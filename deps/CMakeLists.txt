@@ -35,6 +35,12 @@
 #   needs to be set, and sometimes project-specific options.
 #   ExternalProject does not pick up the CMAKE_PREFIX_PATH
 #   set globally below.
+#
+# After each call to ExternalProject, the required libraries
+# should be added to the RPG_DEPENDENCIES list. Be careful to
+# add libraries on which other libraries depend *before* those
+# depending libraries. At the end of this file the RPG_DEPENDENCIES
+# list is reversed so that proper linker order is maintained.
 
 ########################################
 # Source and installation pathes for dependencies
@@ -62,6 +68,8 @@ ExternalProject_Add(zlib
                     --static
   BUILD_COMMAND make
   INSTALL_COMMAND make install)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libz.a)
 
 ExternalProject_Add(libpng
   DEPENDS zlib
@@ -74,6 +82,8 @@ ExternalProject_Add(libpng
                      --disable-shared
   BUILD_COMMAND make
   INSTALL_COMMAND make install)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libpng16.a)
 
 # There is a interdependency of Freetype with Harfbuzz, see
 # docs/INSTALL.UNIX in Freetype's source tree. It is necessary
@@ -94,6 +104,8 @@ ExternalProject_Add(freetype-stage1
                      --with-png=yes
                      --with-harfbuzz=no
                      --with-brotli=no)
+# No appending to RPG_DEPENDENCIES, because this library is not used as-is,
+# see above
 
 ExternalProject_Add(icu
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/icu-68.2
@@ -106,6 +118,10 @@ ExternalProject_Add(icu
                     --disable-layoutex
                     --disable-tests
                     --disable-samples)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libicudata.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libicuuc.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libicui18n.a)
 
 # Consider to add graphite2 as dependency when non-western language
 # support is needed. It has no further dependencies as of 2020.
@@ -129,6 +145,9 @@ ExternalProject_Add(harfbuzz
   --with-gdi=no
   --with-directwrite=no
   --with-coretext=no)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz-icu.a)
 
 ExternalProject_Add(freetype
   DEPENDS zlib libpng harfbuzz
@@ -145,6 +164,8 @@ ExternalProject_Add(freetype
                      --with-png=yes
                      --with-harfbuzz=yes
                      --with-brotli=no)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libfreetype.a)
 
 # Considerations:
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
@@ -203,6 +224,16 @@ ExternalProject_Add(ogre3d
              -DOGRE_INSTALL_SAMPLES=OFF
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libCodec_STBIStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_BSPSceneManagerStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeSceneManagerStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeZoneStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_ParticleFXStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_PCZSceneManagerStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libRenderSystem_GL3PlusStatic.a)
 
 # Wayland support can (hopefully) easily be added later by enabling it here.
 ExternalProject_Add(glfw
@@ -217,3 +248,12 @@ ExternalProject_Add(glfw
              -DGLFW_BUILD_TESTS=OFF
              -DGLFW_BUILD_DOCS=OFF
              -DGLFW_USE_WAYLAND=OFF)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libglfw3.a)
+
+# Reverse the dependencies list to have it fit for the linker
+list(REVERSE RPG_DEPENDENCIES)
+message(STATUS "Compiling these dependencies: ${RPG_DEPENDENCIES}")
+
+# Promote to caller
+set(RPG_DEPENDENCIES ${RPG_DEPENDENCIES} PARENT_SCOPE)

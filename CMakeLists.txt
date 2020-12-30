@@ -41,8 +41,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 
+########################################
 # Dependencies
+
+# Most dependencies are built statically
 add_subdirectory(deps)
+
+# System-specific libraries are linked dynamically from the host
+
+if (WIN32)
+  message(SEND_ERROR "Windows builds are not supported yet")
+else()
+  set(OpenGL_GL_PREFERENCE GLVND)
+
+  find_package(X11 REQUIRED)
+  find_package(Threads REQUIRED)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+
+  include_directories(${X11_INCLUDE_DIR})
+endif()
 
 ########################################
 # The game itself
@@ -51,6 +68,13 @@ file(GLOB_RECURSE rpg_sources "src/*.cpp")
 
 add_executable(rpg ${rpg_sources})
 add_dependencies(rpg ogre3d glfw)
+target_link_libraries(rpg ${RPG_DEPENDENCIES})
+
+if (WIN32)
+  message(SEND_ERROR "Windows builds are not supported yet")
+else()
+  target_link_libraries(rpg OpenGL::OpenGL ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
+endif()
 
 ########################################
 # Installation configuration
@@ -60,9 +84,10 @@ include(GNUInstallDirs)
 ########################################
 # Print summary
 
-message(STATUS "Build info summary:")
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
-message(STATUS "Binary directory: ${CMAKE_INSTALL_BINDIR}")
+message(STATUS "--------- Build info summary: ---------")
+message(STATUS "Build type:            ${CMAKE_BUILD_TYPE}")
+message(STATUS "Install prefix:        ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "Binary directory:      ${CMAKE_INSTALL_BINDIR}")
 message(STATUS "Shared data directory: ${CMAKE_INSTALL_DATADIR}")
 message(STATUS "(relative pathes are relative to the install prefix)")
+message(STATUS "---------------------------------------")
