@@ -50,7 +50,7 @@ add_subdirectory(deps)
 file(GLOB_RECURSE rpg_sources "src/*.cpp")
 
 add_executable(rpg ${rpg_sources})
-add_dependencies(rpg ogre3d)
+add_dependencies(rpg ogre3d glfw)
 
 ########################################
 # Installation configuration

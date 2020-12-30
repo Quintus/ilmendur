@@ -13,7 +13,14 @@
 # GNU General Public License for more details.
 
 # This cmake file contains everything related to building
-# the dependencies.
+# the dependencies. The idea behind the dependency management
+# is this: everything that is not a system-dependent library
+# is build from scratch and linked in statically. This should
+# elminate any problems with version mismatches, people being
+# unable to build this or that dependency, etc, and also serves
+# as a nice reminder to keep the dependency tree small.
+# System-dependent libraries like Mesa or X11 should not be
+# linked in statically.
 #
 # To prevent the dependencies' build systems from choosing
 # the host system's libraries, it is necessary to configure
@@ -24,9 +31,10 @@
 # - For projects that are built with GNU Autotools, the
 #   option `--with-sysroot' has to be passed to the configure
 #   script and set to $RPG_DEPS_INSTALL_DIR.
-# - For projects that are build with CMake, nothing needs
-#   to be done. CMake searches $CMAKE_PREFIX_PATH, and this
-#   variable is set below.
+# - For projects that are build with CMake, CMAKE_PREFIX_PATH
+#   needs to be set, and sometimes project-specific options.
+#   ExternalProject does not pick up the CMAKE_PREFIX_PATH
+#   set globally below.
 
 ########################################
 # Source and installation pathes for dependencies
@@ -195,3 +203,17 @@ ExternalProject_Add(ogre3d
              -DOGRE_INSTALL_SAMPLES=OFF
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
+
+# Wayland support can (hopefully) easily be added later by enabling it here.
+ExternalProject_Add(glfw
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/glfw-3.3.2
+  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DBUILD_STATIC_LIBS=ON
+             -DGLFW_BUILD_EXAMPLES=OFF
+             -DGLFW_BUILD_TESTS=OFF
+             -DGLFW_BUILD_DOCS=OFF
+             -DGLFW_USE_WAYLAND=OFF)
