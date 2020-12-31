@@ -43,6 +43,20 @@ int main(int argc, char* argv[])
     // Initialise Ogre root
     p_ogre_root->initialise(false);
 
+    Ogre::NameValuePairList misc;
+	misc["currentGLContext"] = Ogre::String("true");
+	Ogre::RenderWindow* p_ogre_render_window = p_ogre_root->createRenderWindow("proofoconcept", 800, 600, false, &misc);
+	p_ogre_render_window->setVisible(true);
+
+    // Initialise render system
+    if (Ogre::RTShader::ShaderGenerator::initialize()) {
+        SGTechniqueResolverListener* p_sglistener = new SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator::getSingletonPtr());
+        Ogre::MaterialManager::getSingleton().addListener(p_sglistener);
+    }
+    else {
+        throw(std::runtime_error("Failed to initialise RTSS"));
+    }
+
     // Load resources
     Ogre::ConfigFile ogre_config;
     ogre_config.load("/home/quintus/repos/rpg/build/deps/share/OGRE/resources.cfg");
@@ -60,23 +74,9 @@ int main(int argc, char* argv[])
 			archName, typeName, secName);
 		}
 	}
-
-    Ogre::NameValuePairList misc;
-	misc["currentGLContext"] = Ogre::String("true");
-	Ogre::RenderWindow* p_ogre_render_window = p_ogre_root->createRenderWindow("proofoconcept", 800, 600, false, &misc);
-	p_ogre_render_window->setVisible(true);
-
-    // Initialise render system
-    if (Ogre::RTShader::ShaderGenerator::initialize()) {
-        SGTechniqueResolverListener* p_sglistener = new SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator::getSingletonPtr());
-        Ogre::MaterialManager::getSingleton().addListener(p_sglistener);
-    }
-    else {
-        throw(std::runtime_error("Failed to initialise RTSS"));
-    }
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 
-    Ogre::RenderTarget *ogreRenderTarget = p_ogre_render_window;
+    //Ogre::RenderTarget *ogreRenderTarget = p_ogre_render_window;
     Ogre::SceneManager* p_scene_manager = p_ogre_root->createSceneManager();
 
     p_ogre_root->clearEventTimes();
