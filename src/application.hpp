@@ -25,7 +25,6 @@ private:
     void setupOgre();
     void shutdownOgre();
     void loadOgrePlugins();
-    void unloadOgrePlugins();
     void setupOgreOverlaySystem();
     void loadOgreResources();
     void setupOgreRenderWindow();

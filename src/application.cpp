@@ -81,8 +81,11 @@ void Application::shutdownOgre()
 {
     shutdownOgreRenderWindow();
     delete Ogre::OverlaySystem::getSingletonPtr();
-    unloadOgrePlugins();
-    delete Ogre::Root::getSingletonPtr();
+    delete Ogre::Root::getSingletonPtr(); // Automatically unloads plugins in correct order, see http://wiki.ogre3d.org/StaticLinking
+    // But does not delete the plugins. This needs to be done manually.
+    for (Ogre::Plugin* p_plugin: m_ogre_plugins)
+        delete p_plugin;
+    m_ogre_plugins.clear();
 }
 
 /* This function should load all required plugins, which in turn
@@ -91,26 +94,12 @@ void Application::shutdownOgre()
  * what to load. */
 void Application::loadOgrePlugins()
 {
-    // Plugins, on which other plugins depend, should come first.
-    // That's why the renderer plugin should be the first one.
-    // unloadOgrePlugins() unloads plugins in reverse order.
     m_ogre_plugins.push_back(new Ogre::GL3PlusPlugin());
     m_ogre_plugins.push_back(new Ogre::ParticleFXPlugin());
     m_ogre_plugins.push_back(new Ogre::STBIPlugin());
 
     for(Ogre::Plugin* p_plugin: m_ogre_plugins)
         Ogre::Root::getSingleton().installPlugin(p_plugin);
-}
-
-void Application::unloadOgrePlugins()
-{
-    // Unload plugins in reverse order to ensure dependencies are
-    // honoured (cf. loadOgrePlugins()).
-    for(auto iter = m_ogre_plugins.rbegin(); iter != m_ogre_plugins.rend(); iter++) {
-        Ogre::Root::getSingleton().uninstallPlugin(*iter);
-        delete (*iter);
-    }
-    m_ogre_plugins.clear();
 }
 
 void Application::loadOgreResources()
