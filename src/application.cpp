@@ -14,6 +14,8 @@ static Application* sp_application = nullptr;
 //static void* sp_ignore_because_singleton = nullptr;
 
 Application::Application()
+    : _mp_scene_manager(nullptr),
+      mp_sglistener(nullptr)
 {
     if (sp_application)
         throw(std::runtime_error("There can only be one Application instance!"));
@@ -193,7 +195,7 @@ void Application::run()
 void Application::_make_a_scene()
 {
     // Make a scene manager for this scene
-    Ogre::SceneManager* _mp_scene_manager = Ogre::Root::getSingleton().createSceneManager();
+    _mp_scene_manager = Ogre::Root::getSingleton().createSceneManager();
 
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(_mp_scene_manager);
@@ -230,4 +232,5 @@ void Application::_destroy_the_scene()
     Ogre::Root::getSingleton().getRenderTarget("RPGRenderWindow")->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(_mp_scene_manager);
     Ogre::Root::getSingleton().destroySceneManager(_mp_scene_manager);
+    _mp_scene_manager = nullptr;
 }
