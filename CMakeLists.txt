@@ -30,6 +30,9 @@ project(RPG
   HOMEPAGE_URL "https://redmine.guelker.eu/projects/rpg"
   LANGUAGES CXX)
 
+set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
+set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
+
 ########################################
 # Configuring the compiler
 
@@ -40,6 +43,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Generate warnings
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
+add_compile_options(-Wno-unused-parameter) # Ogre has lots of these
+add_compile_options(-DGLFW_INCLUDE_NONE=1)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE)
 
 ########################################
 # Dependencies
@@ -56,7 +67,13 @@ else()
 
   find_package(X11 REQUIRED)
   find_package(Threads REQUIRED)
-  find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
+
+  if (X11_Xrandr_FOUND)
+    message(STATUS "Xrandr found: ${X11_Xrandr_LIB}")
+  else()
+    message(SEND_ERROR "Xrandr not found")
+  endif()
 
   include_directories(${X11_INCLUDE_DIR})
 endif()
@@ -73,7 +90,7 @@ target_link_libraries(rpg ${RPG_DEPENDENCIES})
 if (WIN32)
   message(SEND_ERROR "Windows builds are not supported yet")
 else()
-  target_link_libraries(rpg OpenGL::OpenGL ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(rpg OpenGL::GLX OpenGL::OpenGL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 ########################################

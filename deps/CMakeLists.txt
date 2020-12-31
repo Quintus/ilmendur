@@ -45,8 +45,7 @@
 ########################################
 # Source and installation pathes for dependencies
 
-set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
-set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
+
 
 ########################################
 # Ensure the compiler knows about the new directories created
@@ -165,7 +164,35 @@ ExternalProject_Add(freetype
                      --with-harfbuzz=yes
                      --with-brotli=no)
 list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libfreetype.a)
+  ${RPG_DEPS_INSTALL_DIR}/lib/libfreetype.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a)
+# ^ Resolving cyclic dependency freetype/harfbuzz/freetype by specifying
+# harfbuzz twice.
+
+# This builds zziplib without any sample programmes.
+# Enabling ZZIPCOMPAT is required, because the build
+# otherwise fails (see https://github.com/gdraheim/zziplib/issues/109).
+# It is possible to remove this dependency if only non-zipped
+# models are used (most notably Ogre's included default models are
+# all zipped). For that, it is necessary to pass OGRE_CONFIG_ENABLE_ZIP=OFF
+# to Ogre's build system below.
+ExternalProject_Add(zziplib
+  DEPENDS zlib
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zziplib-0.13.71
+  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DBUILD_STATIC_LIBS=ON
+             -DZZIPBINS=OFF
+             -DZZIPCOMPAT=ON
+             -DZZIPDOCS=OFF
+             -DZZIPSDL=OFF
+             -DZZIPTEST=OFF
+             -DZZIPWRAP=OFF)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libzzip-0.a)
 
 # Considerations:
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
@@ -175,9 +202,8 @@ list(APPEND RPG_DEPENDENCIES
 #   to use SDL for window and event management. This project does the
 #   system interaction in another way, most notably to circumvent SDL's
 #   large dependency tree.
-# - Tools should be used from the host system. Enabling the tools would
-#   add a dependency on Zziplib (zip support still needs to be expressly
-#   suppressed by setting OGRE_CONFIG_ENABLE_ZIP to OFF).
+# - Tools should be used from the host system. They can add further
+#   dependencies like Zziplib pugixml which would need to be built.
 # - The DOT_SCENE plugin adds a dependency on pugixml, thus disable it.
 #   Reconsider if the plugin is needed. Note: The Bites component
 #   would pull in the pugixml dependency.
@@ -198,7 +224,7 @@ list(APPEND RPG_DEPENDENCIES
 #   and similar things which today are in C++11), which can be worked around.
 #   See if the project can do without for now.
 ExternalProject_Add(ogre3d
-  DEPENDS zlib freetype
+  DEPENDS zlib zziplib freetype
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/ogre-1.12.10
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
@@ -219,14 +245,21 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_PLUGIN_STBI=ON
              -DOGRE_BUILD_PLUGIN_FREEIMAGE=OFF
              -DOGRE_BUILD_PLUGIN_ASSIMP=OFF
-             -DOGRE_CONFIG_ENABLE_ZIP=OFF
+             -DOGRE_CONFIG_ENABLE_ZIP=ON
              -DOGRE_INSTALL_DOCS=OFF
-             -DOGRE_INSTALL_SAMPLES=OFF
+             -DOGRE_INSTALL_SAMPLES=ON
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMeshLodGeneratorStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreOverlayStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgrePagingStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgrePropertyStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreRTShaderSystemStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreTerrainStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreVolumeStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libCodec_STBIStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_BSPSceneManagerStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeSceneManagerStatic.a
