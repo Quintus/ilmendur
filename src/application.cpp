@@ -146,6 +146,8 @@ void Application::run()
 {
     mp_window = new Window(800, 600, "RPG");
     mp_window->activate();
+
+    // Initialising the RTSS requires an active window.
     setupOgreRTSS();
     loadOgreResources();
 
@@ -153,7 +155,6 @@ void Application::run()
 
     // Main loop
     while (true) {
-        //Ogre::WindowEventUtilities::messagePump();
 		if(glfwGetKey(mp_window->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 			break;
 		}
