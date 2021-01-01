@@ -12,15 +12,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# This cmake file contains everything related to building
-# the dependencies. The idea behind the dependency management
-# is this: everything that is not a system-dependent library
-# is build from scratch and linked in statically. This should
-# elminate any problems with version mismatches, people being
-# unable to build this or that dependency, etc, and also serves
-# as a nice reminder to keep the dependency tree small.
-# System-dependent libraries like Mesa or X11 should not be
-# linked in statically.
+# This cmake file contains everything related to building the static
+# dependencies. The idea behind the dependency management is this:
+# everything that is not a system-dependent library is build from
+# scratch and linked in statically. This should elminate any problems
+# with version mismatches, people being unable to build this or that
+# dependency, etc, and also serves as a nice reminder to keep the
+# dependency tree small. System-dependent libraries like Mesa or X11
+# should not be linked in statically. They are taken care of in the
+# toplevel CMakeLists.txt.
 #
 # To prevent the dependencies' build systems from choosing
 # the host system's libraries, it is necessary to configure
@@ -42,21 +42,7 @@
 # depending libraries. At the end of this file the RPG_DEPENDENCIES
 # list is reversed so that proper linker order is maintained.
 
-########################################
-# Source and installation pathes for dependencies
-
-
-
-########################################
-# Ensure the compiler knows about the new directories created
-# by compiling and installing the dependencies
-
 set(CMAKE_PREFIX_PATH ${RPG_DEPS_INSTALL_DIR})
-include_directories(${RPG_DEPS_INSTALL_DIR}/include)
-
-########################################
-# Commands for building the dependencies
-
 include(ExternalProject)
 
 ExternalProject_Add(zlib
