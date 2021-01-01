@@ -1,7 +1,7 @@
 #include "application.hpp"
 #include "resolver.hpp"
+#include <string>
 #include <GLFW/glfw3.h>
-#include <GL/gl3w.h>  // Ogre's OpenGL header
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
@@ -9,9 +9,8 @@
 #include <OgreParticleFXPlugin.h>
 #include <OgreSTBICodec.h>
 
-
 static Application* sp_application = nullptr;
-//static void* sp_ignore_because_singleton = nullptr;
+static std::string s_application_title;
 
 Application::Application()
     : _mp_scene_manager(nullptr),
@@ -19,6 +18,10 @@ Application::Application()
 {
     if (sp_application)
         throw(std::runtime_error("There can only be one Application instance!"));
+
+    // Set window title. TODO: Translate this (this is why this is
+    // specified as a constant).
+    s_application_title = "RPG";
 
     setupGlfw();
     setupOgre();
@@ -38,6 +41,10 @@ Application* Application::getSingleton()
     return sp_application;
 }
 
+/**
+ * This initialises GLFW, creates a window with it and sets that window's OpenGL context
+ * current. That's exactly the situation needed to call setupOgre().
+ */
 void Application::setupGlfw()
 {
     if (!glfwInit())
@@ -46,46 +53,70 @@ void Application::setupGlfw()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
-    mp_glfw_window = glfwCreateWindow(800, 600, "RPG", nullptr, nullptr);
-    if (!mp_glfw_window) {
+    // TODO: Set X11 floating hint on Linux for tiling window managers
+
+    // Note: glfwCreateWindow requires the window title to be UTF-8.
+    m_windowpair.glfw_window = glfwCreateWindow(800, 600, s_application_title.c_str(), nullptr, nullptr);
+
+    if (!m_windowpair.glfw_window) {
         glfwTerminate();
-        throw(std::runtime_error("Failed to create a GLFW window!"));
+        throw(std::runtime_error("Failed to create the GLFW window!"));
     }
+
+    glfwMakeContextCurrent(m_windowpair.glfw_window);
 }
 
 void Application::shutdownGlfw()
 {
-    glfwDestroyWindow(mp_glfw_window);
+    glfwDestroyWindow(m_windowpair.glfw_window);
+    m_windowpair.glfw_window = nullptr;
     glfwTerminate();
 }
 
+/**
+ * Initialises Ogre and creates a RenderWindow. This function requires that setupGlfw()
+ * has been called before, because it relies on a current OpenGL context.
+ */
 void Application::setupOgre()
 {
-    // Switch to that window's OpenGL context. Ogre must have the context
-    // active during setup.
-    glfwMakeContextCurrent(mp_glfw_window);
-
     Ogre::Root* p_root = new Ogre::Root(""); // Note: also saved in Ogre::Root::getSingleton()
+    /* It is REQUIRED to have the GLFW window created and its OpenGL
+     * context current BEFORE loadOgrePlugins() is called. Otherwise anything
+     * can happen, reaching from nothing being rendered to segmentation
+     * faults to crashes of the X11 server. Therefore it is not possible
+     * to have multiple GLFW windows with Ogre. */
     loadOgrePlugins();
-    setupOgreOverlaySystem();
+    setupOgreOverlaySystem(); // Requires Ogre::Root to not be created-but-not-initialised
     p_root->setRenderSystem(p_root->getAvailableRenderers()[0]);
     p_root->initialise(false);
-    setupOgreRenderWindow();
+
+    // Because currentGLContext is set, width, height, and fullscreen parameters
+    // to createRenderWindow() are ignored. GLFW takes care of all of this.
+    // currentGLContext instructs Ogre to not attempt to create a new OpenGL context.
+    Ogre::NameValuePairList misc;
+	misc["currentGLContext"] = Ogre::String("true");
+	m_windowpair.ogre_window = p_root->createRenderWindow(s_application_title, 0, 0, false, &misc);
+	m_windowpair.ogre_window->setVisible(true);
+
+    setupOgreRTSS();
     loadOgreResources();
-    p_root->clearEventTimes();
 }
 
 void Application::shutdownOgre()
 {
-    shutdownOgreRenderWindow();
+    shutdownOgreRTSS();
+
+    Ogre::Root::getSingleton().destroyRenderTarget(m_windowpair.ogre_window);
     delete Ogre::OverlaySystem::getSingletonPtr();
     delete Ogre::Root::getSingletonPtr(); // Automatically unloads plugins in correct order, see http://wiki.ogre3d.org/StaticLinking
     // But does not delete the plugins. This needs to be done manually.
     for (Ogre::Plugin* p_plugin: m_ogre_plugins)
         delete p_plugin;
     m_ogre_plugins.clear();
+    m_windowpair.ogre_window = nullptr;
 }
 
 /* This function should load all required plugins, which in turn
@@ -135,18 +166,8 @@ void Application::setupOgreOverlaySystem()
     new Ogre::OverlaySystem();
 }
 
-void Application::setupOgreRenderWindow()
+void Application::setupOgreRTSS()
 {
-    /* Create a render window that matches the GLFW window. The important thing
-     * is the currentGLContext option, as documented for Ogre::Root::createRenderWindow().
-     * It tells Ogre to just accept out already set up OpenGL context (which was
-     * set up with GLFW in setupGlfw(). */
-    static Ogre::NameValuePairList misc_params;
-	misc_params["currentGLContext"] = Ogre::String("true");
-	Ogre::RenderWindow* p_ogre_render_window = Ogre::Root::getSingleton().createRenderWindow("RPGRenderWindow", 800, 600, false, &misc_params);
-	p_ogre_render_window->setVisible(true);
-
-    // Initialise Real Time Shader System (RTSS)
     if (Ogre::RTShader::ShaderGenerator::initialize()) {
         mp_sglistener = new SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator::getSingletonPtr());
         Ogre::MaterialManager::getSingleton().addListener(mp_sglistener);
@@ -156,7 +177,7 @@ void Application::setupOgreRenderWindow()
     }
 }
 
-void Application::shutdownOgreRenderWindow()
+void Application::shutdownOgreRTSS()
 {
     Ogre::MaterialManager::getSingleton().setActiveScheme(Ogre::MaterialManager::DEFAULT_SCHEME_NAME);
     Ogre::MaterialManager::getSingleton().removeListener(mp_sglistener);
@@ -171,11 +192,11 @@ void Application::run()
     // Main loop
     while (true) {
         //Ogre::WindowEventUtilities::messagePump();
-		if(glfwGetKey(mp_glfw_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		if(glfwGetKey(m_windowpair.glfw_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 			break;
 		}
         Ogre::Root::getSingleton().renderOneFrame();
-		glfwPollEvents();
+        glfwPollEvents();
     }
 
     _destroy_the_scene();
@@ -208,7 +229,7 @@ void Application::_make_a_scene()
 
     // Departure from tutorial. Add a viewport with the given camera
     // to the render window.
-    Ogre::Root::getSingleton().getRenderTarget("RPGRenderWindow")->addViewport(p_camera);
+    m_windowpair.ogre_window->addViewport(p_camera);
 
     // Add something into the scene
     Ogre::Entity* p_entity = _mp_scene_manager->createEntity("Sinbad.mesh");
@@ -218,7 +239,7 @@ void Application::_make_a_scene()
 
 void Application::_destroy_the_scene()
 {
-    Ogre::Root::getSingleton().getRenderTarget("RPGRenderWindow")->removeAllViewports();
+    m_windowpair.ogre_window->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(_mp_scene_manager);
     Ogre::Root::getSingleton().destroySceneManager(_mp_scene_manager);
     _mp_scene_manager = nullptr;
