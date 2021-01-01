@@ -1,6 +1,19 @@
                            < Role-Play Game >
 
-This is a personal project of my friends and me to develop a role-play game.
+This is a personal project of my friends and me to develop a role-play
+game.
+
+                         Project Information
+                         -------------------
+
+Canonical homepage:  https://redmine.guelker.eu/projects/rpg
+Forum:               https://redmine.guelker.eu/projects/rpg/boards
+Bugtracker:          https://redmine.guelker.eu/projects/rpg/issues
+
+The source code is currently only available via Git. Clone the
+repository as follows:
+
+    $ git clone git://git.guelker.eu/rpg.git
 
                              How to build
                              ------------
