@@ -28,7 +28,7 @@ system used is CMake.
 Therefore, to successfully build this project you need:
 
 - A working C++ compiler, which needs to be capable of C++11. On
-  Ubuntu Linux, install the `base-devel' and `g++' packages.
+  Ubuntu Linux, install the `build-essential' and `g++' packages.
 - CMake, at least version 3.13. On Ubuntu Linux, install the `cmake'
   package.
 - A Linux system (Windows is not yet supported).
