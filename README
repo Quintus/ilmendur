@@ -34,8 +34,10 @@ Therefore, to successfully build this project you need:
 - A Linux system (Windows is not yet supported).
 - The following Linux-specific libraries and their development
   headers:
-  * libx11, libxrandr, libxext.
-  * libOpenGL (GLVND variant, that is the newer ABI).
+  * The X11 libraries: libx11, libxrandr, libsm, libice, libxext,
+    libxrender, libxcb, libxau, libxdmcp
+  * The OpenGL libraries, in the newer GLVND variant (libOpenGL
+    and libGLX).
   * pthreads and dl (you have this if your system uses GNU libc (glibc),
     which is the case for most Linux distrbutions).
 
