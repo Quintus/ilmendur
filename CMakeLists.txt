@@ -81,23 +81,16 @@ endif()
 ########################################
 # The game itself
 
-#file(GLOB_RECURSE rpg_sources "src/*.cpp")
-set(rpg_sources src/main.cpp src/resolver.cpp src/resolver.hpp)
-set(rpg2_sources src/main2.cpp src/resolver.cpp src/resolver.hpp src/application.cpp src/application.hpp src/window.cpp src/window.hpp)
+file(GLOB_RECURSE rpg_sources "src/*.cpp" "src/*.hpp")
 
 add_executable(rpg ${rpg_sources})
 add_dependencies(rpg ogre3d glfw)
 target_link_libraries(rpg ${RPG_DEPENDENCIES})
 
-add_executable(rpg2 ${rpg2_sources})
-add_dependencies(rpg2 ogre3d glfw)
-target_link_libraries(rpg2 ${RPG_DEPENDENCIES})
-
 if (WIN32)
   message(SEND_ERROR "Windows builds are not supported yet")
 else()
   target_link_libraries(rpg OpenGL::GLX OpenGL::OpenGL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
-  target_link_libraries(rpg2 OpenGL::GLX OpenGL::OpenGL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 ########################################
