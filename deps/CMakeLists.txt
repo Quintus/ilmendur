@@ -233,9 +233,19 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_PLUGIN_ASSIMP=OFF
              -DOGRE_CONFIG_ENABLE_ZIP=ON
              -DOGRE_INSTALL_DOCS=OFF
-             -DOGRE_INSTALL_SAMPLES=ON
+             -DOGRE_INSTALL_SAMPLES=OFF
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
+# If the samples are turned off (which they are for dependency
+# avoidance), Ogre's sample media are not installed at the
+# installation step. At this early stage of development, they are
+# however necessary to see if things render at all. Thus, manually
+# install them. The following call to ExternalProject_Add_Step() can
+# probably be removed once only our own models are used.
+ExternalProject_Add_Step(ogre3d install-sample-media
+  DEPENDEES build
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Samples/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
