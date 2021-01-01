@@ -83,7 +83,7 @@ endif()
 
 #file(GLOB_RECURSE rpg_sources "src/*.cpp")
 set(rpg_sources src/main.cpp src/resolver.cpp src/resolver.hpp)
-set(rpg2_sources src/main2.cpp src/resolver.cpp src/resolver.hpp src/application.cpp src/application.hpp)
+set(rpg2_sources src/main2.cpp src/resolver.cpp src/resolver.hpp src/application.cpp src/application.hpp src/window.cpp src/window.hpp)
 
 add_executable(rpg ${rpg_sources})
 add_dependencies(rpg ogre3d glfw)
