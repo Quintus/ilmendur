@@ -23,7 +23,7 @@ Application::Application()
     // specified as a constant).
     s_application_title = "RPG";
 
-    setupGlfw();
+    //setupGlfw();
     setupOgre();
 
     sp_application = this;
@@ -57,6 +57,11 @@ void Application::setupGlfw()
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
     // TODO: Set X11 floating hint on Linux for tiling window managers
+    // GLFW has functions to retrieve the native window and display.
+    // Screen on today's system is always 0 (nobody uses X anymore to
+    // render for multiple computers). The Screen* pointer itself can
+    // be retrieved as ScreenOfDisplay(p_x11_display, XDefaultScreen(p_x11_display)),
+    // where XDefaultScreen() will usually return said 0.
 
     // Note: glfwCreateWindow requires the window title to be UTF-8.
     m_windowpair.glfw_window = glfwCreateWindow(800, 600, s_application_title.c_str(), nullptr, nullptr);
@@ -83,23 +88,21 @@ void Application::shutdownGlfw()
 void Application::setupOgre()
 {
     Ogre::Root* p_root = new Ogre::Root(""); // Note: also saved in Ogre::Root::getSingleton()
-    /* It is REQUIRED to have the GLFW window created and its OpenGL
-     * context current BEFORE loadOgrePlugins() is called. Otherwise anything
-     * can happen, reaching from nothing being rendered to segmentation
-     * faults to crashes of the X11 server. Therefore it is not possible
-     * to have multiple GLFW windows with Ogre. */
     loadOgrePlugins();
     setupOgreOverlaySystem(); // Requires Ogre::Root to not be created-but-not-initialised
     p_root->setRenderSystem(p_root->getAvailableRenderers()[0]);
     p_root->initialise(false);
 
-    // Because currentGLContext is set, width, height, and fullscreen parameters
-    // to createRenderWindow() are ignored. GLFW takes care of all of this.
-    // currentGLContext instructs Ogre to not attempt to create a new OpenGL context.
+    setupGlfw();
+
+    // Create Ogre's render window and configure it to just use GLFW's already
+    // created OpenGL context. The height/width/fullscreen parameters are
+    // thus ignored.
     Ogre::NameValuePairList misc;
-	misc["currentGLContext"] = Ogre::String("true");
-	m_windowpair.ogre_window = p_root->createRenderWindow(s_application_title, 0, 0, false, &misc);
-	m_windowpair.ogre_window->setVisible(true);
+    misc["currentGLContext"] = Ogre::String("true");
+    misc["externalGLControl"] = Ogre::String("true");
+    m_windowpair.ogre_window = p_root->createRenderWindow(s_application_title, 1, 1, false, &misc);
+    m_windowpair.ogre_window->setVisible(true);
 
     setupOgreRTSS();
     loadOgreResources();
@@ -196,6 +199,7 @@ void Application::run()
 			break;
 		}
         Ogre::Root::getSingleton().renderOneFrame();
+        glfwSwapBuffers(m_windowpair.glfw_window);
         glfwPollEvents();
     }
 
