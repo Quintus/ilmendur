@@ -1,7 +1,6 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
-#include <string>
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>

@@ -2,7 +2,6 @@
 #define WINDOW_HPP
 #include <string>
 #include <stdexcept>
-#include <OGRE/Ogre.h>
 
 // Forward declarations
 struct GLFWwindow;

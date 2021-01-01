@@ -1,5 +1,6 @@
 #include "window.hpp"
 #include <GLFW/glfw3.h>
+#include <OGRE/Ogre.h>
 
 Window::Window(int width, int height, std::string title)
     : mp_glfw_window(nullptr),
