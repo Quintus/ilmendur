@@ -38,10 +38,6 @@ Application* Application::getSingleton()
     return sp_application;
 }
 
-/**
- * This initialises GLFW, creates a window with it and sets that window's OpenGL context
- * current. That's exactly the situation needed to call setupOgre().
- */
 void Application::setupGlfw()
 {
     if (!glfwInit())
@@ -53,10 +49,6 @@ void Application::shutdownGlfw()
     glfwTerminate();
 }
 
-/**
- * Initialises Ogre and creates a RenderWindow. This function requires that setupGlfw()
- * has been called before, because it relies on a current OpenGL context.
- */
 void Application::setupOgre()
 {
     Ogre::Root* p_root = new Ogre::Root(""); // Note: also saved in Ogre::Root::getSingleton()
@@ -123,6 +115,10 @@ void Application::setupOgreOverlaySystem()
     new Ogre::OverlaySystem();
 }
 
+/**
+ * Initialises Ogre's Real-Time Shading System (RTSS). Calling
+ * this function requires an active OpenGL context.
+ */
 void Application::setupOgreRTSS()
 {
     if (Ogre::RTShader::ShaderGenerator::initialize()) {
@@ -134,6 +130,10 @@ void Application::setupOgreRTSS()
     }
 }
 
+/**
+ * Cleans up Ogre's Real-Time Shading System (RTSS). Call this
+ * before destroying the OpenGL context it is used in.
+ */
 void Application::shutdownOgreRTSS()
 {
     Ogre::MaterialManager::getSingleton().setActiveScheme(Ogre::MaterialManager::DEFAULT_SCHEME_NAME);
@@ -142,6 +142,9 @@ void Application::shutdownOgreRTSS()
     Ogre::RTShader::ShaderGenerator::destroy();
 }
 
+/**
+ * Creates the window and enters the main loop.
+ */
 void Application::run()
 {
     mp_window = new Window(800, 600, "RPG");
@@ -149,6 +152,7 @@ void Application::run()
 
     // Initialising the RTSS requires an active window.
     setupOgreRTSS();
+    // Loading the resources requires the RTSS to be active.
     loadOgreResources();
 
     _make_a_scene();
