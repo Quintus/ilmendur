@@ -1,5 +1,59 @@
-                            Role-Play Game
+                           < Role-Play Game >
 
 This is a personal project of my friends and me to develop a role-play game.
+
+                             How to build
+                             ------------
+
+The project is written in C++ with Ogre as the 3D game engine and GLFW
+as the window management system. Most of its dependency libraries are
+compiled during the project compilation and then linked in statically.
+Exempted from this rule are only system-specific libraries such as
+libx11, which are searched for and linked in dynamically. The build
+system used is CMake.
+
+Therefore, to successfully build this project you need:
+
+- A working C++ compiler, which needs to be capable of C++11. On
+  Ubuntu Linux, install the `base-devel' and `g++' packages.
+- CMake, at least version 3.13. On Ubuntu Linux, install the `cmake'
+  package.
+- A Linux system (Windows is not yet supported).
+- The following Linux-specific libraries and their development
+  headers:
+  * libx11, libxrandr, libxext.
+  * libOpenGL (GLVND variant, that is the newer ABI).
+  * pthreads and dl (you have this if your system uses GNU libc (glibc),
+    which is the case for most Linux distrbutions).
+
+Any other dependencies are automatically compiled during the
+compilation of the project. This can take quite a while, but you only
+need to do it once, unless the dependencies change later on. In that
+case, cmake will pick this up and build the new dependencies as
+needed. If you are interested in the exact list of dependencies
+compiled in this process, consult deps/CMakeLists.txt.
+
+To build this project, execute the following commands:
+
+    $ cd /path/to/this/repository
+    $ mkdir build
+    $ cd build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug ..
+    $ make
+
+You can (and should) pass the option -jN to the call to make(1), where
+`N' should be replaced with the number of CPU cores you have. This
+massively speeds up the build as files can be compiled in parallel.
+E.g., use `make -j4' on a system with four CPU cores.
+
+Note: It is neither useful nor possible to call `make install' at this
+point. There is no installation target available currently.
+
+To run the created programme, execute:
+
+    $ ./rpg
+
+                          Legal Information
+                          -----------------
 
 Licensing information is contained in the file LICENSE.

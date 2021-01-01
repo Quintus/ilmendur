@@ -12,15 +12,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# This cmake file contains everything related to building
-# the dependencies. The idea behind the dependency management
-# is this: everything that is not a system-dependent library
-# is build from scratch and linked in statically. This should
-# elminate any problems with version mismatches, people being
-# unable to build this or that dependency, etc, and also serves
-# as a nice reminder to keep the dependency tree small.
-# System-dependent libraries like Mesa or X11 should not be
-# linked in statically.
+# This cmake file contains everything related to building the static
+# dependencies. The idea behind the dependency management is this:
+# everything that is not a system-dependent library is build from
+# scratch and linked in statically. This should elminate any problems
+# with version mismatches, people being unable to build this or that
+# dependency, etc, and also serves as a nice reminder to keep the
+# dependency tree small. System-dependent libraries like Mesa or X11
+# should not be linked in statically. They are taken care of in the
+# toplevel CMakeLists.txt.
 #
 # To prevent the dependencies' build systems from choosing
 # the host system's libraries, it is necessary to configure
@@ -42,21 +42,7 @@
 # depending libraries. At the end of this file the RPG_DEPENDENCIES
 # list is reversed so that proper linker order is maintained.
 
-########################################
-# Source and installation pathes for dependencies
-
-
-
-########################################
-# Ensure the compiler knows about the new directories created
-# by compiling and installing the dependencies
-
 set(CMAKE_PREFIX_PATH ${RPG_DEPS_INSTALL_DIR})
-include_directories(${RPG_DEPS_INSTALL_DIR}/include)
-
-########################################
-# Commands for building the dependencies
-
 include(ExternalProject)
 
 ExternalProject_Add(zlib
@@ -247,9 +233,19 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_PLUGIN_ASSIMP=OFF
              -DOGRE_CONFIG_ENABLE_ZIP=ON
              -DOGRE_INSTALL_DOCS=OFF
-             -DOGRE_INSTALL_SAMPLES=ON
+             -DOGRE_INSTALL_SAMPLES=OFF
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
+# If the samples are turned off (which they are for dependency
+# avoidance), Ogre's sample media are not installed at the
+# installation step. At this early stage of development, they are
+# however necessary to see if things render at all. Thus, manually
+# install them. The following call to ExternalProject_Add_Step() can
+# probably be removed once only our own models are used.
+ExternalProject_Add_Step(ogre3d install-sample-media
+  DEPENDEES build
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Samples/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a

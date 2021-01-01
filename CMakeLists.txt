@@ -30,9 +30,6 @@ project(RPG
   HOMEPAGE_URL "https://redmine.guelker.eu/projects/rpg"
   LANGUAGES CXX)
 
-set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
-set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
-
 ########################################
 # Configuring the compiler
 
@@ -40,26 +37,43 @@ set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Generate warnings
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter) # Ogre has lots of these
-add_compile_options(-DGLFW_INCLUDE_NONE=1)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include/OGRE)
+add_compile_options(-DGLFW_INCLUDE_NONE=1) # Ogre ships its own set of OpenGL headers
+
+########################################
+# Game source code
+
+file(GLOB_RECURSE rpg_sources "src/*.cpp" "src/*.hpp")
+add_executable(rpg ${rpg_sources})
 
 ########################################
 # Dependencies
 
-# Most dependencies are built statically
+# This project builds most of its dependencies itself and
+# links them in statically. The sources are stored
+# in SRC_DIR and the compiled results are stored
+# under INSTALL_DIR as configured below.
+set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
+set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
+
+# Instruct CMake to build the subdirectory deps/ and
+# tell it what to do with the results. add_subdirectory(deps)
+# results in $RPG_DEPENDENCIES being set in this scope.
 add_subdirectory(deps)
+include_directories(${RPG_DEPS_INSTALL_DIR}/include
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec)
+add_dependencies(rpg ogre3d glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
+target_link_libraries(rpg ${RPG_DEPENDENCIES})
 
-# System-specific libraries are linked dynamically from the host
-
+# System-specific libraries are linked dynamically from the host.
+# Following is the configuration to find them and what to do
+# with the find results.
 if (WIN32)
   message(SEND_ERROR "Windows builds are not supported yet")
 else()
@@ -69,27 +83,11 @@ else()
   find_package(Threads REQUIRED)
   find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
 
-  if (X11_Xrandr_FOUND)
-    message(STATUS "Xrandr found: ${X11_Xrandr_LIB}")
-  else()
+  if (NOT X11_Xrandr_FOUND)
     message(SEND_ERROR "Xrandr not found")
   endif()
 
   include_directories(${X11_INCLUDE_DIR})
-endif()
-
-########################################
-# The game itself
-
-file(GLOB_RECURSE rpg_sources "src/*.cpp")
-
-add_executable(rpg ${rpg_sources})
-add_dependencies(rpg ogre3d glfw)
-target_link_libraries(rpg ${RPG_DEPENDENCIES})
-
-if (WIN32)
-  message(SEND_ERROR "Windows builds are not supported yet")
-else()
   target_link_libraries(rpg OpenGL::GLX OpenGL::OpenGL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
