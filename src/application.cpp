@@ -180,6 +180,9 @@ void Application::_make_a_scene()
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(_mp_scene_manager);
 
+    // Enable the overlay system for this scene
+    _mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
+
     // without light we would just get a black screen
     Ogre::Light* p_light = _mp_scene_manager->createLight("MainLight");
     Ogre::SceneNode* p_light_node = _mp_scene_manager->getRootSceneNode()->createChildSceneNode();
