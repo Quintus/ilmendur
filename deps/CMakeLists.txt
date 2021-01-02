@@ -28,31 +28,52 @@
 # system's search pathes; $RPG_DEPS_INSTALL_DIR is set in
 # the toplevel CMake file. This can be achieved as follows:
 #
-# - For projects that are built with GNU Autotools, the
-#   option `--with-sysroot' has to be passed to the configure
-#   script and set to $RPG_DEPS_INSTALL_DIR.
-# - For projects that are build with CMake, CMAKE_PREFIX_PATH
-#   needs to be set, and sometimes project-specific options.
-#   ExternalProject does not pick up the CMAKE_PREFIX_PATH
-#   set globally below.
+# - For projects that are built with GNU Autotools,
+#   it is necessary to provide three environment variables for
+#   any command:
+#     * CFLAGS set to -I=${RPG_DEPS_INSTALL_DIR}/include
+#       - To have `configure' find the headers.
+#     * LDFLAGS set to -L=${RPG_DEPS_INSTALL_DIR}/lib
+#       - To have the linker find the library.
+#     * PKG_CONFIG_LIBDIR set to ${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig
+#       - To have pkg-config(1) sub-calls look at the right place.
+#   Passing environment variables via ExternalProject_Add
+#   is not easily possible, see <http://cmake.3232098.n2.nabble.com/Environment-variables-and-ExternalProject-td6901280.html>.
+#   It is possible to wrap by calling cmake(1) with -E env,
+#   see <https://stackoverflow.com/a/62437353>.
+#
+# - For projects that are build with CMake, CMAKE_PREFIX_PATH needs to
+#   be set by passing -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}.
+#   Starting from version 3.1, cmake configures pkg-config(1) subcalls
+#   to use that prefix path automatically if CMAKE_PREFIX_PATH is set
+#   (see <https://cmake.org/cmake/help/v3.17/module/FindPkgConfig.html>).
+#   It probably uses PKG_CONFIG_PATH instead of PKG_CONFIG_LIBDIR
+#   under the hood, but the difference is negligible (the former
+#   overrides the default pkg-config search path, the latter
+#   prepends to it). ExternalProject_Add does not automatically pick
+#   up an existing set CMAKE_PREFIX_PATH.
 #
 # After each call to ExternalProject, the required libraries
 # should be added to the RPG_DEPENDENCIES list. Be careful to
 # add libraries on which other libraries depend *before* those
 # depending libraries. At the end of this file the RPG_DEPENDENCIES
 # list is reversed so that proper linker order is maintained.
+#
+# Note: see here for the $(MAKE) trick: <https://stackoverflow.com/a/33171336>
+# It makes cmake use make's jobserver to parallelize builds
+# with external projects. Sadly, that trick enforces use of
+# make on Unix, i.e. it is non-portable.
 
-set(CMAKE_PREFIX_PATH ${RPG_DEPS_INSTALL_DIR})
 include(ExternalProject)
 
 ExternalProject_Add(zlib
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zlib-1.2.11
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/zlib-1.2.11/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/zlib-1.2.11/configure
                     --prefix=${RPG_DEPS_INSTALL_DIR}
                     --static
-  BUILD_COMMAND make
-  INSTALL_COMMAND make install)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libz.a)
 
@@ -60,13 +81,12 @@ ExternalProject_Add(libpng
   DEPENDS zlib
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/libpng-1.6.37
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/libpng-1.6.37/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/libpng-1.6.37/configure
                      --prefix=${RPG_DEPS_INSTALL_DIR}
-                     --with-sysroot=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
-  BUILD_COMMAND make
-  INSTALL_COMMAND make install)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libpng16.a)
 
@@ -78,31 +98,33 @@ ExternalProject_Add(freetype-stage1
   DEPENDS zlib libpng
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype-2.10.4
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
                      --srcdir=${RPG_DEPS_SRC_DIR}/freetype-2.10.4
                      --prefix=${RPG_DEPS_INSTALL_DIR}
-                     --with-sysroot=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
                      --with-zlib=yes
                      --with-bzip2=no
                      --with-png=yes
                      --with-harfbuzz=no
-                     --with-brotli=no)
+                     --with-brotli=no
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 # No appending to RPG_DEPENDENCIES, because this library is not used as-is,
 # see above
 
 ExternalProject_Add(icu
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/icu-68.2
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/icu-68.2/source/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/icu-68.2/source/configure
                     --prefix=${RPG_DEPS_INSTALL_DIR}
-                    --with-sysroot=${RPG_DEPS_INSTALL_DIR}
                     --enable-static
                     --disable-shared
                     --disable-layoutex
                     --disable-tests
-                    --disable-samples)
+                    --disable-samples
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libicudata.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libicuuc.a
@@ -114,9 +136,8 @@ ExternalProject_Add(harfbuzz
   DEPENDS freetype-stage1 icu
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/harfbuzz-2.7.4
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/harfbuzz-2.7.4/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/harfbuzz-2.7.4/configure
   --prefix=${RPG_DEPS_INSTALL_DIR}
-  --with-sysroot=${RPG_DEPS_INSTALL_DIR}
   --enable-static
   --disable-shared
   --with-glib=no
@@ -129,7 +150,9 @@ ExternalProject_Add(harfbuzz
   --with-uniscribe=no
   --with-gdi=no
   --with-directwrite=no
-  --with-coretext=no)
+  --with-coretext=no
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz-icu.a)
@@ -138,17 +161,18 @@ ExternalProject_Add(freetype
   DEPENDS zlib libpng harfbuzz
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype-2.10.4
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
                      --srcdir=${RPG_DEPS_SRC_DIR}/freetype-2.10.4
                      --prefix=${RPG_DEPS_INSTALL_DIR}
-                     --with-sysroot=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
                      --with-zlib=yes
                      --with-bzip2=no
                      --with-png=yes
                      --with-harfbuzz=yes
-                     --with-brotli=no)
+                     --with-brotli=no
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libfreetype.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a)

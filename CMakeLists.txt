@@ -55,8 +55,12 @@ add_executable(rpg ${rpg_sources})
 # links them in statically. The sources are stored
 # in SRC_DIR and the compiled results are stored
 # under INSTALL_DIR as configured below.
+# CMAKE_PREFIX_PATH is set for completeness. find_package()
+# operates on it, but all dependencies built automatically
+# are included in RPG_DEPENDENCIES with an absolute path anyway.
 set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
 set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
+set(CMAKE_PREFIX_PATH     ${RPG_DEPS_INSTALL_DIR})
 
 # Instruct CMake to build the subdirectory deps/ and
 # tell it what to do with the results. add_subdirectory(deps)
