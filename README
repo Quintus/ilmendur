@@ -29,8 +29,11 @@ Therefore, to successfully build this project you need:
 
 - A working C++ compiler, which needs to be capable of C++11.
 - CMake, at least version 3.13.
-- A Linux system (Windows is not yet supported).
-- The following Linux-specific libraries and their development
+- The build tools used by the dependencies that are compiled:
+  * pkg-config
+  * Autotools
+- A Unix system (Windows is not yet supported).
+- The following Unix-specific libraries and their development
   headers:
   * The X11 libraries: libx11, libxrandr, libsm, libice, libxext,
     libxrender, libxcb, libxau, libxdmcp
@@ -45,9 +48,8 @@ following command at once:
     $ sudo apt install build-essential g++ cmake libx11-dev \
       libglvnd-dev libxrandr-dev libice-dev libxext-dev \
       libsm-dev libxrender-dev libxau-dev libxdmcp-dev \
-      libicu-dev zlib1g-dev libfreetype-dev automake \
-      libharfbuzz-dev libxinerama-dev libxcursor-dev \
-      libxi-dev
+      libicu-dev zlib1g-dev automake libxinerama-dev
+      libxcursor-dev libxi-dev pkg-config
 
 Any other dependencies are automatically compiled during the
 compilation of the project. This can take quite a while, but you only
