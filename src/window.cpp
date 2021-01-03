@@ -28,8 +28,9 @@ Window::Window(int width, int height, std::string title)
 
     // Note: glfwCreateWindow requires the window title to be UTF-8.
     mp_glfw_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-    if (!mp_glfw_window)
+    if (!mp_glfw_window) {
         throw(std::runtime_error("Failed to create GLFW window!"));
+    }
 
     ////////////////////////////////////////
     // Create Ogre window
@@ -42,9 +43,9 @@ Window::Window(int width, int height, std::string title)
     // context. The height/width/fullscreen parameters are thus
     // ignored.
     Ogre::NameValuePairList misc_params;
-	misc_params["currentGLContext"]  = Ogre::String("true");
+    misc_params["currentGLContext"]  = Ogre::String("true");
     misc_params["externalGLControl"] = Ogre::String("true");
-	mp_ogre_window = Ogre::Root::getSingleton().createRenderWindow(title, width, height, false, &misc_params);
+    mp_ogre_window = Ogre::Root::getSingleton().createRenderWindow(title, width, height, false, &misc_params);
 
     // Switch back to whatever was current
     glfwMakeContextCurrent(p_prev_context);

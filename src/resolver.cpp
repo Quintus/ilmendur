@@ -1,26 +1,25 @@
 #include "resolver.hpp"
 #include "OgreTechnique.h"
 
-SGTechniqueResolverListener::SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator *pShaderGenerator)
+SGTechniqueResolverListener::SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator* pShaderGenerator)
 {
     mShaderGenerator = pShaderGenerator;
 }
 
-Ogre::Technique *SGTechniqueResolverListener::handleSchemeNotFound(unsigned short schemeIndex, const Ogre::String &schemeName, Ogre::Material *originalMaterial, unsigned short lodIndex, const Ogre::Renderable *rend) {
-    if (!mShaderGenerator->hasRenderState(schemeName))
-    {
+Ogre::Technique* SGTechniqueResolverListener::handleSchemeNotFound(unsigned short schemeIndex, const Ogre::String& schemeName, Ogre::Material* originalMaterial, unsigned short lodIndex, const Ogre::Renderable* rend)
+{
+    if (!mShaderGenerator->hasRenderState(schemeName)) {
         return NULL;
     }
     // Case this is the default shader generator scheme.
 
     // Create shader generated technique for this material.
     bool techniqueCreated = mShaderGenerator->createShaderBasedTechnique(
-                *originalMaterial,
-                Ogre::MaterialManager::DEFAULT_SCHEME_NAME,
-                schemeName);
+                                *originalMaterial,
+                                Ogre::MaterialManager::DEFAULT_SCHEME_NAME,
+                                schemeName);
 
-    if (!techniqueCreated)
-    {
+    if (!techniqueCreated) {
         return NULL;
     }
     // Case technique registration succeeded.
@@ -30,12 +29,10 @@ Ogre::Technique *SGTechniqueResolverListener::handleSchemeNotFound(unsigned shor
 
     // Grab the generated technique.
     Ogre::Material::Techniques::const_iterator it;
-    for(it = originalMaterial->getTechniques().begin(); it != originalMaterial->getTechniques().end(); ++it)
-    {
+    for(it = originalMaterial->getTechniques().begin(); it != originalMaterial->getTechniques().end(); ++it) {
         Ogre::Technique* curTech = *it;
 
-        if (curTech->getSchemeName() == schemeName)
-        {
+        if (curTech->getSchemeName() == schemeName) {
             return curTech;
         }
     }
@@ -43,25 +40,23 @@ Ogre::Technique *SGTechniqueResolverListener::handleSchemeNotFound(unsigned shor
     return NULL;
 }
 
-bool SGTechniqueResolverListener::afterIlluminationPassesCreated(Ogre::Technique *tech)
+bool SGTechniqueResolverListener::afterIlluminationPassesCreated(Ogre::Technique* tech)
 {
-    if(mShaderGenerator->hasRenderState(tech->getSchemeName()))
-    {
+    if(mShaderGenerator->hasRenderState(tech->getSchemeName())) {
         Ogre::Material* mat = tech->getParent();
         mShaderGenerator->validateMaterialIlluminationPasses(tech->getSchemeName(),
-                                                             mat->getName(), mat->getGroup());
+                mat->getName(), mat->getGroup());
         return true;
     }
     return false;
 }
 
-bool SGTechniqueResolverListener::beforeIlluminationPassesCleared(Ogre::Technique *tech)
+bool SGTechniqueResolverListener::beforeIlluminationPassesCleared(Ogre::Technique* tech)
 {
-    if(mShaderGenerator->hasRenderState(tech->getSchemeName()))
-    {
+    if(mShaderGenerator->hasRenderState(tech->getSchemeName())) {
         Ogre::Material* mat = tech->getParent();
         mShaderGenerator->invalidateMaterialIlluminationPasses(tech->getSchemeName(),
-                                                               mat->getName(), mat->getGroup());
+                mat->getName(), mat->getGroup());
         return true;
     }
     return false;

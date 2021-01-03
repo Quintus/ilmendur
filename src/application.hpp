@@ -10,8 +10,7 @@ namespace Ogre {
 class SGTechniqueResolverListener;
 class Window;
 
-class Application
-{
+class Application {
 public:
     static Application* getSingleton();
 

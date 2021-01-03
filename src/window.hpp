@@ -15,8 +15,7 @@ namespace Ogre {
  * operations carried out always affect both windows so that
  * they might not go out of sync.
  */
-class Window
-{
+class Window {
 public:
     Window(int width, int height, std::string title);
     ~Window();

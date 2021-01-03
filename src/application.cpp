@@ -16,8 +16,9 @@ Application::Application()
       mp_window(nullptr),
       mp_sglistener(nullptr)
 {
-    if (sp_application)
+    if (sp_application) {
         throw(std::runtime_error("There can only be one Application instance!"));
+    }
 
     setupGlfw();
     setupOgre();
@@ -39,8 +40,9 @@ Application* Application::getSingleton()
 
 void Application::setupGlfw()
 {
-    if (!glfwInit())
+    if (!glfwInit()) {
         throw(std::runtime_error("Failed to initialise glfw!"));
+    }
 }
 
 void Application::shutdownGlfw()
@@ -62,8 +64,9 @@ void Application::shutdownOgre()
     delete Ogre::OverlaySystem::getSingletonPtr();
     delete Ogre::Root::getSingletonPtr(); // Automatically unloads plugins in correct order, see http://wiki.ogre3d.org/StaticLinking
     // But does not delete the plugins. This needs to be done manually.
-    for (Ogre::Plugin* p_plugin: m_ogre_plugins)
+    for (Ogre::Plugin* p_plugin: m_ogre_plugins) {
         delete p_plugin;
+    }
     m_ogre_plugins.clear();
 }
 
@@ -77,8 +80,9 @@ void Application::loadOgrePlugins()
     m_ogre_plugins.push_back(new Ogre::ParticleFXPlugin());
     m_ogre_plugins.push_back(new Ogre::STBIPlugin());
 
-    for(Ogre::Plugin* p_plugin: m_ogre_plugins)
+    for(Ogre::Plugin* p_plugin: m_ogre_plugins) {
         Ogre::Root::getSingleton().installPlugin(p_plugin);
+    }
 }
 
 void Application::loadOgreResources()
@@ -90,18 +94,18 @@ void Application::loadOgreResources()
 
     // TODO: Change this to look more like OgreBites' ApplicationContextBase::locateResources()
     Ogre::ConfigFile::SectionIterator seci = resconfigfile.getSectionIterator();
-	Ogre::String secName, typeName, archName;
-	while (seci.hasMoreElements()) {
-		secName = seci.peekNextKey();
-		Ogre::ConfigFile::SettingsMultiMap *settings = seci.getNext();
-		Ogre::ConfigFile::SettingsMultiMap::iterator i;
-		for (i = settings->begin(); i != settings->end(); ++i) {
-			typeName = i->first;
-			archName = i->second;
-			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-			archName, typeName, secName);
-		}
-	}
+    Ogre::String secName, typeName, archName;
+    while (seci.hasMoreElements()) {
+        secName = seci.peekNextKey();
+        Ogre::ConfigFile::SettingsMultiMap* settings = seci.getNext();
+        Ogre::ConfigFile::SettingsMultiMap::iterator i;
+        for (i = settings->begin(); i != settings->end(); ++i) {
+            typeName = i->first;
+            archName = i->second;
+            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
+                archName, typeName, secName);
+        }
+    }
 
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
@@ -123,8 +127,7 @@ void Application::setupOgreRTSS()
     if (Ogre::RTShader::ShaderGenerator::initialize()) {
         mp_sglistener = new SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator::getSingletonPtr());
         Ogre::MaterialManager::getSingleton().addListener(mp_sglistener);
-    }
-    else {
+    } else {
         throw(std::runtime_error("Failed to initialise RTSS"));
     }
 }
@@ -158,9 +161,9 @@ void Application::run()
 
     // Main loop
     while (true) {
-		if(glfwGetKey(mp_window->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-			break;
-		}
+        if(glfwGetKey(mp_window->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            break;
+        }
         Ogre::Root::getSingleton().renderOneFrame();
         glfwSwapBuffers(mp_window->getGLFWWindow());
         glfwPollEvents();
