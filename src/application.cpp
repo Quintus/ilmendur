@@ -115,15 +115,19 @@ void Application::loadOgreResources()
     fs::path ogre_internal_resource_dir;
     fs::path rpg_resource_dir;
 
+#ifdef RPG_DEBUG_BUILD
     if (fs::exists(exe_path().parent_path() / fs::u8path(u8"CMakeCache.txt"))) {
         std::cout << "[NOTE] Detected running from build directory (CMakeCache.txt present). Resources will be loaded from the build and source directories, not from the installation directory." << std::endl;
 
-        ogre_internal_resource_dir = exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre
+        ogre_internal_resource_dir = exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre/Media
         rpg_resource_dir           = fs::u8path(RPG_SOURCE_DIR) / fs::u8path(u8"data/meshes");
     } else {
+#endif
         ogre_internal_resource_dir = fs::u8path(RPG_DATADIR) / fs::u8path(u8"ogre");
         rpg_resource_dir           = fs::u8path(RPG_DATADIR) / fs::u8path(u8"meshes");
+#ifdef RPG_DEBUG_BUILD
     }
+#endif
 
     std::cout << "Ogre internal resources directory: " << ogre_internal_resource_dir << std::endl
               << "RPG resource directory: " << rpg_resource_dir << std::endl;

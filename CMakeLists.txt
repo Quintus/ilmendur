@@ -112,6 +112,10 @@ install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_
 # Build configuration header
 # Forwards some build configuration to the source code
 
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(RPG_DEBUG_BUILD ON)
+endif()
+
 configure_file(${CMAKE_SOURCE_DIR}/src/buildconfig.hpp.in ${CMAKE_BINARY_DIR}/buildconfig.hpp)
 include_directories(${CMAKE_BINARY_DIR})
 

@@ -4,4 +4,6 @@
 #define RPG_DATADIR    u8"@CMAKE_INSTALL_FULL_DATADIR@/rpg"
 #define RPG_SOURCE_DIR u8"@CMAKE_SOURCE_DIR@"
 
+#cmakedefine RPG_DEBUG_BUILD
+
 #endif /* RPG_BUILDCONFIG_HPP */
