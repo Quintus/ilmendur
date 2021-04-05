@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
+#include "buildconfig.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
@@ -8,8 +9,32 @@
 #include <OgreGL3PlusPlugin.h>
 #include <OgreParticleFXPlugin.h>
 #include <OgreSTBICodec.h>
+#include <iostream>
+#include <filesystem>
+
+// For exe_path()
+#ifdef __linux
+#include <unistd.h>
+#include <limits.h>
+#endif
+
+namespace fs = std::filesystem;
 
 static Application* sp_application = nullptr;
+
+/// Returns the path to the currently running executable.
+static fs::path exe_path()
+{
+#if defined(__linux__)
+    char buf[PATH_MAX];
+    ssize_t size = readlink("/proc/self/exe", buf, PATH_MAX);
+    if (size < 0)
+        throw(std::runtime_error("Failed to read /proc/self/exe"));
+    return fs::path(std::string(buf, size));
+#else
+#error Dont know how to determine path to running executable on this platform
+#endif
+}
 
 Application::Application()
     : _mp_scene_manager(nullptr),
@@ -87,24 +112,42 @@ void Application::loadOgrePlugins()
 
 void Application::loadOgreResources()
 {
-    // TODO: For now, this loads Ogre's example resources. Of course,
-    // we want to replace this with our own ones!
-    Ogre::ConfigFile resconfigfile;
-    resconfigfile.load("deps/share/OGRE/resources.cfg"); // Assumes build dir as current working directory
+    fs::path depsdir = exe_path().parent_path() / fs::u8path(u8"deps");
 
-    // TODO: Change this to look more like OgreBites' ApplicationContextBase::locateResources()
-    Ogre::ConfigFile::SectionIterator seci = resconfigfile.getSectionIterator();
-    Ogre::String secName, typeName, archName;
-    while (seci.hasMoreElements()) {
-        secName = seci.peekNextKey();
-        Ogre::ConfigFile::SettingsMultiMap* settings = seci.getNext();
-        Ogre::ConfigFile::SettingsMultiMap::iterator i;
-        for (i = settings->begin(); i != settings->end(); ++i) {
-            typeName = i->first;
-            archName = i->second;
-            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-                archName, typeName, secName);
+    if (fs::exists(depsdir)) {
+        std::cout << "[NOTE] Detected running from build directory. Resources will be loaded from the build and source directories, not from the installation directory." << std::endl;
+
+        /* First add Ogre's own OgreInternal resources. These are
+         * taken from Ogre's resources.cfg's OgreInternal section,
+         * which they have to match. Note the list is repeated
+         * in the `else' branch below. */
+        std::vector<fs::path> ogredirs = {depsdir / fs::u8path(u8"share/OGRE/Media/ShadowVolume"),
+                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/materials"),
+                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/GLSL"),
+                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/HLSL_Cg"),
+                                          depsdir / fs::u8path(u8"share/OGRE/Media/Terrain")};
+        for (const fs::path& ogredir: ogredirs) {
+            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
         }
+
+        // Now add the project's own resources
+        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(exe_path().parent_path().parent_path() / fs::u8path(u8"data/meshes"), "FileSystem", "General");
+    } else {
+        std::cout << "Loading resources from " << RPG_DATADIR << "." << std::endl;
+
+        // Note the same list in the other `if' branch.
+        fs::path datadir = fs::u8path(RPG_DATADIR);
+        std::vector<fs::path> ogredirs = {datadir / fs::u8path(u8"ogre/ShadowVolume"),
+                                          datadir / fs::u8path(u8"ogre/RTShaderLib/materials"),
+                                          datadir / fs::u8path(u8"ogre/RTShaderLib/GLSL"),
+                                          datadir / fs::u8path(u8"ogre/RTShaderLib/HLSL_Cg"),
+                                          datadir / fs::u8path(u8"ogre/Terrain")};
+        for (const fs::path& ogredir: ogredirs) {
+            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
+        }
+
+        // Now add the project's own resources
+        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(datadir / fs::u8path(u8"meshes"), "FileSystem", "General");
     }
 
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
@@ -208,8 +251,10 @@ void Application::_make_a_scene()
     mp_window->getOgreRenderWindow()->addViewport(p_camera);
 
     // Add something into the scene
-    Ogre::Entity* p_entity = _mp_scene_manager->createEntity("Sinbad.mesh");
+    Ogre::Entity* p_entity = _mp_scene_manager->createEntity("Cube.mesh");
     Ogre::SceneNode* p_node = _mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    p_node->rotate(Ogre::Vector3(0, 0, 1), Ogre::Degree(30));
+    p_node->rotate(Ogre::Vector3(0, 1, 0), Ogre::Degree(35));
     p_node->attachObject(p_entity);
 }
 

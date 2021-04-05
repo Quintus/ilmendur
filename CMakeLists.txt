@@ -78,7 +78,7 @@ include_directories(${RPG_DEPS_INSTALL_DIR}/include
                     ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX
                     ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec)
 add_dependencies(rpg ogre3d glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
-target_link_libraries(rpg ${RPG_DEPENDENCIES})
+target_link_libraries(rpg ${RPG_DEPENDENCIES} stdc++fs)
 
 # System-specific libraries are linked dynamically from the host.
 # Following is the configuration to find them and what to do
@@ -104,6 +104,16 @@ endif()
 # Installation configuration
 
 include(GNUInstallDirs)
+install(TARGETS rpg DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg)
+install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg/ogre)
+
+########################################
+# Build configuration header
+# Forwards some build configuration to the source code
+
+configure_file(${CMAKE_SOURCE_DIR}/src/buildconfig.hpp.in ${CMAKE_BINARY_DIR}/buildconfig.hpp)
+include_directories(${CMAKE_BINARY_DIR})
 
 ########################################
 # Print summary
