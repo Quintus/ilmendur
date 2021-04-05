@@ -106,7 +106,7 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS rpg DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg)
-install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg/ogre)
+install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg/ogre)
 
 ########################################
 # Build configuration header

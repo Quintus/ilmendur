@@ -112,44 +112,38 @@ void Application::loadOgrePlugins()
 
 void Application::loadOgreResources()
 {
-    fs::path depsdir = exe_path().parent_path() / fs::u8path(u8"deps");
+    fs::path ogre_internal_resource_dir;
+    fs::path rpg_resource_dir;
 
-    if (fs::exists(depsdir)) {
-        std::cout << "[NOTE] Detected running from build directory. Resources will be loaded from the build and source directories, not from the installation directory." << std::endl;
+    if (fs::exists(exe_path().parent_path() / fs::u8path(u8"CMakeCache.txt"))) {
+        std::cout << "[NOTE] Detected running from build directory (CMakeCache.txt present). Resources will be loaded from the build and source directories, not from the installation directory." << std::endl;
 
-        /* First add Ogre's own OgreInternal resources. These are
-         * taken from Ogre's resources.cfg's OgreInternal section,
-         * which they have to match. Note the list is repeated
-         * in the `else' branch below. */
-        std::vector<fs::path> ogredirs = {depsdir / fs::u8path(u8"share/OGRE/Media/ShadowVolume"),
-                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/materials"),
-                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/GLSL"),
-                                          depsdir / fs::u8path(u8"share/OGRE/Media/RTShaderLib/HLSL_Cg"),
-                                          depsdir / fs::u8path(u8"share/OGRE/Media/Terrain")};
-        for (const fs::path& ogredir: ogredirs) {
-            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
-        }
-
-        // Now add the project's own resources
-        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(exe_path().parent_path().parent_path() / fs::u8path(u8"data/meshes"), "FileSystem", "General");
+        ogre_internal_resource_dir = exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre
+        rpg_resource_dir           = fs::u8path(RPG_SOURCE_DIR) / fs::u8path(u8"data/meshes");
     } else {
-        std::cout << "Loading resources from " << RPG_DATADIR << "." << std::endl;
-
-        // Note the same list in the other `if' branch.
-        fs::path datadir = fs::u8path(RPG_DATADIR);
-        std::vector<fs::path> ogredirs = {datadir / fs::u8path(u8"ogre/ShadowVolume"),
-                                          datadir / fs::u8path(u8"ogre/RTShaderLib/materials"),
-                                          datadir / fs::u8path(u8"ogre/RTShaderLib/GLSL"),
-                                          datadir / fs::u8path(u8"ogre/RTShaderLib/HLSL_Cg"),
-                                          datadir / fs::u8path(u8"ogre/Terrain")};
-        for (const fs::path& ogredir: ogredirs) {
-            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
-        }
-
-        // Now add the project's own resources
-        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(datadir / fs::u8path(u8"meshes"), "FileSystem", "General");
+        ogre_internal_resource_dir = fs::u8path(RPG_DATADIR) / fs::u8path(u8"ogre");
+        rpg_resource_dir           = fs::u8path(RPG_DATADIR) / fs::u8path(u8"meshes");
     }
 
+    std::cout << "Ogre internal resources directory: " << ogre_internal_resource_dir << std::endl
+              << "RPG resource directory: " << rpg_resource_dir << std::endl;
+
+    /* First add Ogre's own OgreInternal resources. These are
+     * taken from Ogre's resources.cfg's OgreInternal section,
+     * which they have to match. */
+    std::vector<fs::path> ogredirs = {ogre_internal_resource_dir / fs::u8path(u8"ShadowVolume"),
+                                      ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/materials"),
+                                      ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/GLSL"),
+                                      ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/HLSL_Cg"),
+                                      ogre_internal_resource_dir / fs::u8path(u8"Terrain")};
+    for (const fs::path& ogredir: ogredirs) {
+        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
+    }
+
+    // Now add the project's own resources
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation(rpg_resource_dir, "FileSystem", "General");
+
+    // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
