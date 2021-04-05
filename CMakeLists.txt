@@ -42,6 +42,11 @@ add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter) # Ogre has lots of these
 add_compile_options(-DGLFW_INCLUDE_NONE=1) # Ogre ships its own set of OpenGL headers
 
+if(UNIX)
+  # Request POSIX.1-2008
+  add_compile_options(-D_POSIX_C_SOURCE=200809L)
+endif()
+
 ########################################
 # Game source code
 
