@@ -63,7 +63,7 @@ add_executable(rpg ${rpg_sources})
 # CMAKE_PREFIX_PATH is set for completeness. find_package()
 # operates on it, but all dependencies built automatically
 # are included in RPG_DEPENDENCIES with an absolute path anyway.
-set(RPG_DEPS_SRC_DIR      ${CMAKE_SOURCE_DIR}/deps)
+set(RPG_DEPS_SRC_DIR      ${CMAKE_BINARY_DIR}/deps-source)
 set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
 set(CMAKE_PREFIX_PATH     ${RPG_DEPS_INSTALL_DIR})
 

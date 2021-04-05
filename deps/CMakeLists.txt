@@ -67,9 +67,11 @@
 include(ExternalProject)
 
 ExternalProject_Add(zlib
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zlib-1.2.11
+  URL "http://www.zlib.net/zlib-1.2.11.tar.gz"
+  URL_HASH SHA256=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zlib
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/zlib-1.2.11/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/zlib/configure
                     --prefix=${RPG_DEPS_INSTALL_DIR}
                     --static
   BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
@@ -79,9 +81,11 @@ list(APPEND RPG_DEPENDENCIES
 
 ExternalProject_Add(libpng
   DEPENDS zlib
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/libpng-1.6.37
+  URL "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz?download"
+  URL_HASH SHA256=daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/libpng
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/libpng-1.6.37/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/libpng/configure
                      --prefix=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
@@ -96,10 +100,12 @@ list(APPEND RPG_DEPENDENCIES
 # Harfbuzz, and then build Freetype again with Harfbuzz support.
 ExternalProject_Add(freetype-stage1
   DEPENDS zlib libpng
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype-2.10.4
+  URL "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.4.tar.gz"
+  URL_HASH SHA256=5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
-                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype-2.10.4
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype/configure
+                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype
                      --prefix=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
@@ -114,9 +120,11 @@ ExternalProject_Add(freetype-stage1
 # see above
 
 ExternalProject_Add(icu
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/icu-68.2
+  URL "https://github.com/unicode-org/icu/releases/download/release-68-2/icu4c-68_2-src.tgz"
+  URL_HASH SHA256=c79193dee3907a2199b8296a93b52c5cb74332c26f3d167269487680d479d625
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/icu
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/icu-68.2/source/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/icu/source/configure
                     --prefix=${RPG_DEPS_INSTALL_DIR}
                     --enable-static
                     --disable-shared
@@ -134,9 +142,11 @@ list(APPEND RPG_DEPENDENCIES
 # support is needed. It has no further dependencies as of 2020.
 ExternalProject_Add(harfbuzz
   DEPENDS freetype-stage1 icu
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/harfbuzz-2.7.4
+  URL "https://github.com/harfbuzz/harfbuzz/releases/download/2.8.0/harfbuzz-2.8.0.tar.xz"
+  URL_HASH SHA256=a1079fd021adaf5683351f34587a255975cc3bcadba31246ae40ebebb95ecd42
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/harfbuzz
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/harfbuzz-2.7.4/configure
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/harfbuzz/configure
   --prefix=${RPG_DEPS_INSTALL_DIR}
   --enable-static
   --disable-shared
@@ -157,12 +167,16 @@ list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz-icu.a)
 
+# Freetype stage2 reuses the sources already downloaded by freetype stage 1.
+# Hence, DOWNLOAD_COMMAND is an empty string. Leaving it out entirely is
+# not possible, as cmake would complain.
 ExternalProject_Add(freetype
   DEPENDS zlib libpng harfbuzz
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype-2.10.4
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype-2.10.4/configure
-                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype-2.10.4
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype/configure
+                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype
                      --prefix=${RPG_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
@@ -188,7 +202,9 @@ list(APPEND RPG_DEPENDENCIES
 # to Ogre's build system below.
 ExternalProject_Add(zziplib
   DEPENDS zlib
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zziplib-0.13.71
+  URL "https://github.com/gdraheim/zziplib/archive/refs/tags/v0.13.72.tar.gz"
+  URL_HASH SHA256=93ef44bf1f1ea24fc66080426a469df82fa631d13ca3b2e4abaeab89538518dc
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zziplib
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
              -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
@@ -235,7 +251,9 @@ list(APPEND RPG_DEPENDENCIES
 #   See if the project can do without for now.
 ExternalProject_Add(ogre3d
   DEPENDS zlib zziplib freetype
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/ogre-1.12.10
+  URL "https://github.com/OGRECave/ogre/archive/v1.12.11.zip"
+  URL_HASH SHA256=b37af7c6bec50f07126cad1c07538cfb2b1ae5093a0c1bc2f97326f004957bea
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/ogre
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
              -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
@@ -268,8 +286,8 @@ ExternalProject_Add(ogre3d
 # probably be removed once only our own models are used.
 ExternalProject_Add_Step(ogre3d install-sample-media
   DEPENDEES build
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Samples/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre-1.12.10/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/)
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre/Samples/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RPG_DEPS_SRC_DIR}/ogre/Media ${RPG_DEPS_INSTALL_DIR}/share/OGRE/Media/)
 list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
@@ -290,7 +308,9 @@ list(APPEND RPG_DEPENDENCIES
 
 # Wayland support can (hopefully) easily be added later by enabling it here.
 ExternalProject_Add(glfw
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/glfw-3.3.2
+  URL "https://github.com/glfw/glfw/releases/download/3.3.3/glfw-3.3.3.zip"
+  URL_HASH SHA256=723087ad45b40cd333be7d1a2cd5e09a28facb7f3acdb69f3e5613bd20543977
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/glfw
   INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
              -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
