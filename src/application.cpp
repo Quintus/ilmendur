@@ -59,9 +59,9 @@ Application::~Application()
     sp_application = nullptr;
 }
 
-Application* Application::getSingleton()
+Application& Application::getSingleton()
 {
-    return sp_application;
+    return *sp_application;
 }
 
 void Application::setupGlfw()

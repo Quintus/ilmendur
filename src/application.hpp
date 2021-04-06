@@ -15,7 +15,7 @@ class Scene;
 
 class Application {
 public:
-    static Application* getSingleton();
+    static Application& getSingleton();
 
     Application();
     ~Application();
