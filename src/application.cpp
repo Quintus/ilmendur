@@ -2,6 +2,7 @@
 #include "resolver.hpp"
 #include "window.hpp"
 #include "buildconfig.hpp"
+#include "scenes/dummy_scene.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
@@ -37,8 +38,7 @@ static fs::path exe_path()
 }
 
 Application::Application()
-    : _mp_scene_manager(nullptr),
-      mp_window(nullptr),
+    : mp_window(nullptr),
       mp_sglistener(nullptr)
 {
     if (sp_application) {
@@ -185,6 +185,12 @@ void Application::shutdownOgreRTSS()
     Ogre::RTShader::ShaderGenerator::destroy();
 }
 
+/// Access the Window for this application.
+Window* Application::getWindow()
+{
+    return mp_window;
+}
+
 /**
  * Creates the window and enters the main loop.
  */
@@ -198,68 +204,30 @@ void Application::run()
     // Loading the resources requires the RTSS to be active.
     loadOgreResources();
 
-    _make_a_scene();
+    // For now, only display the dummy scene
+    m_scene_stack.push(new DummyScene());
 
     // Main loop
-    while (true) {
-        if(glfwGetKey(mp_window->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            break;
-        }
+    while (m_scene_stack.size() > 0) {
+        m_scene_stack.top()->update();
+
         Ogre::Root::getSingleton().renderOneFrame();
         glfwSwapBuffers(mp_window->getGLFWWindow());
         glfwPollEvents();
+
+        if (m_scene_stack.top()->isFinishing()) {
+            delete m_scene_stack.top();
+            m_scene_stack.pop();
+        }
     }
 
-    _destroy_the_scene();
+    // Clear all remaining scenes, if any
+    while (m_scene_stack.size() > 0) {
+        delete m_scene_stack.top();
+        m_scene_stack.pop();
+    }
+
     shutdownOgreRTSS();
     delete mp_window;
     mp_window = nullptr;
-}
-
-void Application::_make_a_scene()
-{
-    // Make a scene manager for this scene
-    _mp_scene_manager = Ogre::Root::getSingleton().createSceneManager();
-
-    // register our scene with the RTSS
-    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(_mp_scene_manager);
-
-    // Enable the overlay system for this scene
-    _mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
-
-    // without light we would just get a black screen
-    Ogre::Light* p_light = _mp_scene_manager->createLight("MainLight");
-    Ogre::SceneNode* p_light_node = _mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_light_node->setPosition(0, 10, 15);
-    p_light_node->attachObject(p_light);
-
-    // also need to tell where we are
-    Ogre::SceneNode* p_cam_node = _mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_cam_node->setPosition(0, 0, 15);
-    p_cam_node->lookAt(Ogre::Vector3(0, 0, -1), Ogre::Node::TS_PARENT);
-
-    // create the camera
-    Ogre::Camera* p_camera = _mp_scene_manager->createCamera("myCam");
-    p_camera->setNearClipDistance(5);
-    p_camera->setAutoAspectRatio(true);
-    p_cam_node->attachObject(p_camera);
-
-    // Departure from tutorial. Add a viewport with the given camera
-    // to the render window.
-    mp_window->getOgreRenderWindow()->addViewport(p_camera);
-
-    // Add something into the scene
-    Ogre::Entity* p_entity = _mp_scene_manager->createEntity("Cube.mesh");
-    Ogre::SceneNode* p_node = _mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_node->rotate(Ogre::Vector3(0, 0, 1), Ogre::Degree(30));
-    p_node->rotate(Ogre::Vector3(0, 1, 0), Ogre::Degree(35));
-    p_node->attachObject(p_entity);
-}
-
-void Application::_destroy_the_scene()
-{
-    mp_window->getOgreRenderWindow()->removeAllViewports();
-    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(_mp_scene_manager);
-    Ogre::Root::getSingleton().destroySceneManager(_mp_scene_manager);
-    _mp_scene_manager = nullptr;
 }

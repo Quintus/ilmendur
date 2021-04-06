@@ -1,6 +1,7 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 #include <vector>
+#include <stack>
 
 // Forward declarations
 namespace Ogre {
@@ -9,6 +10,7 @@ namespace Ogre {
 }
 class SGTechniqueResolverListener;
 class Window;
+class Scene;
 
 class Application {
 public:
@@ -16,6 +18,8 @@ public:
 
     Application();
     ~Application();
+
+    Window* getWindow();
 
     void run();
 private:
@@ -29,14 +33,10 @@ private:
     void setupOgreRTSS();
     void shutdownOgreRTSS();
 
-    // For debugging purposes
-    void _make_a_scene();
-    void _destroy_the_scene();
-    Ogre::SceneManager* _mp_scene_manager;
-
     Window* mp_window;
     std::vector<Ogre::Plugin*> m_ogre_plugins;
     SGTechniqueResolverListener* mp_sglistener;
+    std::stack<Scene*> m_scene_stack;
 };
 
 #endif /* APPLICATION_HPP */
