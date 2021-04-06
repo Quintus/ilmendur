@@ -20,6 +20,7 @@
 #endif
 
 namespace fs = std::filesystem;
+using namespace std;
 
 static Application* sp_application = nullptr;
 
@@ -30,8 +31,8 @@ static fs::path exe_path()
     char buf[PATH_MAX];
     ssize_t size = readlink("/proc/self/exe", buf, PATH_MAX);
     if (size < 0)
-        throw(std::runtime_error("Failed to read /proc/self/exe"));
-    return fs::path(std::string(buf, size));
+        throw(runtime_error("Failed to read /proc/self/exe"));
+    return fs::path(string(buf, size));
 #else
 #error Dont know how to determine path to running executable on this platform
 #endif
@@ -42,7 +43,7 @@ Application::Application()
       mp_sglistener(nullptr)
 {
     if (sp_application) {
-        throw(std::runtime_error("There can only be one Application instance!"));
+        throw(runtime_error("There can only be one Application instance!"));
     }
 
     setupGlfw();
@@ -66,7 +67,7 @@ Application* Application::getSingleton()
 void Application::setupGlfw()
 {
     if (!glfwInit()) {
-        throw(std::runtime_error("Failed to initialise glfw!"));
+        throw(runtime_error("Failed to initialise glfw!"));
     }
 }
 
@@ -97,11 +98,11 @@ void Application::shutdownOgre()
  * what to load. */
 void Application::loadOgrePlugins()
 {
-    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::GL3PlusPlugin>()));
-    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::ParticleFXPlugin>()));
-    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::STBIPlugin>()));
+    m_ogre_plugins.push_back(move(make_unique<Ogre::GL3PlusPlugin>()));
+    m_ogre_plugins.push_back(move(make_unique<Ogre::ParticleFXPlugin>()));
+    m_ogre_plugins.push_back(move(make_unique<Ogre::STBIPlugin>()));
 
-    for(std::unique_ptr<Ogre::Plugin>& p_plugin: m_ogre_plugins) {
+    for(unique_ptr<Ogre::Plugin>& p_plugin: m_ogre_plugins) {
         Ogre::Root::getSingleton().installPlugin(p_plugin.get());
     }
 }
@@ -113,7 +114,7 @@ void Application::loadOgreResources()
 
 #ifdef RPG_DEBUG_BUILD
     if (fs::exists(exe_path().parent_path() / fs::u8path(u8"CMakeCache.txt"))) {
-        std::cout << "[NOTE] Detected running from build directory (CMakeCache.txt present). Resources will be loaded from the build and source directories, not from the installation directory." << std::endl;
+        cout << "[NOTE] Detected running from build directory (CMakeCache.txt present). Resources will be loaded from the build and source directories, not from the installation directory." << endl;
 
         ogre_internal_resource_dir = exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre/Media
         rpg_resource_dir           = fs::u8path(RPG_SOURCE_DIR) / fs::u8path(u8"data/meshes");
@@ -125,13 +126,13 @@ void Application::loadOgreResources()
     }
 #endif
 
-    std::cout << "Ogre internal resources directory: " << ogre_internal_resource_dir << std::endl
-              << "RPG resource directory: " << rpg_resource_dir << std::endl;
+    cout << "Ogre internal resources directory: " << ogre_internal_resource_dir << endl
+         << "RPG resource directory: " << rpg_resource_dir << endl;
 
     /* First add Ogre's own OgreInternal resources. These are
      * taken from Ogre's resources.cfg's OgreInternal section,
      * which they have to match. */
-    std::vector<fs::path> ogredirs = {ogre_internal_resource_dir / fs::u8path(u8"ShadowVolume"),
+    vector<fs::path> ogredirs = {ogre_internal_resource_dir / fs::u8path(u8"ShadowVolume"),
                                       ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/materials"),
                                       ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/GLSL"),
                                       ogre_internal_resource_dir / fs::u8path(u8"RTShaderLib/HLSL_Cg"),
@@ -165,7 +166,7 @@ void Application::setupOgreRTSS()
         mp_sglistener = new SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator::getSingletonPtr());
         Ogre::MaterialManager::getSingleton().addListener(mp_sglistener);
     } else {
-        throw(std::runtime_error("Failed to initialise RTSS"));
+        throw(runtime_error("Failed to initialise RTSS"));
     }
 }
 
@@ -201,7 +202,7 @@ void Application::run()
     loadOgreResources();
 
     // For now, only display the dummy scene
-    m_scene_stack.push(std::move(std::make_unique<DummyScene>()));
+    m_scene_stack.push(move(make_unique<DummyScene>()));
 
     // Main loop
     while (m_scene_stack.size() > 0) {
