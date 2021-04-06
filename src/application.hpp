@@ -2,6 +2,7 @@
 #define APPLICATION_HPP
 #include <vector>
 #include <stack>
+#include <memory>
 
 // Forward declarations
 namespace Ogre {
@@ -36,7 +37,7 @@ private:
     Window* mp_window;
     std::vector<Ogre::Plugin*> m_ogre_plugins;
     SGTechniqueResolverListener* mp_sglistener;
-    std::stack<Scene*> m_scene_stack;
+    std::stack<std::unique_ptr<Scene>> m_scene_stack;
 };
 
 #endif /* APPLICATION_HPP */

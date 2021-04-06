@@ -205,7 +205,7 @@ void Application::run()
     loadOgreResources();
 
     // For now, only display the dummy scene
-    m_scene_stack.push(new DummyScene());
+    m_scene_stack.push(std::move(std::make_unique<DummyScene>()));
 
     // Main loop
     while (m_scene_stack.size() > 0) {
@@ -216,14 +216,12 @@ void Application::run()
         glfwPollEvents();
 
         if (m_scene_stack.top()->isFinishing()) {
-            delete m_scene_stack.top();
             m_scene_stack.pop();
         }
     }
 
     // Clear all remaining scenes, if any
     while (m_scene_stack.size() > 0) {
-        delete m_scene_stack.top();
         m_scene_stack.pop();
     }
 
