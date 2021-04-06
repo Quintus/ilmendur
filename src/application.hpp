@@ -20,7 +20,7 @@ public:
     Application();
     ~Application();
 
-    Window* getWindow();
+    Window& getWindow();
 
     void run();
 private:
@@ -35,8 +35,8 @@ private:
     void shutdownOgreRTSS();
 
     Window* mp_window;
-    std::vector<std::unique_ptr<Ogre::Plugin>> m_ogre_plugins;
     SGTechniqueResolverListener* mp_sglistener;
+    std::vector<std::unique_ptr<Ogre::Plugin>> m_ogre_plugins;
     std::stack<std::unique_ptr<Scene>> m_scene_stack;
 };
 

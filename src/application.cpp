@@ -183,9 +183,9 @@ void Application::shutdownOgreRTSS()
 }
 
 /// Access the Window for this application.
-Window* Application::getWindow()
+Window& Application::getWindow()
 {
-    return mp_window;
+    return *mp_window;
 }
 
 /**
