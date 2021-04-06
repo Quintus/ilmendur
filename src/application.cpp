@@ -88,10 +88,6 @@ void Application::shutdownOgre()
 {
     delete Ogre::OverlaySystem::getSingletonPtr();
     delete Ogre::Root::getSingletonPtr(); // Automatically unloads plugins in correct order, see http://wiki.ogre3d.org/StaticLinking
-    // But does not delete the plugins. This needs to be done manually.
-    for (Ogre::Plugin* p_plugin: m_ogre_plugins) {
-        delete p_plugin;
-    }
     m_ogre_plugins.clear();
 }
 
@@ -101,12 +97,12 @@ void Application::shutdownOgre()
  * what to load. */
 void Application::loadOgrePlugins()
 {
-    m_ogre_plugins.push_back(new Ogre::GL3PlusPlugin());
-    m_ogre_plugins.push_back(new Ogre::ParticleFXPlugin());
-    m_ogre_plugins.push_back(new Ogre::STBIPlugin());
+    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::GL3PlusPlugin>()));
+    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::ParticleFXPlugin>()));
+    m_ogre_plugins.push_back(std::move(std::make_unique<Ogre::STBIPlugin>()));
 
-    for(Ogre::Plugin* p_plugin: m_ogre_plugins) {
-        Ogre::Root::getSingleton().installPlugin(p_plugin);
+    for(std::unique_ptr<Ogre::Plugin>& p_plugin: m_ogre_plugins) {
+        Ogre::Root::getSingleton().installPlugin(p_plugin.get());
     }
 }
 

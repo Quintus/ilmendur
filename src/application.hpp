@@ -35,7 +35,7 @@ private:
     void shutdownOgreRTSS();
 
     Window* mp_window;
-    std::vector<Ogre::Plugin*> m_ogre_plugins;
+    std::vector<std::unique_ptr<Ogre::Plugin>> m_ogre_plugins;
     SGTechniqueResolverListener* mp_sglistener;
     std::stack<std::unique_ptr<Scene>> m_scene_stack;
 };
