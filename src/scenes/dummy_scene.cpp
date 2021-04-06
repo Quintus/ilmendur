@@ -7,7 +7,8 @@
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 
 DummyScene::DummyScene()
-    : Scene("dummy scene")
+    : Scene("dummy scene"),
+      mp_cube_node(nullptr)
 {
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
@@ -38,10 +39,8 @@ DummyScene::DummyScene()
 
     // Add something into the scene
     Ogre::Entity* p_entity = mp_scene_manager->createEntity("Cube.mesh");
-    Ogre::SceneNode* p_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_node->rotate(Ogre::Vector3(0, 0, 1), Ogre::Degree(30));
-    p_node->rotate(Ogre::Vector3(0, 1, 0), Ogre::Degree(35));
-    p_node->attachObject(p_entity);
+    mp_cube_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    mp_cube_node->attachObject(p_entity);
 }
 
 DummyScene::~DummyScene()
@@ -55,4 +54,7 @@ void DummyScene::update()
     if(glfwGetKey(Application::getSingleton().getWindow().getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         finish();
     }
+
+    mp_cube_node->rotate(Ogre::Vector3(0, 0, 1), Ogre::Degree(1));
+    mp_cube_node->rotate(Ogre::Vector3(0, 1, 0), Ogre::Degree(1));
 }
