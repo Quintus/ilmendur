@@ -1,8 +1,8 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
-#include "buildconfig.hpp"
 #include "scenes/dummy_scene.hpp"
+#include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
