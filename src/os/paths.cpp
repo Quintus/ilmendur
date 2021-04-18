@@ -1,4 +1,5 @@
 #include "paths.hpp"
+#include <buildconfig.hpp>
 #include <string>
 #include <iostream>
 #include <filesystem>
@@ -130,4 +131,35 @@ fs::path OS::saves_dir()
 fs::path OS::slot2path(unsigned int slot)
 {
     return OS::saves_dir() / (to_string(slot) + ".sav");
+}
+
+fs::path OS::game_resource_dir()
+{
+#ifdef RPG_DEBUG_BUILD
+    // Support running from the build directory in debug mode
+    if (fs::exists(OS::exe_path().parent_path() / fs::u8path("CMakeCache.txt"))) {
+        return fs::u8path(RPG_SOURCE_DIR) / fs::u8path("data");
+    } else {
+#endif
+        return fs::u8path(RPG_DATADIR);
+#ifdef RPG_DEBUG_BUILD
+    }
+#endif
+}
+
+fs::path OS::ogre_resource_dir()
+{
+#ifdef RPG_DEBUG_BUILD
+    // Support running from the build directory in debug mode.
+    // Note that Ogre's internal resources in this case are only available
+    // within the extracted downloaded ogre tarball.
+    if (fs::exists(OS::exe_path().parent_path() / fs::u8path("CMakeCache.txt"))) {
+        return OS::exe_path().parent_path() / fs::u8path("deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre/Media
+    }
+    else {
+#endif
+        return OS::game_resource_dir() / fs::u8path("ogre");
+#ifdef RPG_DEBUG_BUILD
+    }
+#endif
 }

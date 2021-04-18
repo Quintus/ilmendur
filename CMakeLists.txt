@@ -104,7 +104,12 @@ endif()
 # Installation configuration
 
 include(GNUInstallDirs)
+
+# Binary executable
 install(TARGETS rpg DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Game data. Ensure this matches the expectations of
+# OS::game_resource_dir() and OS::ogre_resource_dir().
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg)
 install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg/ogre)
 
