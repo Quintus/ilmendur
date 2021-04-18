@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
+#include "os/paths.hpp"
 #include "scenes/dummy_scene.hpp"
 #include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
@@ -13,30 +14,10 @@
 #include <iostream>
 #include <filesystem>
 
-// For exe_path()
-#ifdef __linux
-#include <unistd.h>
-#include <limits.h>
-#endif
-
 namespace fs = std::filesystem;
 using namespace std;
 
 static Application* sp_application = nullptr;
-
-/// Returns the path to the currently running executable.
-static fs::path exe_path()
-{
-#if defined(__linux__)
-    char buf[PATH_MAX];
-    ssize_t size = readlink("/proc/self/exe", buf, PATH_MAX);
-    if (size < 0)
-        throw(runtime_error("Failed to read /proc/self/exe"));
-    return fs::path(string(buf, size));
-#else
-#error Dont know how to determine path to running executable on this platform
-#endif
-}
 
 Application::Application()
     : mp_window(nullptr),
@@ -113,10 +94,10 @@ void Application::loadOgreResources()
     fs::path rpg_resource_dir;
 
 #ifdef RPG_DEBUG_BUILD
-    if (fs::exists(exe_path().parent_path() / fs::u8path(u8"CMakeCache.txt"))) {
+    if (fs::exists(OS::exe_path().parent_path() / fs::u8path(u8"CMakeCache.txt"))) {
         cout << "[NOTE] Detected running from build directory (CMakeCache.txt present). Resources will be loaded from the build and source directories, not from the installation directory." << endl;
 
-        ogre_internal_resource_dir = exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre/Media
+        ogre_internal_resource_dir = OS::exe_path().parent_path() / fs::u8path(u8"deps-source/ogre/Media"); // = ${CMAKE_BINARY_DIR}/deps-source/ogre/Media
         rpg_resource_dir           = fs::u8path(RPG_SOURCE_DIR) / fs::u8path(u8"data/meshes");
     } else {
 #endif
