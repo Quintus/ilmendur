@@ -27,6 +27,11 @@ Application::Application()
         throw(runtime_error("There can only be one Application instance!"));
     }
 
+    cout << "Welcome, adventurer, to project version " << RPG_VERSION << "." << endl;
+    if (RPG_VERSION_MAJOR < 1 || RPG_VERSION_MINOR % 2 == 1) {
+        cout << "This is a development version. Be careful." << endl;
+    }
+
     setupGlfw();
     setupOgre();
 
