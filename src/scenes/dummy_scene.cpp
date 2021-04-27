@@ -35,7 +35,7 @@ DummyScene::DummyScene()
 
     // Departure from tutorial. Add a viewport with the given camera
     // to the render window.
-    Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
+    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
 
     // Add something into the scene
     Ogre::Entity* p_entity = mp_scene_manager->createEntity("Cube.mesh");
@@ -45,13 +45,13 @@ DummyScene::DummyScene()
 
 DummyScene::~DummyScene()
 {
-    Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
+    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
 }
 
 void DummyScene::update()
 {
-    if(glfwGetKey(Application::getSingleton().getWindow().getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if(glfwGetKey(Core::Application::getSingleton().getWindow().getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         finish();
     }
 

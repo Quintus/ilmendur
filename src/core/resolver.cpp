@@ -1,6 +1,8 @@
 #include "resolver.hpp"
 #include "OgreTechnique.h"
 
+using namespace Core;
+
 SGTechniqueResolverListener::SGTechniqueResolverListener(Ogre::RTShader::ShaderGenerator* pShaderGenerator)
 {
     mShaderGenerator = pShaderGenerator;

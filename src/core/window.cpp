@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 
+using namespace Core;
+
 Window::Window(int width, int height, std::string title)
     : mp_glfw_window(nullptr),
       mp_ogre_window(nullptr)

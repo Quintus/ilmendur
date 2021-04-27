@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-    Application app;
+    Core::Application app;
     app.run();
     return 0;
 }

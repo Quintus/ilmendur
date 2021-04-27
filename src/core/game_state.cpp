@@ -6,6 +6,7 @@
 #include <string>
 
 using namespace std;
+using namespace Core;
 namespace fs = std::filesystem;
 
 GameState GameState::instance;

@@ -16,6 +16,7 @@
 
 namespace fs = std::filesystem;
 using namespace std;
+using namespace Core;
 
 static Application* sp_application = nullptr;
 
