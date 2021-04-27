@@ -39,9 +39,6 @@ namespace Core {
             int bombs = 0;
         } equipment[2]; // one equipment struct per player; use "players" enum indices for access
 
-        static void load(unsigned int slot);
-        void save(unsigned int slot);
-
         static GameState instance;
     };
 
