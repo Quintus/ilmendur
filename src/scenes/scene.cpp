@@ -1,6 +1,8 @@
 #include "scene.hpp"
 #include <OGRE/Ogre.h>
 
+using namespace SceneSystem;
+
 Scene::Scene(const std::string& name)
     : mp_scene_manager(Ogre::Root::getSingleton().createSceneManager()),
       m_name(name),

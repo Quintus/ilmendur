@@ -175,7 +175,7 @@ void Application::run()
     loadOgreResources();
 
     // For now, only display the dummy scene
-    m_scene_stack.push(move(make_unique<DummyScene>()));
+    m_scene_stack.push(move(make_unique<SceneSystem::DummyScene>()));
 
     // Main loop
     while (m_scene_stack.size() > 0) {

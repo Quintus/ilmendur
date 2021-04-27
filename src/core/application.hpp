@@ -9,11 +9,12 @@ namespace Ogre {
     class Plugin;
 }
 
-class Scene;
+namespace SceneSystem {
+    class Scene;
+}
 
 namespace Core {
 
-    // More forward declarations
     class SGTechniqueResolverListener;
     class Window;
 
@@ -41,7 +42,7 @@ namespace Core {
         Window* mp_window;
         SGTechniqueResolverListener* mp_sglistener;
         std::vector<std::unique_ptr<Ogre::Plugin>> m_ogre_plugins;
-        std::stack<std::unique_ptr<Scene>> m_scene_stack;
+        std::stack<std::unique_ptr<SceneSystem::Scene>> m_scene_stack;
     };
 
 }

@@ -6,15 +6,19 @@ namespace Ogre {
     class SceneNode;
 }
 
-class DummyScene: public Scene
-{
-public:
-    DummyScene();
-    virtual ~DummyScene();
+namespace SceneSystem {
 
-    virtual void update();
-private:
-    Ogre::SceneNode* mp_cube_node;
-};
+    class DummyScene: public Scene
+    {
+    public:
+        DummyScene();
+        virtual ~DummyScene();
+
+        virtual void update();
+    private:
+        Ogre::SceneNode* mp_cube_node;
+    };
+
+}
 
 #endif /* RPG_DUMMY_SCENE_HPP */

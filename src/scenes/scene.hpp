@@ -6,23 +6,27 @@ namespace Ogre {
     class SceneManager;
 }
 
-class Scene
-{
-public:
-    Scene(const std::string& name);
-    virtual ~Scene();
+namespace SceneSystem {
 
-    const std::string& getName() { return m_name; }
+    class Scene
+    {
+    public:
+        Scene(const std::string& name);
+        virtual ~Scene();
 
-    virtual void update() {};
+        const std::string& getName() { return m_name; }
 
-    void finish();
-    bool isFinishing();
-protected:
-    Ogre::SceneManager* mp_scene_manager;
-private:
-    std::string m_name;
-    bool m_finish;
-};
+        virtual void update() {};
+
+        void finish();
+        bool isFinishing();
+    protected:
+        Ogre::SceneManager* mp_scene_manager;
+    private:
+        std::string m_name;
+        bool m_finish;
+    };
+
+}
 
 #endif /* RPG_SCENE_HPP */

@@ -6,6 +6,8 @@
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 
+using namespace SceneSystem;
+
 DummyScene::DummyScene()
     : Scene("dummy scene"),
       mp_cube_node(nullptr)
