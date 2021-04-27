@@ -1,5 +1,5 @@
 #include "game_state.hpp"
-#include "os/paths.hpp"
+#include "../os/paths.hpp"
 #include <buildconfig.hpp>
 #include <filesystem>
 #include <fstream>

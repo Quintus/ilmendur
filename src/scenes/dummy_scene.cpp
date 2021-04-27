@@ -1,6 +1,6 @@
 #include "dummy_scene.hpp"
-#include "../application.hpp"
-#include "../window.hpp"
+#include "../core/application.hpp"
+#include "../core/window.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>

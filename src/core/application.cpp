@@ -1,8 +1,8 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
-#include "os/paths.hpp"
-#include "scenes/dummy_scene.hpp"
+#include "../os/paths.hpp"
+#include "../scenes/dummy_scene.hpp"
 #include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
