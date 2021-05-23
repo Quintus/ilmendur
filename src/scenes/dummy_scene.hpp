@@ -4,6 +4,7 @@
 
 namespace Ogre {
     class SceneNode;
+    class ManualObject;
 }
 
 namespace SceneSystem {
@@ -14,9 +15,12 @@ namespace SceneSystem {
         DummyScene();
         virtual ~DummyScene();
 
+        virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void update();
     private:
-        Ogre::SceneNode* mp_cube_node;
+        Ogre::SceneNode* mp_area_node;
+        Ogre::SceneNode* mp_cam_node;
+        Ogre::ManualObject* mp_obj;
     };
 
 }

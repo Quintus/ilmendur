@@ -26,6 +26,7 @@ namespace Core {
         ~Application();
 
         Window& getWindow();
+        SceneSystem::Scene& currentScene();
 
         void run();
     private:

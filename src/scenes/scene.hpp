@@ -16,6 +16,7 @@ namespace SceneSystem {
 
         const std::string& getName() { return m_name; }
 
+        virtual void processKeyInput(int key, int scancode, int action, int mods) {};
         virtual void update() {};
 
         void finish();

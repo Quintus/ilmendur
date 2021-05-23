@@ -20,6 +20,14 @@ using namespace Core;
 
 static Application* sp_application = nullptr;
 
+static void processGLFWKeys(GLFWwindow* p_glfw_window,
+                            int key, int scancode, int action, int mods)
+{
+    Application::getSingleton()
+        .currentScene()
+        .processKeyInput(key, scancode, action, mods);
+}
+
 Application::Application()
     : mp_window(nullptr),
       mp_sglistener(nullptr)
@@ -161,6 +169,11 @@ Window& Application::getWindow()
     return *mp_window;
 }
 
+SceneSystem::Scene& Application::currentScene()
+{
+    return *m_scene_stack.top();
+}
+
 /**
  * Creates the window and enters the main loop.
  */
@@ -176,6 +189,9 @@ void Application::run()
 
     // For now, only display the dummy scene
     m_scene_stack.push(move(make_unique<SceneSystem::DummyScene>()));
+
+    // Register GLFW callbacks
+    glfwSetKeyCallback(mp_window->getGLFWWindow(), processGLFWKeys);
 
     // Main loop
     while (m_scene_stack.size() > 0) {

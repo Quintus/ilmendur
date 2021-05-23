@@ -6,12 +6,13 @@
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
+#include <OGRE/OgreMath.h>
 
 using namespace SceneSystem;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
-      mp_cube_node(nullptr)
+      mp_area_node(nullptr)
 {
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
@@ -20,44 +21,83 @@ DummyScene::DummyScene()
     mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
 
     // without light we would just get a black screen
-    Ogre::Light* p_light = mp_scene_manager->createLight("MainLight");
-    Ogre::SceneNode* p_light_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_light_node->setPosition(0, 10, 15);
-    p_light_node->attachObject(p_light);
+    mp_scene_manager->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
+
+    Ogre::Light* p_light2 = mp_scene_manager->createLight("Light2");
+    Ogre::SceneNode* p_light_node2 = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    p_light2->setType(Ogre::Light::LT_POINT);
+    p_light_node2->setPosition(0, 100, 20);
+    p_light_node2->attachObject(p_light2);
 
     // also need to tell where we are
-    Ogre::SceneNode* p_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_cam_node->setPosition(0, 0, 15);
-    p_cam_node->lookAt(Ogre::Vector3(0, 0, -1), Ogre::Node::TS_PARENT);
+    mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    mp_cam_node->setPosition(0, 0, 5);
+    /* Align camera with Blender's axes. Blender has Z pointing upwards
+     * while Ogre's camera by default faces down the Z axis, i.e. Ogre
+     * treats the Y axis as the height. The below line rotates the camera
+     * so that it faces up the Y axis, making the Z axis the upwards direction
+     * like it is in Blender. */
+    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z) * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
 
     // create the camera
     Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
     p_camera->setNearClipDistance(5);
     p_camera->setAutoAspectRatio(true);
-    p_cam_node->attachObject(p_camera);
+    mp_cam_node->attachObject(p_camera);
 
-    // Departure from tutorial. Add a viewport with the given camera
-    // to the render window.
+    // Add a viewport with the given camera to the render window.
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
 
-    // Add something into the scene
-    Ogre::Entity* p_entity = mp_scene_manager->createEntity("Cube.mesh");
-    mp_cube_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_cube_node->attachObject(p_entity);
+    // Load the test area. Note the test area model has the floor in the XY plane.
+    Ogre::Entity* p_entity = mp_scene_manager->createEntity("testarea.mesh");
+    mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    mp_area_node->setPosition(Ogre::Vector3(0, 0, 0));
+    mp_area_node->attachObject(p_entity);
 }
 
 DummyScene::~DummyScene()
 {
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
+    delete mp_obj;
 }
 
 void DummyScene::update()
 {
-    if(glfwGetKey(Core::Application::getSingleton().getWindow().getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        finish();
-    }
+}
 
-    mp_cube_node->rotate(Ogre::Vector3(0, 0, 1), Ogre::Degree(1));
-    mp_cube_node->rotate(Ogre::Vector3(0, 1, 0), Ogre::Degree(1));
+void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
+{
+
+    Ogre::Vector3 dir = mp_cam_node->getOrientation().zAxis() * -1;
+    dir.normalise();
+
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+        finish();
+        break;
+    case GLFW_KEY_UP:
+        mp_cam_node->translate(dir);
+        break;
+    case GLFW_KEY_DOWN:
+        mp_cam_node->translate(-dir);
+        break;
+    case GLFW_KEY_LEFT:
+        mp_cam_node->yaw(Ogre::Angle(1));
+        break;
+    case GLFW_KEY_RIGHT:
+        mp_cam_node->yaw(Ogre::Angle(-1));
+        break;
+    case GLFW_KEY_PAGE_UP:
+        mp_cam_node->pitch(Ogre::Angle(1));
+        break;
+    case GLFW_KEY_PAGE_DOWN:
+        mp_cam_node->pitch(Ogre::Angle(-1));
+        break;
+    case GLFW_KEY_X:
+        mp_area_node->translate(Ogre::Vector3(0, 0, 1));
+        break;
+        //default:
+        // Ignore
+    }
 }
