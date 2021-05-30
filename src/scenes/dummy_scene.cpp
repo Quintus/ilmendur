@@ -31,7 +31,7 @@ DummyScene::DummyScene()
 
     // also need to tell where we are
     mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_cam_node->setPosition(0, 0, 5);
+    mp_cam_node->setPosition(0, 0, 1.75);
     /* Align camera with Blender's axes. Blender has Z pointing upwards
      * while Ogre's camera by default faces down the Z axis, i.e. Ogre
      * treats the Y axis as the height. The below line rotates the camera
@@ -41,7 +41,7 @@ DummyScene::DummyScene()
 
     // create the camera
     Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
-    p_camera->setNearClipDistance(5);
+    p_camera->setNearClipDistance(0.1);
     p_camera->setAutoAspectRatio(true);
     mp_cam_node->attachObject(p_camera);
 
@@ -77,10 +77,10 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         finish();
         break;
     case GLFW_KEY_UP:
-        mp_cam_node->translate(dir);
+        mp_cam_node->translate(dir * 0.5);
         break;
     case GLFW_KEY_DOWN:
-        mp_cam_node->translate(-dir);
+        mp_cam_node->translate(-dir * 0.5);
         break;
     case GLFW_KEY_LEFT:
         mp_cam_node->yaw(Ogre::Angle(1));
