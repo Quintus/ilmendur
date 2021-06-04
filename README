@@ -48,7 +48,7 @@ following command at once:
     $ sudo apt install build-essential g++ cmake libx11-dev \
       libglvnd-dev libxrandr-dev libice-dev libxext-dev \
       libsm-dev libxrender-dev libxau-dev libxdmcp-dev \
-      libicu-dev zlib1g-dev automake libxinerama-dev
+      libicu-dev zlib1g-dev automake libxinerama-dev \
       libxcursor-dev libxi-dev pkg-config
 
 Any other dependencies are automatically compiled during the
