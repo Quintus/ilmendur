@@ -20,6 +20,9 @@ DummyScene::DummyScene()
     // Enable the overlay system for this scene
     mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
 
+    // Sky box
+    mp_scene_manager->setSkyBox(true, "testskybox");
+
     // without light we would just get a black screen
     mp_scene_manager->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
@@ -35,7 +38,7 @@ DummyScene::DummyScene()
     /* Align camera with Blender's axes. Blender has Z pointing upwards
      * while Ogre's camera by default faces down the Z axis, i.e. Ogre
      * treats the Y axis as the height. The below line rotates the camera
-     * so that it faces up the Y axis, making the Z axis the upwards direction
+     * so that it look in -Y axis direction, making the +Z axis the upwards direction
      * like it is in Blender. */
     mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z) * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
 

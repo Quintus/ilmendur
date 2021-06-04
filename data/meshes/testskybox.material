@@ -1,0 +1,17 @@
+material testskybox
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+
+			texture_unit
+			{
+				texture wolken1d.jpg cubic
+				tex_address_mode clamp
+			}
+		}
+	}
+}
