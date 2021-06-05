@@ -76,7 +76,8 @@ include_directories(${RPG_DEPS_INSTALL_DIR}/include
                     ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
                     ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
                     ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec)
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec
+                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene)
 add_dependencies(rpg ogre3d glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
 target_link_libraries(rpg ${RPG_DEPENDENCIES} stdc++fs)
 

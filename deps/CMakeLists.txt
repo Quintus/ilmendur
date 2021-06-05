@@ -66,6 +66,20 @@
 
 include(ExternalProject)
 
+ExternalProject_Add(pugixml
+  URL "https://github.com/zeux/pugixml/releases/download/v1.11.4/pugixml-1.11.4.tar.gz"
+  URL_HASH SHA256=8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716
+  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/pugixml
+  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DBUILD_STATIC_LIBS=ON
+             -DBUILD_TESTS=OFF)
+list(APPEND RPG_DEPENDENCIES
+  ${RPG_DEPS_INSTALL_DIR}/lib/libpugixml.a)
+
 ExternalProject_Add(zlib
   URL "http://www.zlib.net/zlib-1.2.11.tar.gz"
   URL_HASH SHA256=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
@@ -229,10 +243,7 @@ list(APPEND RPG_DEPENDENCIES
 #   system interaction in another way, most notably to circumvent SDL's
 #   large dependency tree.
 # - Tools should be used from the host system. They can add further
-#   dependencies like Zziplib pugixml which would need to be built.
-# - The DOT_SCENE plugin adds a dependency on pugixml, thus disable it.
-#   Reconsider if the plugin is needed. Note: The Bites component
-#   would pull in the pugixml dependency.
+#   dependencies like Zziplib which would need to be built.
 # - NODELESS_POSITIONING is a legacy compatibility feature which is not
 #   needed for new projects.
 # - FreeImage is the better codec, but FreeImage is a nightmare to build.
@@ -250,7 +261,7 @@ list(APPEND RPG_DEPENDENCIES
 #   and similar things which today are in C++11), which can be worked around.
 #   See if the project can do without for now.
 ExternalProject_Add(ogre3d
-  DEPENDS zlib zziplib freetype
+  DEPENDS pugixml zlib zziplib freetype
   URL "https://github.com/OGRECave/ogre/archive/v1.12.11.zip"
   URL_HASH SHA256=b37af7c6bec50f07126cad1c07538cfb2b1ae5093a0c1bc2f97326f004957bea
   SOURCE_DIR ${RPG_DEPS_SRC_DIR}/ogre
@@ -269,7 +280,7 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=ON
              -DOGRE_BUILD_COMPONENT_OVERLAY_IMGUI=OFF
              -DOGRE_BUILD_COMPONENT_BITES=OFF
-             -DOGRE_BUILD_PLUGIN_DOT_SCENE=OFF
+             -DOGRE_BUILD_PLUGIN_DOT_SCENE=ON
              -DOGRE_BUILD_PLUGIN_STBI=ON
              -DOGRE_BUILD_PLUGIN_FREEIMAGE=OFF
              -DOGRE_BUILD_PLUGIN_ASSIMP=OFF
@@ -294,6 +305,7 @@ list(APPEND RPG_DEPENDENCIES
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeZoneStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_ParticleFXStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_PCZSceneManagerStatic.a
+  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_DotSceneStatic.a
   ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libRenderSystem_GL3PlusStatic.a)
 
 # Wayland support can (hopefully) easily be added later by enabling it here.

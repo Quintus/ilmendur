@@ -11,6 +11,7 @@
 #include <OgreGL3PlusPlugin.h>
 #include <OgreParticleFXPlugin.h>
 #include <OgreSTBICodec.h>
+#include <OgreDotSceneLoader.h>
 #include <iostream>
 #include <filesystem>
 
@@ -96,6 +97,7 @@ void Application::loadOgrePlugins()
     m_ogre_plugins.push_back(move(make_unique<Ogre::GL3PlusPlugin>()));
     m_ogre_plugins.push_back(move(make_unique<Ogre::ParticleFXPlugin>()));
     m_ogre_plugins.push_back(move(make_unique<Ogre::STBIPlugin>()));
+    m_ogre_plugins.push_back(move(make_unique<Ogre::DotScenePlugin>()));
 
     for(unique_ptr<Ogre::Plugin>& p_plugin: m_ogre_plugins) {
         Ogre::Root::getSingleton().installPlugin(p_plugin.get());
