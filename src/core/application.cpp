@@ -122,8 +122,11 @@ void Application::loadOgreResources()
         Ogre::ResourceGroupManager::getSingleton().addResourceLocation(ogredir.u8string(), "FileSystem", Ogre::ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
     }
 
-    // Now add the project's own resources
-    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((rpg_resource_dir / fs::u8path("meshes")).u8string(), "FileSystem", "General");
+    // Now add the project's own resources.
+    // The "General" group holds global resources typically used in many scenes.
+    // The groups starting with "scenes/" hold scene-specific resources.
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((rpg_resource_dir / fs::u8path("general")).u8string(), "FileSystem", "General"); // Ogre convention wants the "General" group to be capitalised
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((rpg_resource_dir / fs::u8path("scenes/dummy_scene")).u8string(), "FileSystem", "scenes/dummy_scene"); // Ogre convention wants the "General" group to be capitalised
 
     // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
