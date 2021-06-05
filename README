@@ -36,7 +36,8 @@ Therefore, to successfully build this project you need:
 - The following Unix-specific libraries and their development
   headers:
   * The X11 libraries: libx11, libxrandr, libsm, libice, libxext,
-    libxrender, libxcb, libxau, libxdmcp
+    libxrender, libxcb, libxau, libxdmcp, libxinerama, libxcursor,
+    libxi
   * The OpenGL libraries, in the newer GLVND variant (libOpenGL
     and libGLX).
   * pthreads and dl (you have this if your system uses GNU libc (glibc),
@@ -48,8 +49,7 @@ following command at once:
     $ sudo apt install build-essential g++ cmake libx11-dev \
       libglvnd-dev libxrandr-dev libice-dev libxext-dev \
       libsm-dev libxrender-dev libxau-dev libxdmcp-dev \
-      libicu-dev zlib1g-dev automake libxinerama-dev \
-      libxcursor-dev libxi-dev pkg-config
+      automake libxinerama-dev libxcursor-dev libxi-dev pkg-config
 
 Any other dependencies are automatically compiled during the
 compilation of the project. This can take quite a while, but you only
