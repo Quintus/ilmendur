@@ -26,12 +26,6 @@ DummyScene::DummyScene()
     // without light we would just get a black screen
     mp_scene_manager->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
-    Ogre::Light* p_light2 = mp_scene_manager->createLight("Light2");
-    Ogre::SceneNode* p_light_node2 = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_light2->setType(Ogre::Light::LT_POINT);
-    p_light_node2->setPosition(0, 100, 20);
-    p_light_node2->attachObject(p_light2);
-
     // also need to tell where we are
     mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
     mp_cam_node->setPosition(0, 0, 1.75);
