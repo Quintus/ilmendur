@@ -39,10 +39,10 @@ Therefore, to successfully build this project you need:
   * For Linux on X11: The X11 libraries. Linux distributions typically
     have a metapackage for installing these (xorg-dev in Debian
     for instance).
-- Ogre depends on some system-specific libraries as well, but normally
-  these are preinstalled anyway.
-  * For Linux: pthreads and dl (you have this if your system uses GNU libc (glibc),
-    which is the case for most Linux distrbutions).
+- Ogre depends on OpenGL, the system-specific thread library, and the system-specific
+  dlopen/dlclose() library.
+  * For Linux these are pthreads, dl, and libglvnd (or the older libgl).
+    pthreads and dl come with Glibc and are thus normally preinstalled.
 
 On Ubuntu 20.04, all required dependencies can be installed with the
 following command at once:

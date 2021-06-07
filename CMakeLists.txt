@@ -85,8 +85,18 @@ target_link_libraries(rpg ${RPG_DEPENDENCIES} stdc++fs)
 # Following is the configuration to find them and what to do
 # with the find results.
 if (WIN32)
-  message(SEND_ERROR "Windows builds are not supported yet")
-else()
+  find_package(Threads REQUIRED)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
+
+  target_link_libraries(rpg OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
+  message(WARNING "Win32 support is experimental")
+elseif (APPLE)
+  find_package(Threads REQUIRED)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
+
+  target_link_libraries(rpg OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
+  message(WARNING "Apple support is experimental")
+else() # That is, Linux or another good Unix
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   set(OpenGL_GL_PREFERENCE GLVND)
 
