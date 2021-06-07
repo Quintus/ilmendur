@@ -18,6 +18,9 @@ repository as follows:
                              How to build
                              ------------
 
+Note that for now, only Linux on X11 is officially supported.
+Contributions are welcome.
+
 The project is written in C++ with Ogre as the 3D game engine and GLFW
 as the window management system. Most of its dependency libraries are
 compiled during the project compilation and then linked in statically.
@@ -32,15 +35,13 @@ Therefore, to successfully build this project you need:
 - The build tools used by the dependencies that are compiled:
   * pkg-config
   * Autotools
-- A Unix system (Windows is not yet supported).
-- The following Unix-specific libraries and their development
-  headers:
-  * The X11 libraries: libx11, libxrandr, libsm, libice, libxext,
-    libxrender, libxcb, libxau, libxdmcp, libxinerama, libxcursor,
-    libxi
-  * The OpenGL libraries, in the newer GLVND variant (libOpenGL
-    and libGLX).
-  * pthreads and dl (you have this if your system uses GNU libc (glibc),
+- GLFW's dependencies. These vary per platform.
+  * For Linux on X11: The X11 libraries: libx11, libxrandr, libsm,
+    libice, libxext, libxrender, libxcb, libxau, libxdmcp, libxinerama,
+    libxcursor, libxi
+- Ogre depends on some system-specific libraries as well, but normally
+  these are preinstalled anyway.
+  * For Linux: pthreads and dl (you have this if your system uses GNU libc (glibc),
     which is the case for most Linux distrbutions).
 
 On Ubuntu 20.04, all required dependencies can be installed with the
