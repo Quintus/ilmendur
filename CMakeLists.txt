@@ -91,6 +91,8 @@ if (WIN32)
   target_link_libraries(rpg OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
   message(WARNING "Win32 support is experimental")
 elseif (APPLE)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+
   find_package(Threads REQUIRED)
   find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
 
