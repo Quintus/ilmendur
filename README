@@ -36,9 +36,9 @@ Therefore, to successfully build this project you need:
   * pkg-config
   * Autotools
 - GLFW's dependencies. These vary per platform.
-  * For Linux on X11: The X11 libraries: libx11, libxrandr, libsm,
-    libice, libxext, libxrender, libxcb, libxau, libxdmcp, libxinerama,
-    libxcursor, libxi
+  * For Linux on X11: The X11 libraries. Linux distributions typically
+    have a metapackage for installing these (xorg-dev in Debian
+    for instance).
 - Ogre depends on some system-specific libraries as well, but normally
   these are preinstalled anyway.
   * For Linux: pthreads and dl (you have this if your system uses GNU libc (glibc),
@@ -47,10 +47,8 @@ Therefore, to successfully build this project you need:
 On Ubuntu 20.04, all required dependencies can be installed with the
 following command at once:
 
-    $ sudo apt install build-essential g++ cmake libx11-dev \
-      libglvnd-dev libxrandr-dev libice-dev libxext-dev \
-      libsm-dev libxrender-dev libxau-dev libxdmcp-dev \
-      automake libxinerama-dev libxcursor-dev libxi-dev pkg-config
+    $ sudo apt install build-essential g++ cmake automake \
+      pkg-config libglvnd-dev xorg-dev
 
 Any other dependencies are automatically compiled during the
 compilation of the project. This can take quite a while, but you only
