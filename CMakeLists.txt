@@ -87,6 +87,7 @@ target_link_libraries(rpg ${RPG_DEPENDENCIES} stdc++fs)
 if (WIN32)
   message(SEND_ERROR "Windows builds are not supported yet")
 else()
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
   set(OpenGL_GL_PREFERENCE GLVND)
 
   find_package(X11 REQUIRED)
@@ -98,7 +99,7 @@ else()
   endif()
 
   include_directories(${X11_INCLUDE_DIR})
-  target_link_libraries(rpg OpenGL::GLX OpenGL::OpenGL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(rpg OpenGL::GLX OpenGL::GL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 ########################################
