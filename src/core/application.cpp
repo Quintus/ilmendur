@@ -37,10 +37,22 @@ Application::Application()
         throw(runtime_error("There can only be one Application instance!"));
     }
 
-    cout << "Welcome, adventurer, to project version " << ILMENDUR_VERSION << "." << endl;
+    cout << "  ( )   ___    __     __ _____ _   ___ _____   ___  ___ ____" << endl
+         << " <   >  | |    | \\   / | | __| |\\  | | |    \\  | |  | | |   \\" << endl
+         << "  | |   | |    |  \\_/  | | |_  | \\ | | | ||  \\ | |  | | | () |" << endl
+         << "  | |   | |    |  ___  | | __| |  \\| | | ||  | | |  | | |  _ \\" << endl
+         << "  | |   | |__  | |   | | | |_  |  _  | |    /  | |__| | | | \\ \\" << endl
+         << "  | |   |____| |_|   |_| |___| |_| \\_| |___/   |______| |_|  \\_\\" << endl
+         << "  \\ /" << endl
+         << "   °               H E I R S  T O  T H E  E L V E N  S W O R D" << endl << endl;
+
+    cout << "                                            VERSION " << ILMENDUR_VERSION << endl;
+
     if (ILMENDUR_VERSION_MAJOR < 1 || ILMENDUR_VERSION_MINOR % 2 == 1) {
-        cout << "This is a development version. Be careful." << endl;
+        cout << endl << "This is a development version. Be careful." << endl << endl;
     }
+
+    cout << "Welcome, adventurer." << endl;
 
     setupGlfw();
     setupOgre();
@@ -184,7 +196,7 @@ SceneSystem::Scene& Application::currentScene()
  */
 void Application::run()
 {
-    mp_window = new Window(800, 600, "ILMENDUR");
+    mp_window = new Window(800, 600, "Ilmendur");
     mp_window->activate();
 
     // Initialising the RTSS requires an active window.
