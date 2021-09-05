@@ -326,6 +326,38 @@ ExternalProject_Add(glfw
 list(APPEND ILMENDUR_DEPENDENCIES
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libglfw3.a)
 
+# Believe it or not, but Bullet has no dependencies on its own (other
+# than OpenGL). Note that passing OpenGL_GL_PREFERENCE=GLVND is
+# important. This must be set to the same value used in Ilmendur's
+# main CMakeLists.txt to prevent ABI mismatches.
+ExternalProject_Add(bullet
+  URL "https://github.com/bulletphysics/bullet3/archive/refs/tags/3.17.tar.gz"
+  URL_HASH SHA256=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/bullet
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DBUILD_STATIC_LIBS=ON
+             -DBUILD_PYBULLET=OFF
+             -DUSE_DOUBLE_PRECISION=ON
+             -DBUILD_BULLET2_DEMOS=OFF
+             -DBUILD_EXTRAS=OFF
+             -DBUILD_CLSOCKET=OFF
+             -DBUILD_CPU_DEMOS=OFF
+             -DBUILD_ENET=OFF
+             -DBUILD_OPENGL3_DEMOS=OFF
+             -DBUILD_UNIT_TESTS=OFF
+             -DOpenGL_GL_PREFERENCE=GLVND)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletSoftBody.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletDynamics.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletCollision.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletInverseDynamics.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBullet3Common.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libLinearMath.a)
+
 # Reverse the dependencies list to have it fit for the linker
 list(REVERSE ILMENDUR_DEPENDENCIES)
 message(STATUS "Compiling these dependencies: ${ILMENDUR_DEPENDENCIES}")
