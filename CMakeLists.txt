@@ -24,10 +24,10 @@
 # Configuring CMake
 
 cmake_minimum_required(VERSION 3.13)
-project(RPG
+project(ILMENDUR
   VERSION 0.0.1
-  DESCRIPTION "A Role-Play Game."
-  HOMEPAGE_URL "https://redmine.guelker.eu/projects/rpg"
+  DESCRIPTION "Ilmendur - Heirs to the Elven word. A Role-Play Game."
+  HOMEPAGE_URL "https://redmine.guelker.eu/projects/ilmendur"
   LANGUAGES CXX)
 
 ########################################
@@ -50,8 +50,8 @@ endif()
 ########################################
 # Game source code
 
-file(GLOB_RECURSE rpg_sources "src/*.cpp" "src/*.hpp")
-add_executable(rpg ${rpg_sources})
+file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.hpp")
+add_executable(ilmendur ${ilmendur_sources})
 
 ########################################
 # Dependencies
@@ -62,24 +62,24 @@ add_executable(rpg ${rpg_sources})
 # under INSTALL_DIR as configured below.
 # CMAKE_PREFIX_PATH is set for completeness. find_package()
 # operates on it, but all dependencies built automatically
-# are included in RPG_DEPENDENCIES with an absolute path anyway.
-set(RPG_DEPS_SRC_DIR      ${CMAKE_BINARY_DIR}/deps-source)
-set(RPG_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
-set(CMAKE_PREFIX_PATH     ${RPG_DEPS_INSTALL_DIR})
+# are included in ILMENDUR_DEPENDENCIES with an absolute path anyway.
+set(ILMENDUR_DEPS_SRC_DIR      ${CMAKE_BINARY_DIR}/deps-source)
+set(ILMENDUR_DEPS_INSTALL_DIR  ${CMAKE_BINARY_DIR}/deps)
+set(CMAKE_PREFIX_PATH          ${ILMENDUR_DEPS_INSTALL_DIR})
 
 # Instruct CMake to build the subdirectory deps/ and
 # tell it what to do with the results. add_subdirectory(deps)
-# results in $RPG_DEPENDENCIES being set in this scope.
+# results in $ILMENDUR_DEPENDENCIES being set in this scope.
 add_subdirectory(deps)
-include_directories(${RPG_DEPS_INSTALL_DIR}/include
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec
-                    ${RPG_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene)
-add_dependencies(rpg ogre3d glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
-target_link_libraries(rpg ${RPG_DEPENDENCIES} stdc++fs)
+include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/ParticleFX
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene)
+add_dependencies(ilmendur ogre3d glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
+target_link_libraries(ilmendur ${ILMENDUR_DEPENDENCIES} stdc++fs)
 
 # System-specific libraries are linked dynamically from the host.
 # Following is the configuration to find them and what to do
@@ -88,7 +88,7 @@ if (WIN32)
   find_package(Threads REQUIRED)
   find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
 
-  target_link_libraries(rpg OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(ilmendur OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
   message(WARNING "Win32 support is experimental")
 elseif (APPLE)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -96,7 +96,7 @@ elseif (APPLE)
   find_package(Threads REQUIRED)
   find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
 
-  target_link_libraries(rpg OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(ilmendur OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
   message(WARNING "Apple support is experimental")
 else() # That is, Linux or another good Unix
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -111,7 +111,7 @@ else() # That is, Linux or another good Unix
   endif()
 
   include_directories(${X11_INCLUDE_DIR})
-  target_link_libraries(rpg OpenGL::GLX OpenGL::GL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(ilmendur OpenGL::GLX OpenGL::GL ${X11_Xrandr_LIB} ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 ########################################
@@ -120,19 +120,19 @@ endif()
 include(GNUInstallDirs)
 
 # Binary executable
-install(TARGETS rpg DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ilmendur DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Game data. Ensure this matches the expectations of
 # OS::game_resource_dir() and OS::ogre_resource_dir().
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg)
-install(DIRECTORY "${RPG_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/rpg/ogre)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur)
+install(DIRECTORY "${ILMENDUR_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur/ogre)
 
 ########################################
 # Build configuration header
 # Forwards some build configuration to the source code
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-  set(RPG_DEBUG_BUILD ON)
+  set(ILMENDUR_DEBUG_BUILD ON)
 endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/src/buildconfig.hpp.in ${CMAKE_BINARY_DIR}/buildconfig.hpp)

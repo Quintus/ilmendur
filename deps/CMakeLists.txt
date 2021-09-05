@@ -24,18 +24,18 @@
 #
 # To prevent the dependencies' build systems from choosing
 # the host system's libraries, it is necessary to configure
-# them to look into $RPG_DEPS_INSTALL_DIR instead of the
-# system's search pathes; $RPG_DEPS_INSTALL_DIR is set in
+# them to look into $ILMENDUR_DEPS_INSTALL_DIR instead of the
+# system's search pathes; $ILMENDUR_DEPS_INSTALL_DIR is set in
 # the toplevel CMake file. This can be achieved as follows:
 #
 # - For projects that are built with GNU Autotools,
 #   it is necessary to provide three environment variables for
 #   any command:
-#     * CFLAGS set to -I=${RPG_DEPS_INSTALL_DIR}/include
+#     * CFLAGS set to -I=${ILMENDUR_DEPS_INSTALL_DIR}/include
 #       - To have `configure' find the headers.
-#     * LDFLAGS set to -L=${RPG_DEPS_INSTALL_DIR}/lib
+#     * LDFLAGS set to -L=${ILMENDUR_DEPS_INSTALL_DIR}/lib
 #       - To have the linker find the library.
-#     * PKG_CONFIG_LIBDIR set to ${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig
+#     * PKG_CONFIG_LIBDIR set to ${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig
 #       - To have pkg-config(1) sub-calls look at the right place.
 #   Passing environment variables via ExternalProject_Add
 #   is not easily possible, see <http://cmake.3232098.n2.nabble.com/Environment-variables-and-ExternalProject-td6901280.html>.
@@ -43,7 +43,7 @@
 #   see <https://stackoverflow.com/a/62437353>.
 #
 # - For projects that are build with CMake, CMAKE_PREFIX_PATH needs to
-#   be set by passing -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}.
+#   be set by passing -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}.
 #   Starting from version 3.1, cmake configures pkg-config(1) subcalls
 #   to use that prefix path automatically if CMAKE_PREFIX_PATH is set
 #   (see <https://cmake.org/cmake/help/v3.17/module/FindPkgConfig.html>).
@@ -54,9 +54,9 @@
 #   up an existing set CMAKE_PREFIX_PATH.
 #
 # After each call to ExternalProject, the required libraries
-# should be added to the RPG_DEPENDENCIES list. Be careful to
+# should be added to the ILMENDUR_DEPENDENCIES list. Be careful to
 # add libraries on which other libraries depend *before* those
-# depending libraries. At the end of this file the RPG_DEPENDENCIES
+# depending libraries. At the end of this file the ILMENDUR_DEPENDENCIES
 # list is reversed so that proper linker order is maintained.
 #
 # Note: see here for the $(MAKE) trick: <https://stackoverflow.com/a/33171336>
@@ -69,44 +69,44 @@ include(ExternalProject)
 ExternalProject_Add(pugixml
   URL "https://github.com/zeux/pugixml/releases/download/v1.11.4/pugixml-1.11.4.tar.gz"
   URL_HASH SHA256=8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/pugixml
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/pugixml
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
-             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
              -DBUILD_SHARED_LIBS=OFF
              -DBUILD_STATIC_LIBS=ON
              -DBUILD_TESTS=OFF)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libpugixml.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libpugixml.a)
 
 ExternalProject_Add(zlib
   URL "http://www.zlib.net/zlib-1.2.11.tar.gz"
   URL_HASH SHA256=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zlib
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/zlib/configure
-                    --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/zlib
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/zlib/configure
+                    --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
                     --static
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libz.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libz.a)
 
 ExternalProject_Add(libpng
   DEPENDS zlib
   URL "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz?download"
   URL_HASH SHA256=daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/libpng
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/libpng/configure
-                     --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/libpng
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/libpng/configure
+                     --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libpng16.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libpng16.a)
 
 # There is a interdependency of Freetype with Harfbuzz, see
 # docs/INSTALL.UNIX in Freetype's source tree. It is necessary
@@ -116,11 +116,11 @@ ExternalProject_Add(freetype-stage1
   DEPENDS zlib libpng
   URL "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.4.tar.gz"
   URL_HASH SHA256=5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype/configure
-                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype
-                     --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/freetype
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/freetype/configure
+                     --srcdir=${ILMENDUR_DEPS_SRC_DIR}/freetype
+                     --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
                      --with-zlib=yes
@@ -128,29 +128,29 @@ ExternalProject_Add(freetype-stage1
                      --with-png=yes
                      --with-harfbuzz=no
                      --with-brotli=no
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-# No appending to RPG_DEPENDENCIES, because this library is not used as-is,
+# No appending to ILMENDUR_DEPENDENCIES, because this library is not used as-is,
 # see above
 
 ExternalProject_Add(icu
   URL "https://github.com/unicode-org/icu/releases/download/release-68-2/icu4c-68_2-src.tgz"
   URL_HASH SHA256=c79193dee3907a2199b8296a93b52c5cb74332c26f3d167269487680d479d625
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/icu
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/icu/source/configure
-                    --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/icu
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/icu/source/configure
+                    --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
                     --enable-static
                     --disable-shared
                     --disable-layoutex
                     --disable-tests
                     --disable-samples
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libicudata.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libicuuc.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libicui18n.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libicudata.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libicuuc.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libicui18n.a)
 
 # Consider to add graphite2 as dependency when non-western language
 # support is needed. It has no further dependencies as of 2020.
@@ -158,10 +158,10 @@ ExternalProject_Add(harfbuzz
   DEPENDS freetype-stage1 icu
   URL "https://github.com/harfbuzz/harfbuzz/releases/download/2.8.0/harfbuzz-2.8.0.tar.xz"
   URL_HASH SHA256=a1079fd021adaf5683351f34587a255975cc3bcadba31246ae40ebebb95ecd42
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/harfbuzz
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/harfbuzz/configure
-  --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/harfbuzz
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/harfbuzz/configure
+  --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
   --enable-static
   --disable-shared
   --with-glib=no
@@ -175,11 +175,11 @@ ExternalProject_Add(harfbuzz
   --with-gdi=no
   --with-directwrite=no
   --with-coretext=no
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz-icu.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libharfbuzz.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libharfbuzz-icu.a)
 
 # Freetype stage2 reuses the sources already downloaded by freetype stage 1.
 # Hence, DOWNLOAD_COMMAND is an empty string. Leaving it out entirely is
@@ -187,11 +187,11 @@ list(APPEND RPG_DEPENDENCIES
 ExternalProject_Add(freetype
   DEPENDS zlib libpng harfbuzz
   DOWNLOAD_COMMAND ""
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/freetype
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include ${RPG_DEPS_SRC_DIR}/freetype/configure
-                     --srcdir=${RPG_DEPS_SRC_DIR}/freetype
-                     --prefix=${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/freetype
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/freetype/configure
+                     --srcdir=${ILMENDUR_DEPS_SRC_DIR}/freetype
+                     --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
                      --enable-static
                      --disable-shared
                      --with-zlib=yes
@@ -199,11 +199,11 @@ ExternalProject_Add(freetype
                      --with-png=yes
                      --with-harfbuzz=yes
                      --with-brotli=no
-  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${RPG_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${RPG_DEPS_INSTALL_DIR}/lib CFLAGS=-I${RPG_DEPS_INSTALL_DIR}/include $(MAKE)
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libfreetype.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libharfbuzz.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libfreetype.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libharfbuzz.a)
 # ^ Resolving cyclic dependency freetype/harfbuzz/freetype by specifying
 # harfbuzz twice.
 
@@ -218,11 +218,11 @@ ExternalProject_Add(zziplib
   DEPENDS zlib
   URL "https://github.com/gdraheim/zziplib/archive/refs/tags/v0.13.72.tar.gz"
   URL_HASH SHA256=93ef44bf1f1ea24fc66080426a469df82fa631d13ca3b2e4abaeab89538518dc
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/zziplib
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/zziplib
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
-             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
              -DBUILD_SHARED_LIBS=OFF
              -DBUILD_STATIC_LIBS=ON
              -DZZIPBINS=OFF
@@ -231,8 +231,8 @@ ExternalProject_Add(zziplib
              -DZZIPSDL=OFF
              -DZZIPTEST=OFF
              -DZZIPWRAP=OFF)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libzzip-0.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libzzip-0.a)
 
 # Considerations:
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
@@ -264,16 +264,16 @@ ExternalProject_Add(ogre3d
   DEPENDS pugixml zlib zziplib freetype
   URL "https://github.com/OGRECave/ogre/archive/v1.12.11.zip"
   URL_HASH SHA256=b37af7c6bec50f07126cad1c07538cfb2b1ae5093a0c1bc2f97326f004957bea
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/ogre
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/ogre
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
-             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
              -DBUILD_SHARED_LIBS=OFF
              -DBUILD_STATIC_LIBS=ON
              -DOGRE_STATIC=ON
              -DOGRE_BUILD_DEPENDENCIES=OFF
-             -DOGRE_DEPENDENCIES_DIR=${RPG_DEPS_INSTALL_DIR}
+             -DOGRE_DEPENDENCIES_DIR=${ILMENDUR_DEPS_INSTALL_DIR}
              -DOGRE_BUILD_SAMPLES=OFF
              -DOGRE_BUILD_TOOLS=OFF
              -DOGRE_BUILD_RENDERSYSTEM_GL=OFF
@@ -289,46 +289,46 @@ ExternalProject_Add(ogre3d
              -DOGRE_INSTALL_SAMPLES=OFF
              -DOGRE_NODELESS_POSITIONING=OFF
              -DOGRE_ENABLE_PRECOMPILED_HEADERS=OFF)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreMeshLodGeneratorStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreOverlayStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgrePagingStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgrePropertyStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreRTShaderSystemStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreTerrainStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/libOgreVolumeStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libCodec_STBIStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_BSPSceneManagerStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeSceneManagerStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeZoneStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_ParticleFXStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_PCZSceneManagerStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_DotSceneStatic.a
-  ${RPG_DEPS_INSTALL_DIR}/lib/OGRE/libRenderSystem_GL3PlusStatic.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreMainStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreGLSupportStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreMeshLodGeneratorStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreOverlayStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgrePagingStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgrePropertyStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreRTShaderSystemStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreTerrainStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libOgreVolumeStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libCodec_STBIStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_BSPSceneManagerStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeSceneManagerStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_OctreeZoneStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_ParticleFXStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_PCZSceneManagerStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libPlugin_DotSceneStatic.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/OGRE/libRenderSystem_GL3PlusStatic.a)
 
 # Wayland support can (hopefully) easily be added later by enabling it here.
 ExternalProject_Add(glfw
   URL "https://github.com/glfw/glfw/releases/download/3.3.3/glfw-3.3.3.zip"
   URL_HASH SHA256=723087ad45b40cd333be7d1a2cd5e09a28facb7f3acdb69f3e5613bd20543977
-  SOURCE_DIR ${RPG_DEPS_SRC_DIR}/glfw
-  INSTALL_DIR ${RPG_DEPS_INSTALL_DIR}
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/glfw
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_INSTALL_PREFIX=${RPG_DEPS_INSTALL_DIR}
-             -DCMAKE_PREFIX_PATH=${RPG_DEPS_INSTALL_DIR}
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
              -DBUILD_SHARED_LIBS=OFF
              -DBUILD_STATIC_LIBS=ON
              -DGLFW_BUILD_EXAMPLES=OFF
              -DGLFW_BUILD_TESTS=OFF
              -DGLFW_BUILD_DOCS=OFF
              -DGLFW_USE_WAYLAND=OFF)
-list(APPEND RPG_DEPENDENCIES
-  ${RPG_DEPS_INSTALL_DIR}/lib/libglfw3.a)
+list(APPEND ILMENDUR_DEPENDENCIES
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libglfw3.a)
 
 # Reverse the dependencies list to have it fit for the linker
-list(REVERSE RPG_DEPENDENCIES)
-message(STATUS "Compiling these dependencies: ${RPG_DEPENDENCIES}")
+list(REVERSE ILMENDUR_DEPENDENCIES)
+message(STATUS "Compiling these dependencies: ${ILMENDUR_DEPENDENCIES}")
 
 # Promote to caller
-set(RPG_DEPENDENCIES ${RPG_DEPENDENCIES} PARENT_SCOPE)
+set(ILMENDUR_DEPENDENCIES ${ILMENDUR_DEPENDENCIES} PARENT_SCOPE)

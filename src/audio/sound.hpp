@@ -1,5 +1,5 @@
-#ifndef RPG_SOUND_HPP
-#define RPG_SOUND_HPP
+#ifndef ILMENDUR_SOUND_HPP
+#define ILMENDUR_SOUND_HPP
 #include "../core/point.hpp"
 #include <OGRE/OgreVector.h>
 #include <string>
@@ -39,4 +39,4 @@ namespace AudioSystem {
     };
 }
 
-#endif /* RPG_SOUND_HPP */
+#endif /* ILMENDUR_SOUND_HPP */

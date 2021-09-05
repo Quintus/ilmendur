@@ -37,8 +37,8 @@ Application::Application()
         throw(runtime_error("There can only be one Application instance!"));
     }
 
-    cout << "Welcome, adventurer, to project version " << RPG_VERSION << "." << endl;
-    if (RPG_VERSION_MAJOR < 1 || RPG_VERSION_MINOR % 2 == 1) {
+    cout << "Welcome, adventurer, to project version " << ILMENDUR_VERSION << "." << endl;
+    if (ILMENDUR_VERSION_MAJOR < 1 || ILMENDUR_VERSION_MINOR % 2 == 1) {
         cout << "This is a development version. Be careful." << endl;
     }
 
@@ -107,10 +107,10 @@ void Application::loadOgrePlugins()
 void Application::loadOgreResources()
 {
     fs::path ogre_internal_resource_dir = OS::ogre_resource_dir();
-    fs::path rpg_resource_dir = OS::game_resource_dir();
+    fs::path ilmendur_resource_dir = OS::game_resource_dir();
 
     cout << "Ogre internal resources directory: " << ogre_internal_resource_dir << endl
-         << "RPG resource directory: " << rpg_resource_dir << endl;
+         << "ILMENDUR resource directory: " << ilmendur_resource_dir << endl;
 
     /* First add Ogre's own OgreInternal resources. These are
      * taken from Ogre's resources.cfg's OgreInternal section,
@@ -127,8 +127,8 @@ void Application::loadOgreResources()
     // Now add the project's own resources.
     // The "General" group holds global resources typically used in many scenes.
     // The groups starting with "scenes/" hold scene-specific resources.
-    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((rpg_resource_dir / fs::u8path("general")).u8string(), "FileSystem", "General"); // Ogre convention wants the "General" group to be capitalised
-    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((rpg_resource_dir / fs::u8path("scenes/dummy_scene")).u8string(), "FileSystem", "scenes/dummy_scene"); // Ogre convention wants the "General" group to be capitalised
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("general")).u8string(), "FileSystem", "General"); // Ogre convention wants the "General" group to be capitalised
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/dummy_scene")).u8string(), "FileSystem", "scenes/dummy_scene"); // Ogre convention wants the "General" group to be capitalised
 
     // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
@@ -184,7 +184,7 @@ SceneSystem::Scene& Application::currentScene()
  */
 void Application::run()
 {
-    mp_window = new Window(800, 600, "RPG");
+    mp_window = new Window(800, 600, "ILMENDUR");
     mp_window->activate();
 
     // Initialising the RTSS requires an active window.

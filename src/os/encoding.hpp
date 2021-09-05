@@ -1,5 +1,5 @@
-#ifndef RPG_OS_ENCODING_HPP
-#define RPG_OS_ENCODING_HPP
+#ifndef ILMENDUR_OS_ENCODING_HPP
+#define ILMENDUR_OS_ENCODING_HPP
 #include <string>
 
 #ifdef _WIN32
@@ -53,5 +53,5 @@ namespace OS {
 #endif
 }
 
-#endif /* RPG_OS_ENCODING_HPP */
+#endif /* ILMENDUR_OS_ENCODING_HPP */
 

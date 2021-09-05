@@ -1,5 +1,5 @@
-#ifndef RPG_MUSIC_HPP
-#define RPG_MUSIC_HPP
+#ifndef ILMENDUR_MUSIC_HPP
+#define ILMENDUR_MUSIC_HPP
 #include <string>
 
 namespace AudioSystem {
@@ -34,4 +34,4 @@ namespace AudioSystem {
     };
 };
 
-#endif /* RPG_MUSIC_HPP */
+#endif /* ILMENDUR_MUSIC_HPP */

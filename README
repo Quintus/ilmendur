@@ -1,4 +1,4 @@
-                           < Role-Play Game >
+               < Ilmendur - Heirs to the Elven Sword >
 
 This is a personal project of my friends and me to develop a role-play
 game.
@@ -6,14 +6,14 @@ game.
                          Project Information
                          -------------------
 
-Canonical homepage:  https://redmine.guelker.eu/projects/rpg
-Forum:               https://redmine.guelker.eu/projects/rpg/boards
-Bugtracker:          https://redmine.guelker.eu/projects/rpg/issues
+Canonical homepage:  https://redmine.guelker.eu/projects/ilmendur
+Forum:               https://redmine.guelker.eu/projects/ilmendur/boards
+Bugtracker:          https://redmine.guelker.eu/projects/ilmendur/issues
 
 The source code is currently only available via Git. Clone the
 repository as follows:
 
-    $ git clone git://git.guelker.eu/rpg.git
+    $ git clone git://git.guelker.eu/ilmendur.git
 
                              How to build
                              ------------
@@ -44,8 +44,8 @@ Therefore, to successfully build this project you need:
   * For Linux these are pthreads, dl, and libglvnd (or the older libgl).
     pthreads and dl come with Glibc and are thus normally preinstalled.
 
-On Ubuntu 20.04, all required dependencies can be installed with the
-following command at once:
+On Ubuntu 20.04 and Debian 11, all required dependencies can be
+installed with the following command at once:
 
     $ sudo apt install build-essential g++ cmake automake \
       pkg-config libglvnd-dev xorg-dev
@@ -75,7 +75,7 @@ point. There is no installation target available currently.
 
 To run the created programme, execute:
 
-    $ ./rpg
+    $ ./ilmendur
 
                           Legal Information
                           -----------------

@@ -1,5 +1,5 @@
-#ifndef RPG_OS_PATHS_HPP
-#define RPG_OS_PATHS_HPP
+#ifndef ILMENDUR_OS_PATHS_HPP
+#define ILMENDUR_OS_PATHS_HPP
 #include <filesystem>
 
 namespace OS {
@@ -14,4 +14,4 @@ namespace OS {
     std::filesystem::path ogre_resource_dir(); //< Path to directory with ogre-internal resources
 }
 
-#endif /* RPG_OS_PATHS_HPP */
+#endif /* ILMENDUR_OS_PATHS_HPP */

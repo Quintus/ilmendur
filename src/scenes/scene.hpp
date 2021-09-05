@@ -1,5 +1,5 @@
-#ifndef RPG_SCENE_HPP
-#define RPG_SCENE_HPP
+#ifndef ILMENDUR_SCENE_HPP
+#define ILMENDUR_SCENE_HPP
 #include <string>
 
 namespace Ogre {
@@ -30,4 +30,4 @@ namespace SceneSystem {
 
 }
 
-#endif /* RPG_SCENE_HPP */
+#endif /* ILMENDUR_SCENE_HPP */

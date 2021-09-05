@@ -120,9 +120,8 @@ fs::path OS::exe_path()
 
 fs::path OS::saves_dir()
 {
-#pragma GCC warning "Change nameless-rpg to a sensible name"
 #if defined (__linux__)
-    return xdgdir(xdg::data_home) / fs::u8path("nameless-rpg/saveslots");
+    return xdgdir(xdg::data_home) / fs::u8path("ilmendur/saveslots");
 #else
 #error Unsupported system
 #endif
@@ -135,21 +134,21 @@ fs::path OS::slot2path(unsigned int slot)
 
 fs::path OS::game_resource_dir()
 {
-#ifdef RPG_DEBUG_BUILD
+#ifdef ILMENDUR_DEBUG_BUILD
     // Support running from the build directory in debug mode
     if (fs::exists(OS::exe_path().parent_path() / fs::u8path("CMakeCache.txt"))) {
-        return fs::u8path(RPG_SOURCE_DIR) / fs::u8path("data");
+        return fs::u8path(ILMENDUR_SOURCE_DIR) / fs::u8path("data");
     } else {
 #endif
-        return fs::u8path(RPG_DATADIR);
-#ifdef RPG_DEBUG_BUILD
+        return fs::u8path(ILMENDUR_DATADIR);
+#ifdef ILMENDUR_DEBUG_BUILD
     }
 #endif
 }
 
 fs::path OS::ogre_resource_dir()
 {
-#ifdef RPG_DEBUG_BUILD
+#ifdef ILMENDUR_DEBUG_BUILD
     // Support running from the build directory in debug mode.
     // Note that Ogre's internal resources in this case are only available
     // within the extracted downloaded ogre tarball.
@@ -159,7 +158,7 @@ fs::path OS::ogre_resource_dir()
     else {
 #endif
         return OS::game_resource_dir() / fs::u8path("ogre");
-#ifdef RPG_DEBUG_BUILD
+#ifdef ILMENDUR_DEBUG_BUILD
     }
 #endif
 }

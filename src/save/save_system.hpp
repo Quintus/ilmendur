@@ -1,5 +1,5 @@
-#ifndef RPG_SAVE_SYSTEM_HPP
-#define RPG_SAVE_SYSTEM_HPP
+#ifndef ILMENDUR_SAVE_SYSTEM_HPP
+#define ILMENDUR_SAVE_SYSTEM_HPP
 
 namespace Core {
     struct GameState;
@@ -11,4 +11,4 @@ namespace SaveSystem {
     void save(unsigned int slot, const Core::GameState& gs);
 };
 
-#endif /* RPG_SAVE_SYSTEM_HPP */
+#endif /* ILMENDUR_SAVE_SYSTEM_HPP */
