@@ -8,13 +8,14 @@ assets and object code, please pay special attention to the
 compatibility clause in the CC-BY-SA license, which makes this
 possible.
 
-The directory deps/ contains the source code of dependencies. For those,
-their respective licensing conditions apply as they are outlined in
-the respective dependency's directory.
+Any programming libraries Ilmendur depends on are not shipped with the
+game. Obtain them elsewhere and use them in accordance with each
+dependency's respective license. Thus, there is no licensing
+information for these dependencies to be found in this file.
 
                           -- Source Code --
 
-Copyright (C) 2020 Marvin Gülker and the project team
+Copyright (C) 2021 Marvin Gülker and the Ilmendur team
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@ file LICENSE.GPL.
 
    -- Anything else (namely support media like graphics, audios) --
 
-Copyright (C) 2020 Marvin Gülker and the project team
+Copyright (C) 2021 Marvin Gülker and the project team
 
 This work is licensed under a Creative Commons Attribution-ShareAlike
 4.0 International License. The full text of this license is provided
