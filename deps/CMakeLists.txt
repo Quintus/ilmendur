@@ -207,33 +207,6 @@ list(APPEND ILMENDUR_DEPENDENCIES
 # ^ Resolving cyclic dependency freetype/harfbuzz/freetype by specifying
 # harfbuzz twice.
 
-# This builds zziplib without any sample programmes.
-# Enabling ZZIPCOMPAT is required, because the build
-# otherwise fails (see https://github.com/gdraheim/zziplib/issues/109).
-# It is possible to remove this dependency if only non-zipped
-# models are used (most notably Ogre's included default models are
-# all zipped). For that, it is necessary to pass OGRE_CONFIG_ENABLE_ZIP=OFF
-# to Ogre's build system below.
-ExternalProject_Add(zziplib
-  DEPENDS zlib
-  URL "https://github.com/gdraheim/zziplib/archive/refs/tags/v0.13.72.tar.gz"
-  URL_HASH SHA256=93ef44bf1f1ea24fc66080426a469df82fa631d13ca3b2e4abaeab89538518dc
-  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/zziplib
-  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
-  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
-             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
-             -DBUILD_SHARED_LIBS=OFF
-             -DBUILD_STATIC_LIBS=ON
-             -DZZIPBINS=OFF
-             -DZZIPCOMPAT=ON
-             -DZZIPDOCS=OFF
-             -DZZIPSDL=OFF
-             -DZZIPTEST=OFF
-             -DZZIPWRAP=OFF)
-list(APPEND ILMENDUR_DEPENDENCIES
-  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libzzip-0.a)
-
 # Considerations:
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
 # - RENDERSYSTEM_GL3PLUS is the modern OpenGL renderer and used instead.
@@ -256,14 +229,14 @@ list(APPEND ILMENDUR_DEPENDENCIES
 #   plus a header file). This is build during Ogre's compilation. And, maybe,
 #   after years of further development, maybe STB(I) is not as bad anymore
 #   as one used to say.
-# - Assimp is probably needed to load external 3D models. It has hairy
-#   dependies (boost, because it wants to use boost::thread, boost::shared_ptr,
-#   and similar things which today are in C++11), which can be worked around.
-#   See if the project can do without for now.
+# - Starting from version 13, Ogre can be built without any external
+#   dependencies. It will then build everything it needs itself.
+#   However, the approach taken here allows a more fine-grained control
+#   where necessary.
 ExternalProject_Add(ogre3d
-  DEPENDS pugixml zlib zziplib freetype
-  URL "https://github.com/OGRECave/ogre/archive/v1.12.11.zip"
-  URL_HASH SHA256=b37af7c6bec50f07126cad1c07538cfb2b1ae5093a0c1bc2f97326f004957bea
+  DEPENDS pugixml zlib freetype
+  URL "https://github.com/OGRECave/ogre/archive/v13.0.1.zip"
+  URL_HASH SHA256=27f5c95e4640c4d106134d37ae0d587d680053f7f8a51fb8a5b56729b1edae18
   SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/ogre
   INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
@@ -275,8 +248,10 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_DEPENDENCIES=OFF
              -DOGRE_DEPENDENCIES_DIR=${ILMENDUR_DEPS_INSTALL_DIR}
              -DOGRE_BUILD_SAMPLES=OFF
+             -DOGRE_BUILD_TESTS=OFF
              -DOGRE_BUILD_TOOLS=OFF
              -DOGRE_BUILD_RENDERSYSTEM_GL=OFF
+             -DOGRE_BUILD_RENDERSYSTEM_GLES2=OFF
              -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=ON
              -DOGRE_BUILD_COMPONENT_OVERLAY_IMGUI=OFF
              -DOGRE_BUILD_COMPONENT_BITES=OFF

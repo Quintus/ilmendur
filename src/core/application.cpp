@@ -127,8 +127,7 @@ void Application::loadOgreResources()
     /* First add Ogre's own OgreInternal resources. These are
      * taken from Ogre's resources.cfg's OgreInternal section,
      * which they have to match. */
-    vector<fs::path> ogredirs = {ogre_internal_resource_dir / fs::u8path("ShadowVolume"),
-                                 ogre_internal_resource_dir / fs::u8path("RTShaderLib/materials"),
+    vector<fs::path> ogredirs = {ogre_internal_resource_dir / fs::u8path("Main"),
                                  ogre_internal_resource_dir / fs::u8path("RTShaderLib/GLSL"),
                                  ogre_internal_resource_dir / fs::u8path("RTShaderLib/HLSL_Cg"),
                                  ogre_internal_resource_dir / fs::u8path("Terrain")};
