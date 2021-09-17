@@ -46,17 +46,20 @@ DummyScene::DummyScene()
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
 
     // Load the test area. Note the test area model has the floor in the XY plane.
-    Ogre::Entity* p_entity = mp_scene_manager->createEntity("testarea.mesh");
     mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_area_node->setPosition(Ogre::Vector3(0, 0, 0));
-    mp_area_node->attachObject(p_entity);
+    Ogre::ResourceGroupManager::getSingleton().setWorldResourceGroupName("scenes/test_scene");
+    mp_area_node->loadChildren("testscene.scene");
+
+    //Ogre::Entity* p_entity = mp_scene_manager->createEntity("testarea.mesh");
+    //mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    //mp_area_node->setPosition(Ogre::Vector3(0, 0, 0));
+    //mp_area_node->attachObject(p_entity);
 }
 
 DummyScene::~DummyScene()
 {
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
-    delete mp_obj;
 }
 
 void DummyScene::update()

@@ -20,7 +20,6 @@ namespace SceneSystem {
     private:
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;
-        Ogre::ManualObject* mp_obj;
     };
 
 }
