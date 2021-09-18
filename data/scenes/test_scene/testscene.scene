@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- exporter: blender2ogre 0.8.2 -->
-<!-- export_time: Sat, 18 Sep 2021 07:02:30 +0000 -->
+<!-- export_time: Sat, 18 Sep 2021 19:38:32 +0000 -->
 <scene author="quintus" formatVersion="1.1" >
   <nodes >
     <node name="Light" >
@@ -40,19 +40,30 @@
         <userData />
       </entity>
     </node>
+    <node name="Tower" >
+      <position x="35.530178" y="-15.784740" z="0.000000" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <scale x="1.000000" y="1.000000" z="1.000000" />
+      <entity meshFile="Plane.001.mesh" name="Tower" >
+        <userData />
+      </entity>
+    </node>
   </nodes>
   <externals >
     <item type="material" >
-      <file name="Grass.material" />
+      <file name="Doorframe.material" />
     </item>
     <item type="material" >
       <file name="Bricks.material" />
     </item>
     <item type="material" >
-      <file name="Doorframe.material" />
+      <file name="Roof.material" />
     </item>
     <item type="material" >
-      <file name="Roof.material" />
+      <file name="Grass.material" />
+    </item>
+    <item type="material" >
+      <file name="Bricks2.material" />
     </item>
   </externals>
   <environment >
