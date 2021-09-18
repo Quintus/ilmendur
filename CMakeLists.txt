@@ -26,7 +26,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(ILMENDUR
   VERSION 0.0.1
-  DESCRIPTION "Ilmendur - Heirs to the Elven word. A Role-Play Game."
+  DESCRIPTION "Ilmendur - Heirs to the Elven sword. A Role-Play Game."
   HOMEPAGE_URL "https://redmine.guelker.eu/projects/ilmendur"
   LANGUAGES CXX)
 
