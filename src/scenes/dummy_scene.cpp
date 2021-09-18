@@ -49,6 +49,7 @@ DummyScene::DummyScene()
     mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
     Ogre::ResourceGroupManager::getSingleton().setWorldResourceGroupName("scenes/test_scene");
     mp_area_node->loadChildren("testscene.scene");
+    replaceBlenderEntities(mp_area_node);
 
     //Ogre::Entity* p_entity = mp_scene_manager->createEntity("testarea.mesh");
     //mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
