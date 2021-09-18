@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- exporter: blender2ogre 0.8.2 -->
-<!-- export_time: Sat, 18 Sep 2021 19:38:32 +0000 -->
+<!-- export_time: Sat, 18 Sep 2021 20:12:57 +0000 -->
 <scene author="quintus" formatVersion="1.1" >
   <nodes >
     <node name="Light" >
@@ -48,10 +48,21 @@
         <userData />
       </entity>
     </node>
+    <node name="Test Sign" >
+      <position x="31.826126" y="-14.740783" z="0.499985" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <scale x="1.000000" y="1.000000" z="1.000000" />
+      <entity meshFile="Cube.mesh" name="Test Sign" >
+        <userData >
+          <property data="1" name="il_obj" type="int" />
+          <property data="1" name="il_text" type="int" />
+        </userData>
+      </entity>
+    </node>
   </nodes>
   <externals >
     <item type="material" >
-      <file name="Doorframe.material" />
+      <file name="Grass.material" />
     </item>
     <item type="material" >
       <file name="Bricks.material" />
@@ -60,7 +71,10 @@
       <file name="Roof.material" />
     </item>
     <item type="material" >
-      <file name="Grass.material" />
+      <file name="Doorframe.material" />
+    </item>
+    <item type="material" >
+      <file name="extern.il_obj.material" />
     </item>
     <item type="material" >
       <file name="Bricks2.material" />
