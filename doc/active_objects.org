@@ -1,0 +1,84 @@
+#+TITLE: Active Objects
+#+LANGUAGE: en
+#+AUTHOR: Ilmendur Team
+
+There are a lot of objects which are re-used between multiple areas.
+When designing a new area in Blender, how do you tell Blender that
+a certain object should be one from the list of re-usable objects?
+This document explains how.
+
+* Overview
+
+First, the game employs a concept called /entities/. Entities are all
+re-usable objects and each of these objects has a specific ID number.
+This ID number is assigned in the definition of the =entity_type=
+enum. In order to make the game engine aware that one of those objects
+listed in the =entity_type= enum is wanted at a certain place, you
+need to add a /custom property/ to it in Blender (in Blender 2.8, this
+is is possible though the menu Object Data Proerties [green triangle icon on
+the right side] -> Custom Properties. Click “Add” and then “Edit” on
+the newly created property. Set the property name to =il_entity= and
+the property value to the ID of the entity you want to be placed here.
+For instance, if you want a sign here, set the =il_entity= property to
+=1=, which maps to the symbolic constant =entity_type::sign= in the
+game's C++ code (see the =entity_type= enum’s definition).
+
+Now when the game engine loads an area (a “scene”, as it's
+called by Ogre), it will look for objects with a =il_entity= property
+and automatically /replaces/ the entire object with the built-in
+entity according to the value of that property. So, if the scene
+loader encounters an object with =il_entity= set to =1=, it will
+delete whatever you placed there in Blender and instead place the
+built-in entity there.
+
+Since such reusable built-in entites are typically objects the player
+interacts with in one way or another, these are called /active
+objects/.
+
+* Relevance of the Blender object
+
+The Blender object with the =il_entity= property is recursively
+deleted by the scene loader. This means that in principle, you can
+place whatever object you want at that position in Blender, for
+instance Blender’s famous Suzanne. Normally a cube or a sphere will
+do. It’s recommended to assign a material called =extern.il_obj= to
+the object[fn:1] and set that material to a bright colour like yellow
+so you notice the object when editing the scene in Blender, but it is
+not technically required to do so, because the material will be
+ignored by the scene loader anyway due to the object being erased as a
+whole.
+
+What /does/ matter is the origin and orientation (rotation) of the
+original object in Blender. The scene loader will usually apply this
+information accordingly. So if you request a sign at a specific
+position in Blender by placing a Suzanne face at the place and setting
+=il_entity= to =1=, the sign’s origin will be set to Suzanne’s origin
+and will face into the same direction as Suzanne. Some special active
+objects may however deliberately ignore this information on loading.
+
+* Additional information for specific entities
+
+Some active objects need additional information to function properly.
+Signs for example make no sense without a text on them. These pieces
+of information are added through additional custom properties on the
+active object in Blender. Since these vary by entity type, they cannot
+be described here fully. As an example, the ID 1 entities (signs)
+require an additional custom property called =il_text= which should
+contain the numerical ID of an external text as specified in the
+=externalTexts= static variable in the C++ source code[fn:2].
+
+* Reference material
+
+Currently there is no reference material available for what active
+objects exist and which additional parameters they expect; you need to
+read the source code for that.
+
+* Footnotes
+
+[fn:1] The blender2ogre Blender plugin ignores materials prefixed with
+=extern.= on export so it does not clutter the export target directory.
+
+[fn:2] This is a deliberate design decision. While it would be easier
+for the designer to write the actual text into the custom property,
+this would clash with the translation system. All translatable strings
+must be contained within the source code for it to work.
