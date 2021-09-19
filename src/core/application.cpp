@@ -141,6 +141,7 @@ void Application::loadOgreResources()
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("general")).u8string(), "FileSystem", "General"); // Ogre convention wants the "General" group to be capitalised
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/dummy_scene")).u8string(), "FileSystem", "scenes/dummy_scene"); // Ogre convention wants the "General" group to be capitalised
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/test_scene")).u8string(), "FileSystem", "scenes/test_scene");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("meshes")).u8string(), "FileSystem", "miscmeshes");
 
     // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();

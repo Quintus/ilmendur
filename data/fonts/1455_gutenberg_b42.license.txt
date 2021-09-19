@@ -1,0 +1,29 @@
+The font is Copyright © 2014 KPS Fonts, Switzerland.
+It was found here: <https://www.schäffel.ch/de_gruppe2.html>
+
+Original license text from <https://www.schäffel.ch/allgemein_de.html>
+(checked on 2021-09-19) follows:
+
+Allgemeine Informationen
+========================
+
+Wieso sind die KPS-Fonts gratis?
+--------------------------------
+
+Die KPS-Fonts wurden seit 1999 für den Eigenbedarf (vor allem im
+didaktischen Bereich) hergestellt. Als Software wurde Softy 1.07b und
+Font Lab 5 verwendet. Dass sie nun frei im Netz zugänglich sind, hängt
+mit dem Wunsch zusammen, sie mit interessierten Anwendern zu teilen
+und Anregungen und Verbesserungsvorschläge einzuarbeiten. Die
+Kontaktadresse ist auf der Startseite oben links verlinkt (manuell:
+kpschaeffel@bluewin.ch)
+
+Die Verwendung der OpenType-Features bei den KPS-Fonts ist
+experimentell und genügt weder den gängigen Industrie-Standards noch
+kann für ihr Funktionieren irgendeine Garantie übernommen werden. Die
+Fonts dürfen für private und professionelle Zwecke unbeschränkt
+verwendet werden. Sie kommen vollständig und mit allen
+Einbettungsrechten. Es wird gebeten, jegliche Modifikation der
+Datensätze, den Vertrieb unter anderen Namen, die Verteilung auf
+anderen Websites als dieser oder die Eingliederung in Font-Pakete zu
+unterlassen.

@@ -1,5 +1,6 @@
 #include "scene.hpp"
 #include "../entities/entity.hpp"
+#include "../exttexts/exttexts.hpp"
 #include <OGRE/Ogre.h>
 #include <cassert>
 #include <iostream>
@@ -36,27 +37,43 @@ bool Scene::isFinishing()
  * Blender). It replaces those nodes according to the information in
  * the entity_type table (see entities/entity.hpp).
  *
- * `p_node` itself is also checked.
+ * `p_scene_node` itself is also checked.
  */
-void Scene::replaceBlenderEntities(Ogre::Node* p_node)
+void Scene::replaceBlenderEntities(Ogre::SceneNode* p_scene_node)
 {
-    Ogre::SceneNode* p_scene_node = static_cast<Ogre::SceneNode*>(p_node);
-    cout << "Executing replaceBlanderEntities() for " << p_scene_node->getName() << endl;
-
     if (p_scene_node->numAttachedObjects() > 0) { // Transient nodes have zero entities
         assert(p_scene_node->numAttachedObjects() == 1); // blender2ogre always exports 1 node per entity
         Ogre::MovableObject* p_entity = p_scene_node->getAttachedObject(0);
 
         if (p_entity->getUserObjectBindings().getUserAny("il_entity").has_value()) {
             int etype = Ogre::any_cast<int>(p_entity->getUserObjectBindings().getUserAny("il_entity"));
-            cout << "il_entity type " << etype << " found! This needs to be replaced here" << endl;
+
+            cout << "il_entity type " << etype << " found! Replacing it." << endl;
+            replaceBlenderEntity(p_scene_node, static_cast<entity_type>(etype));
             return;
         }
     }
 
     for(Ogre::Node* p_child: p_scene_node->getChildren()) {
-        replaceBlenderEntities(p_child);
+        replaceBlenderEntities(static_cast<Ogre::SceneNode*>(p_child));
+    }
+}
+
+void Scene::replaceBlenderEntity(Ogre::SceneNode* p_scene_node, entity_type etype)
+{
+    assert(p_scene_node->numAttachedObjects() == 1);
+    Ogre::MovableObject* p_blender_entity = p_scene_node->detachObject(static_cast<short unsigned int>(0));
+    Ogre::Entity* p_new_entity = nullptr;
+
+    switch (etype) {
+    case entity_type::sign:
+        cout << "Replacing " << p_scene_node->getName() << " with a sign. " << endl;
+        cout << "The sign should read '" << ExternalText::fetchExternalText(Ogre::any_cast<int>(p_blender_entity->getUserObjectBindings().getUserAny("il_text"))) << "'." << endl;
+        p_new_entity = mp_scene_manager->createEntity("sign.mesh");
+        break;
+    default:
+        throw(runtime_error(string("Invalid target entity type: ") + to_string(static_cast<int>(etype))));
     }
 
-    cout << "replaceBlanderEntities() done for " << p_scene_node->getName() << endl;
+    p_scene_node->attachObject(p_new_entity);
 }

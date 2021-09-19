@@ -4,7 +4,7 @@
 
 namespace ExternalText {
 
-    std::string fetchExternalText(unsigned long id);
+    std::string fetchExternalText(int id);
 }
 
 #endif /* ILMENDUR_EXTTEXTS_HPP */

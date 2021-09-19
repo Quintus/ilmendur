@@ -18,7 +18,7 @@ static const char* externalTexts[] = {
  * The `id` parameter corresponds to the `il_text` property
  * in Blender scenes. Its value must be >= 1.
  */
-std::string ExternalText::fetchExternalText(unsigned long id)
+std::string ExternalText::fetchExternalText(int id)
 {
     assert(id > 0);
     return externalTexts[id];

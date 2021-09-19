@@ -4,8 +4,10 @@
 
 namespace Ogre {
     class SceneManager;
-    class Node;
+    class SceneNode;
 }
+
+enum class entity_type;
 
 namespace SceneSystem {
 
@@ -24,7 +26,8 @@ namespace SceneSystem {
         bool isFinishing();
     protected:
         Ogre::SceneManager* mp_scene_manager;
-        void replaceBlenderEntities(Ogre::Node* p_node);
+        void replaceBlenderEntities(Ogre::SceneNode* p_scene_node);
+        void replaceBlenderEntity(Ogre::SceneNode* p_scene_node, entity_type etype);
     private:
         std::string m_name;
         bool m_finish;
