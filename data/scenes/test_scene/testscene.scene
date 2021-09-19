@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- exporter: blender2ogre 0.8.2 -->
-<!-- export_time: Sun, 19 Sep 2021 12:24:07 +0000 -->
+<!-- export_time: Sun, 19 Sep 2021 19:54:21 +0000 -->
 <scene author="quintus" formatVersion="1.1" >
   <nodes >
     <node name="Light" >
-      <position x="4.076245" y="1.005454" z="5.903862" />
-      <rotation qw="0.570947" qx="0.169076" qy="0.272171" qz="0.755880" />
+      <position x="4.076245" y="5.903862" z="-1.005454" />
+      <rotation qw="0.570947" qx="0.169076" qy="0.755880" qz="-0.272171" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
     </node>
     <node name="Camera" >
-      <position x="7.358891" y="-6.925791" z="4.958309" />
-      <rotation qw="0.780483" qx="0.483536" qy="0.208704" qz="0.336872" />
+      <position x="7.358891" y="4.958309" z="6.925791" />
+      <rotation qw="0.780483" qx="0.483536" qy="0.336872" qz="-0.208704" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <camera fov="0.356186" name="Camera" projectionType="perspective" >
         <clipping far="100.000000" near="0.100000" />
       </camera>
     </node>
     <node name="Ground" >
-      <position x="0.000000" y="0.000000" z="0.000000" />
-      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <position x="0.000000" y="0.000000" z="-0.000000" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="-0.000000" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <entity meshFile="Plane.mesh" name="Ground" >
         <userData />
       </entity>
     </node>
     <node name="Shade" >
-      <position x="-15.117436" y="21.000000" z="6.000000" />
-      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <position x="-15.117436" y="6.000000" z="-21.000000" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="-0.000000" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <entity meshFile="Cube.001.mesh" name="Shade" >
         <userData />
       </entity>
     </node>
     <node name="Building" >
-      <position x="-14.000000" y="-12.000000" z="5.500000" />
-      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <position x="-14.000000" y="5.500000" z="12.000000" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="-0.000000" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <entity meshFile="Cube.002.mesh" name="Building" >
         <userData />
       </entity>
     </node>
     <node name="Tower" >
-      <position x="35.530178" y="-15.784740" z="0.000000" />
-      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="0.000000" />
+      <position x="35.530178" y="0.000000" z="15.784740" />
+      <rotation qw="1.000000" qx="0.000000" qy="0.000000" qz="-0.000000" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <entity meshFile="Plane.001.mesh" name="Tower" >
         <userData />
       </entity>
     </node>
     <node name="Test Sign" >
-      <position x="31.826126" y="-14.740783" z="-0.000015" />
-      <rotation qw="0.707107" qx="0.000000" qy="0.000000" qz="0.707107" />
+      <position x="31.826126" y="-0.000015" z="14.740783" />
+      <rotation qw="0.707107" qx="0.000000" qy="0.707107" qz="-0.000000" />
       <scale x="1.000000" y="1.000000" z="1.000000" />
       <entity meshFile="Cube.mesh" name="Test Sign" >
         <userData >
@@ -62,6 +62,15 @@
   </nodes>
   <externals >
     <item type="material" >
+      <file name="Bricks.material" />
+    </item>
+    <item type="material" >
+      <file name="extern.il_obj.material" />
+    </item>
+    <item type="material" >
+      <file name="Bricks2.material" />
+    </item>
+    <item type="material" >
       <file name="Doorframe.material" />
     </item>
     <item type="material" >
@@ -69,15 +78,6 @@
     </item>
     <item type="material" >
       <file name="Grass.material" />
-    </item>
-    <item type="material" >
-      <file name="Bricks2.material" />
-    </item>
-    <item type="material" >
-      <file name="Bricks.material" />
-    </item>
-    <item type="material" >
-      <file name="extern.il_obj.material" />
     </item>
   </externals>
   <environment >

@@ -28,13 +28,12 @@ DummyScene::DummyScene()
 
     // also need to tell where we are
     mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_cam_node->setPosition(0, 0, 1.75);
-    /* Align camera with Blender's axes. Blender has Z pointing upwards
-     * while Ogre's camera by default faces down the Z axis, i.e. Ogre
-     * treats the Y axis as the height. The below line rotates the camera
-     * so that it look in -Y axis direction, making the +Z axis the upwards direction
-     * like it is in Blender. */
-    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z) * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
+    mp_cam_node->setPosition(0, 1.75, 0);
+    /* By default, Ogre's camera faces down the +Z axis. Note that
+     * Blender's axes setup is different from Ogre's; while Ogre has the
+     * Y axis pointing upwards, Blender has the Z axis pointing upwards.
+     * This requires to swap the Y and Z axes when exporting with blender2ogre.
+     */
 
     // create the camera
     Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
@@ -53,7 +52,7 @@ DummyScene::DummyScene()
 
     // Add player figure
     Ogre::SceneNode* p_player = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_player->setPosition(Ogre::Vector3(25, 0, 2));
+    p_player->setPosition(Ogre::Vector3(25, 2, 0));
     p_player->attachObject(mp_scene_manager->createEntity("freya.mesh"));
 }
 
