@@ -51,10 +51,10 @@ DummyScene::DummyScene()
     mp_area_node->loadChildren("testscene.scene");
     replaceBlenderEntities(mp_area_node);
 
-    //Ogre::Entity* p_entity = mp_scene_manager->createEntity("testarea.mesh");
-    //mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    //mp_area_node->setPosition(Ogre::Vector3(0, 0, 0));
-    //mp_area_node->attachObject(p_entity);
+    // Add player figure
+    Ogre::SceneNode* p_player = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    p_player->setPosition(Ogre::Vector3(25, 0, 2));
+    p_player->attachObject(mp_scene_manager->createEntity("freya.mesh"));
 }
 
 DummyScene::~DummyScene()

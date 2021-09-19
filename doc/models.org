@@ -1,0 +1,14 @@
+#+TITLE: Models
+#+LANGUAGE: en
+#+AUTHOR: Ilmendur Team
+
+Some points about designing new models.
+
+* Areas (scenes)
+
+* Models
+
+- Orientation: All character and object models should “look” down the
+  X axis in their default state. That is, their (possibly
+  hypothetical) eyes should look into the direction in which the X
+  axis values increase. In Blender, this is the red axis.
