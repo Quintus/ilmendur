@@ -11,7 +11,9 @@
  */
 enum class entity_type {
     invalid = 0, // Default value to indicate no type is set
-    sign = 1     // A sign with text.
+    sign = 1,    // A sign with text.
+
+    fin // Keep this value last and do not assign a number to it
 };
 
 #endif /* ILMENDUR_ENTITY_HPP */

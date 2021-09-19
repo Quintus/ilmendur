@@ -47,6 +47,7 @@ void Scene::replaceBlenderEntities(Ogre::SceneNode* p_scene_node)
 
         if (p_entity->getUserObjectBindings().getUserAny("il_entity").has_value()) {
             int etype = Ogre::any_cast<int>(p_entity->getUserObjectBindings().getUserAny("il_entity"));
+            assert(etype > 0 && etype < static_cast<int>(entity_type::fin));
 
             cout << "il_entity type " << etype << " found! Replacing it." << endl;
             replaceBlenderEntity(p_scene_node, static_cast<entity_type>(etype));

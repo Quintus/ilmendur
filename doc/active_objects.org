@@ -35,6 +35,10 @@ Since such reusable built-in entites are typically objects the player
 interacts with in one way or another, these are called /active
 objects/.
 
+IDs are values greater than zero and smaller than =entity_type::fin=.
+Do not use ID zero, it will crash the scene loader with an assertion
+failure. Value zero is used internally by the code.
+
 * Relevance of the Blender object
 
 The Blender object with the =il_entity= property is recursively
