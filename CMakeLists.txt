@@ -72,6 +72,7 @@ set(CMAKE_PREFIX_PATH          ${ILMENDUR_DEPS_INSTALL_DIR})
 # results in $ILMENDUR_DEPENDENCIES being set in this scope.
 add_subdirectory(deps)
 include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/bullet
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
