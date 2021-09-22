@@ -2,13 +2,19 @@
 #include "../core/application.hpp"
 #include "../core/window.hpp"
 #include "../audio/music.hpp"
+#include <chrono>
+#include <iostream>
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/OgreMath.h>
+#include <btBulletDynamicsCommon.h>
 
+using namespace std;
 using namespace SceneSystem;
+
+chrono::time_point<chrono::high_resolution_clock> last_physics_update;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
@@ -51,9 +57,35 @@ DummyScene::DummyScene()
     replaceBlenderEntities(mp_area_node);
 
     // Add player figure
-    Ogre::SceneNode* p_player = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    p_player->setPosition(Ogre::Vector3(25, 2, 0));
-    p_player->attachObject(mp_scene_manager->createEntity("freya.mesh"));
+    mp_player_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+    mp_player_node->setPosition(Ogre::Vector3(25, 2, 0));
+    mp_player_node->attachObject(mp_scene_manager->createEntity("freya.mesh"));
+
+    // Initialise physics
+    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+    btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
+    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
+    mp_bullet_world = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+    mp_bullet_world->setGravity(btVector3(0, 0, -10));
+
+    Ogre::Vector3 pos = mp_player_node->getPosition();
+    Ogre::Vector3 hs = mp_player_node->getAttachedObject(0)->getBoundingBox().getHalfSize();
+    btScalar mass(0.63); // kg/100
+
+    btCollisionShape* player_shape = new btBoxShape(btVector3(btScalar(hs.x), btScalar(hs.y), btScalar(hs.z)));
+    btTransform player_transform;
+    player_transform.setIdentity();
+    player_transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+    btVector3 local_inertia(0, 0, 0);
+    player_shape->calculateLocalInertia(mass, local_inertia);
+
+    btDefaultMotionState* myMotionState = new btDefaultMotionState(player_transform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, player_shape, local_inertia);
+    btRigidBody* player_rbody = new btRigidBody(rbInfo);
+    mp_bullet_world->addRigidBody(player_rbody);
+
+    last_physics_update = chrono::high_resolution_clock::now();
 }
 
 DummyScene::~DummyScene()
@@ -64,6 +96,22 @@ DummyScene::~DummyScene()
 
 void DummyScene::update()
 {
+    chrono::time_point<chrono::high_resolution_clock> now = chrono::high_resolution_clock::now();
+    mp_bullet_world->stepSimulation(chrono::duration_cast<chrono::microseconds>(now - last_physics_update).count() / 1000000.0);
+    last_physics_update = now;
+
+    cout << "The bullet world has " << mp_bullet_world->getNumCollisionObjects() << " objects." << endl;
+    for(int i=0; i < mp_bullet_world->getNumCollisionObjects(); i++) {
+        btRigidBody* p_body = btRigidBody::upcast(mp_bullet_world->getCollisionObjectArray()[i]);
+        if (p_body) {
+            btTransform transform;
+            p_body->getMotionState()->getWorldTransform(transform);
+            cout << "Player is now at X=" << transform.getOrigin().getX() << " Y=" << transform.getOrigin().getY() << " Z=" << transform.getOrigin().getZ() << endl;
+        }
+        else {
+            cout << "Encountered something else than a rigid body..." << endl;
+        }
+    }
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)

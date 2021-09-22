@@ -53,6 +53,8 @@ endif()
 file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.hpp")
 add_executable(ilmendur ${ilmendur_sources})
 
+add_executable(bullettest "bullettest.cpp")
+
 ########################################
 # Dependencies
 
@@ -80,7 +82,14 @@ include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/STBICodec
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene)
 add_dependencies(ilmendur ogre3d bullet glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
+add_dependencies(bullettest ogre3d bullet) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
 target_link_libraries(ilmendur ${ILMENDUR_DEPENDENCIES} stdc++fs)
+target_link_libraries(bullettest
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletDynamics.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletCollision.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libLinearMath.a)
+#  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletInverseDynamics.a
+#  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBullet3Common.a
 
 # System-specific libraries are linked dynamically from the host.
 # Following is the configuration to find them and what to do
