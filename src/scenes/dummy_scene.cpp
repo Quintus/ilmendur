@@ -34,7 +34,7 @@ DummyScene::DummyScene()
 
     // also need to tell where we are
     mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_cam_node->setPosition(0, 0, 1.75);
+    mp_cam_node->setPosition(20, 20, 1.75);
     /* Align camera with Blender's axes. Blender has Z pointing upwards
      * while Ogre's camera by default faces down the Z axis, i.e. Ogre
      * treats the Y axis as the height. The below line rotates the camera
@@ -107,6 +107,7 @@ void DummyScene::update()
         if (p_body) {
             btTransform transform;
             p_body->getMotionState()->getWorldTransform(transform);
+            mp_player_node->setPosition(Ogre::Vector3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ()));
             cout << "Player is now at X=" << transform.getOrigin().getX() << " Y=" << transform.getOrigin().getY() << " Z=" << transform.getOrigin().getZ() << endl;
         }
         else {
