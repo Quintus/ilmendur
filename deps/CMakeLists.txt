@@ -340,3 +340,7 @@ message(STATUS "Compiling these dependencies: ${ILMENDUR_DEPENDENCIES}")
 
 # Promote to caller
 set(ILMENDUR_DEPENDENCIES ${ILMENDUR_DEPENDENCIES} PARENT_SCOPE)
+
+# btogre is included as it does not offer releases
+add_library(btogre "btogre/BtOgre.cpp" "btogre/BtOgre.h")
+add_dependencies(btogre bullet)

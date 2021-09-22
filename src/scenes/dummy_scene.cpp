@@ -2,6 +2,7 @@
 #include "../core/application.hpp"
 #include "../core/window.hpp"
 #include "../audio/music.hpp"
+#include "../actors/static_geometry.hpp"
 #include "../actors/freya.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
@@ -18,6 +19,7 @@ DummyScene::DummyScene()
       m_physics(),
       mp_area_node(nullptr),
       mp_cam_node(nullptr),
+      mp_ground(nullptr),
       mp_player(nullptr)
 {
     // register our scene with the RTSS
@@ -57,6 +59,10 @@ DummyScene::DummyScene()
     mp_area_node->loadChildren("testscene.scene");
     replaceBlenderEntities(mp_area_node);
 
+    // Extract ground from the loaded scene and add it into the physics system
+    mp_ground = new StaticGeometry(mp_scene_manager->getSceneNode("Ground"));
+    m_physics.addStaticGeometry(mp_ground);
+
     // Add player figure
     mp_player = new Freya(mp_scene_manager->getRootSceneNode()->createChildSceneNode());
     mp_player->getSceneNode()->setPosition(Ogre::Vector3(25, 0, 2));
@@ -66,8 +72,7 @@ DummyScene::DummyScene()
 
 DummyScene::~DummyScene()
 {
-    m_physics.removeActor(mp_player);
-    delete mp_player;
+    //delete mp_player;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);

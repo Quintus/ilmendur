@@ -3,6 +3,7 @@
 #include "scene.hpp"
 #include "../physics/physics.hpp"
 
+class StaticGeometry;
 class Freya;
 
 namespace SceneSystem {
@@ -19,6 +20,7 @@ namespace SceneSystem {
         PhysicsSystem::PhysicsEngine m_physics;
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;
+        StaticGeometry* mp_ground;
         Freya* mp_player;
     };
 
