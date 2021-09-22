@@ -306,6 +306,7 @@ list(APPEND ILMENDUR_DEPENDENCIES
 # than OpenGL). Note that passing OpenGL_GL_PREFERENCE=GLVND is
 # important. This must be set to the same value used in Ilmendur's
 # main CMakeLists.txt to prevent ABI mismatches.
+# Do not set USE_DOUBLE_PRECISION=ON. It will crash bullet with a segfault.
 ExternalProject_Add(bullet
   URL "https://github.com/bulletphysics/bullet3/archive/refs/tags/3.17.tar.gz"
   URL_HASH SHA256=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61
@@ -320,6 +321,10 @@ ExternalProject_Add(bullet
              -DBUILD_CPU_DEMOS=OFF
              -DBUILD_OPENGL3_DEMOS=OFF
              -DBUILD_UNIT_TESTS=OFF
+             -DBUILD_PYBULLET=OFF
+             -DBUILD_EXTRAS=OFF
+             -DBUILD_CLSOCKET=OFF
+             -DBUILD_ENET=OFF
              -DOpenGL_GL_PREFERENCE=GLVND)
 list(APPEND ILMENDUR_DEPENDENCIES
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libLinearMath.a
