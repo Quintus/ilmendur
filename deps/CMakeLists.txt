@@ -323,11 +323,11 @@ ExternalProject_Add(bullet
              -DOpenGL_GL_PREFERENCE=GLVND)
 list(APPEND ILMENDUR_DEPENDENCIES
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libLinearMath.a
-#  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBullet3Common.a
-#  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletInverseDynamics.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBullet3Common.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletInverseDynamics.a
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletCollision.a
-  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletDynamics.a)
-#  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletSoftBody.a)
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletDynamics.a
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libBulletSoftBody.a)
 
 # Reverse the dependencies list to have it fit for the linker
 list(REVERSE ILMENDUR_DEPENDENCIES)
