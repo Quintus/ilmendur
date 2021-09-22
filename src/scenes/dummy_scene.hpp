@@ -1,14 +1,9 @@
 #ifndef ILMENDUR_DUMMY_SCENE_HPP
 #define ILMENDUR_DUMMY_SCENE_HPP
 #include "scene.hpp"
+#include "../physics/physics.hpp"
 
-namespace Ogre {
-    class SceneNode;
-    class ManualObject;
-}
-
-class btRigidBody;
-class btDiscreteDynamicsWorld;
+class Freya;
 
 namespace SceneSystem {
 
@@ -21,11 +16,10 @@ namespace SceneSystem {
         virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void update();
     private:
+        PhysicsSystem::PhysicsEngine m_physics;
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;
-        Ogre::SceneNode* mp_player_node;
-        btRigidBody* mp_player_rbody;
-        btDiscreteDynamicsWorld* mp_bullet_world;
+        Freya* mp_player;
     };
 
 }
