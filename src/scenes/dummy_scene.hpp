@@ -7,6 +7,9 @@ namespace Ogre {
     class ManualObject;
 }
 
+class btRigidBody;
+class btDiscreteDynamicsWorld;
+
 namespace SceneSystem {
 
     class DummyScene: public Scene
@@ -20,6 +23,9 @@ namespace SceneSystem {
     private:
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;
+        Ogre::SceneNode* mp_player_node;
+        btRigidBody* mp_player_rbody;
+        btDiscreteDynamicsWorld* mp_bullet_world;
     };
 
 }
