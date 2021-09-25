@@ -16,7 +16,7 @@ using namespace SceneSystem;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
-      m_physics(),
+      m_physics(mp_scene_manager->getRootSceneNode()),
       mp_area_node(nullptr),
       mp_cam_node(nullptr),
       mp_ground(nullptr),

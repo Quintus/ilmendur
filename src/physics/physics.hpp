@@ -14,7 +14,7 @@ namespace PhysicsSystem {
      */
     class PhysicsEngine {
     public:
-        PhysicsEngine();
+        PhysicsEngine(Ogre::SceneNode* p_root_node);
         ~PhysicsEngine();
 
         void addActor(Actor* p_actor);
@@ -26,6 +26,7 @@ namespace PhysicsSystem {
     private:
         std::chrono::time_point<std::chrono::high_resolution_clock> m_last_update;
         BtOgre::DynamicsWorld m_bto_world;
+        BtOgre::DebugDrawer m_bto_debug;
     };
 }
 

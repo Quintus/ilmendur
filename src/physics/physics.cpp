@@ -8,14 +8,16 @@ using namespace PhysicsSystem;
 /// Gravity the world is exposed to, in m/s².
 static const float GRAVITY_ACCEL = -9.81f;
 
-PhysicsEngine::PhysicsEngine()
-    : m_bto_world(Ogre::Vector3(0, 0, GRAVITY_ACCEL))
+PhysicsEngine::PhysicsEngine(Ogre::SceneNode* p_root_node)
+    : m_bto_world(Ogre::Vector3(0, 0, GRAVITY_ACCEL)),
+      m_bto_debug(p_root_node, m_bto_world.getBtWorld())
 {
     m_last_update = chrono::high_resolution_clock::now();
 }
 
 PhysicsEngine::~PhysicsEngine()
 {
+    m_bto_debug.clear();
 }
 
 void PhysicsEngine::addActor(Actor* p_actor)
@@ -68,6 +70,8 @@ void PhysicsEngine::update()
     chrono::time_point<chrono::high_resolution_clock> now = chrono::high_resolution_clock::now();
     m_bto_world.getBtWorld()->stepSimulation(chrono::duration_cast<chrono::microseconds>(now - m_last_update).count() / 1000000.0);
     m_last_update = now;
+
+    m_bto_debug.update();
 
     /* Note: BtOgre registers a callback into Bullet, in which
      * it automatically updates all the scene nodes associated with
