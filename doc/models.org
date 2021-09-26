@@ -4,7 +4,18 @@
 
 Some points about designing new models.
 
+* Common points
+
+- Please always use the lowest count of vertices possible. If you need
+  a rectangle, that’s only four vertices. If you subdivided the
+  rectangle’s edge before, remove the subdivisions. This lightens the
+  load on the rendering engine (Ogre) and results in improved
+  performance. It will also make life easier for the collision engine.
+
 * Areas (scenes)
+
+- Please refer to active_objects.org for information on how to
+  reference common models in your area (e.g. for signs).
 
 * Models
 
@@ -12,3 +23,14 @@ Some points about designing new models.
   X axis in their default state. That is, their (possibly
   hypothetical) eyes should look into the direction in which the X
   axis values increase. In Blender, this is the red axis.
+  - Related: Do not request realtime rotation in the model’s default
+    state. The game will rotate the model when it finds that to be
+    necessary.
+- Z start: Models should have their “feet” vertices at Z=0. Failure to
+  do so will make the model misfit the 3D world.
+- Origin: A model’s origin should be in the centre of its geometry,
+  not at the centre of Blender’s 3D world.
+  For models which collide using collision boxes, BtOgre calculates
+  the collision box starting from the model’s origin. If the origin is
+  somewhere else than the geometry’s centre, the collision box will be
+  set off accordingly (may be a desired effect, but be aware of it).
