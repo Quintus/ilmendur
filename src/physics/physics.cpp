@@ -3,7 +3,6 @@
 #include "debug_drawer.hpp"
 #include "../actors/actor.hpp"
 #include "../actors/static_geometry.hpp"
-#include <iostream>
 
 using namespace std;
 using namespace PhysicsSystem;
@@ -31,6 +30,24 @@ Ogre::Vector3 PhysicsSystem::bulletVec2Ogre(const btVector3& v)
     return Ogre::Vector3(v.x(), v.y(), v.z());
 }
 
+PhysicsMotionState::PhysicsMotionState(Ogre::SceneNode* p_node)
+    : mp_node(p_node)
+{
+    assert(mp_node);
+}
+
+void PhysicsMotionState::getWorldTransform(btTransform& trans) const
+{
+    trans.setRotation(ogreQuat2Bullet(mp_node->getOrientation()));
+    trans.setOrigin(ogreVec2Bullet(mp_node->getPosition()));
+}
+
+void PhysicsMotionState::setWorldTransform(const btTransform& trans)
+{
+    mp_node->setOrientation(bulletQuat2Ogre(trans.getRotation()));
+    mp_node->setPosition(bulletVec2Ogre(trans.getOrigin()));
+}
+
 RigidBody::RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype)
     : m_colltype(ctype),
       mp_bullet_collshape(nullptr),
@@ -40,15 +57,12 @@ RigidBody::RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype)
     assert(p_entity->getParentSceneNode()); // Must be attached to the scene
     mp_bullet_collshape = calculateCollisionShape(p_entity, ctype);
 
-    btTransform ground_transform(ogreQuat2Bullet(p_entity->getParentSceneNode()->getOrientation()),
-                                 ogreVec2Bullet(p_entity->getParentSceneNode()->getPosition()));
-
     btVector3 local_inertia(0, 0, 0);
     if (mass != 0.0f) { // zero mass means immobile rigid body to bullet
         mp_bullet_collshape->calculateLocalInertia(mass, local_inertia);
     }
 
-    mp_bullet_motionstate = new btDefaultMotionState(ground_transform);
+    mp_bullet_motionstate = new PhysicsMotionState(p_entity->getParentSceneNode());
 
     btRigidBody::btRigidBodyConstructionInfo args(mass, mp_bullet_motionstate, mp_bullet_collshape, local_inertia);
     mp_bullet_rbody = new btRigidBody(args);
@@ -93,7 +107,6 @@ void PhysicsEngine::addActor(Actor* p_actor)
 
 void PhysicsEngine::removeActor(Actor* p_actor)
 {
-    cout << "Removing actor" << endl;
     assert(m_actors.count(p_actor) == 1);
 
     RigidBody* p_rbody = m_actors[p_actor];
@@ -123,9 +136,7 @@ void PhysicsEngine::addStaticGeometry(StaticGeometry* p_geometry)
  */
 void PhysicsEngine::clear()
 {
-    cout << "Calling clear" << endl;
     while (!m_actors.empty()) {
-        cout << "Calling removeActor()" << endl;
         removeActor(m_actors.begin()->first);
     }
 }
@@ -136,12 +147,10 @@ void PhysicsEngine::update()
     m_bullet_world.stepSimulation(chrono::duration_cast<chrono::microseconds>(now - m_last_update).count() / 1000000.0);
     m_last_update = now;
 
-    for(auto iter: m_actors) {
-        btTransform transform;
-        iter.second->mp_bullet_motionstate->getWorldTransform(transform);
-        iter.first->getSceneNode()->setOrientation(bulletQuat2Ogre(transform.getRotation()));
-        iter.first->getSceneNode()->setPosition(bulletVec2Ogre(transform.getOrigin()));
-    }
+    /* Bullet in stepSimulation() calls the callback functions
+     * in the PhysicsMotionState object when it is necessary
+     * to transform an object due to physics. This is more efficient
+     * then iterating over m_actors here. */
 
     mp_debug_drawer->update();
 }

@@ -24,6 +24,21 @@ namespace PhysicsSystem {
     };
 
     /**
+     * Internal callback object used by bullet to indicate an object
+     * is transformed due to physics. See bullet manual version 2.83,
+     * pp. 20 f.
+     */
+    class PhysicsMotionState: public btMotionState
+    {
+    public:
+        PhysicsMotionState(Ogre::SceneNode* p_node);
+        virtual void getWorldTransform(btTransform& trans) const;
+        virtual void setWorldTransform(const btTransform& trans);
+    private:
+        Ogre::SceneNode* mp_node;
+    };
+
+    /**
      * Internal object for managing the memory bullet associates
      * with a rigid body.
      */
@@ -34,7 +49,7 @@ namespace PhysicsSystem {
 
         ColliderType          m_colltype;
         btCollisionShape*     mp_bullet_collshape;
-        btDefaultMotionState* mp_bullet_motionstate;
+        PhysicsMotionState*   mp_bullet_motionstate;
         btRigidBody*          mp_bullet_rbody;
     };
 
