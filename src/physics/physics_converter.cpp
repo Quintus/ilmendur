@@ -1,20 +1,9 @@
-/*
- * =============================================================================================
+/******************************************************
+ * This file includes code from BtOgre:
+ * <https://github.com/OGRECave/btogre/tree/30131b4b24c57cd4ca47683deba6fe7f91c9ab32>
+ * The code was modified by the Ilmendur team.
  *
- *       Filename:  BtOgre.cpp
- *
- *    Description:  BtOgre implementation.
- *
- *        Version:  1.0
- *        Created:  27/12/2008 01:47:56 PM
- *
- *         Author:  Nikhilesh (nikki)
- *
- * =============================================================================================
- *
- * Taken from:
- * https://github.com/OGRECave/btogre/tree/30131b4b24c57cd4ca47683deba6fe7f91c9ab32
- * and slightly modified by the Ilmendur team.
+ * BtOgre license information:
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,150 +23,139 @@
  *
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- *
- */
+ ******************************************************/
 
-#include "BtOgre.h"
+#include "physics_converter.hpp"
+#include "physics.hpp"
+#include <Ogre.h>
+#include <btBulletDynamicsCommon.h>
 
-using namespace Ogre;
+using namespace PhysicsSystem;
 
-namespace BtOgre {
+namespace {
+    typedef std::vector<Ogre::Vector3> Vector3Array;
+    typedef std::map<unsigned char, Vector3Array*> BoneIndex;
+    typedef std::pair<unsigned short, Vector3Array*> BoneKeyIndex;
 
-typedef std::pair<unsigned short, Vector3Array*> BoneKeyIndex;
-
-btSphereShape* createSphereCollider(const Ogre::MovableObject* mo)
-{
-	OgreAssert(mo->getParentSceneNode(), "MovableObject must be attached");
-
-	auto shape = new btSphereShape(mo->getBoundingRadius());
-	shape->setLocalScaling(Convert::toBullet(mo->getParentSceneNode()->getScale()));
-
-	return shape;
-}
-btBoxShape* createBoxCollider(const Ogre::MovableObject* mo)
-{
-	OgreAssert(mo->getParentSceneNode(), "MovableObject must be attached");
-
-	auto shape = new btBoxShape(Convert::toBullet(mo->getBoundingBox().getHalfSize()));
-	shape->setLocalScaling(Convert::toBullet(mo->getParentSceneNode()->getScale()));
-
-	return shape;
-}
-
-struct EntityCollisionListener
-{
-	const Ogre::MovableObject* entity;
-	CollisionListener* listener;
-};
-
-static void onTick(btDynamicsWorld* world, btScalar timeStep)
-{
-	int numManifolds = world->getDispatcher()->getNumManifolds();
-	auto manifolds = world->getDispatcher()->getInternalManifoldPointer();
-    for (int i = 0; i < numManifolds; i++) {
-        btPersistentManifold* manifold = manifolds[i];
-
-        for (int j = 0; j < manifold->getNumContacts(); j++)
-        {
-			const btManifoldPoint& mp = manifold->getContactPoint(i);
-           	auto body0 = static_cast<EntityCollisionListener*>(manifold->getBody0()->getUserPointer());
-			auto body1 = static_cast<EntityCollisionListener*>(manifold->getBody1()->getUserPointer());
-			if(body0->listener)
-				body0->listener->contact(body1->entity, mp);
-			if(body1->listener)
-				body1->listener->contact(body0->entity, mp);
-        }
-    }
-}
-
-/// wrapper with automatic memory management
-class RigidBody
-{
-	btRigidBody* mBtBody;
-	btDynamicsWorld* mBtWorld;
-public:
-    RigidBody(btRigidBody* btBody, btDynamicsWorld* btWorld) : mBtBody(btBody), mBtWorld(btWorld) {}
-	~RigidBody()
-	{
-		mBtWorld->removeRigidBody(mBtBody);
-		delete (EntityCollisionListener*)mBtBody->getUserPointer();
-		delete mBtBody->getMotionState();
-		delete mBtBody->getCollisionShape();
-		delete mBtBody;
-	}
-
-	btRigidBody* getBtBody() const { return mBtBody; }
-};
-
-DynamicsWorld::DynamicsWorld(const Ogre::Vector3& gravity)
-{
-	//Bullet initialisation.
-	mCollisionConfig.reset(new btDefaultCollisionConfiguration());
-	mDispatcher.reset(new btCollisionDispatcher(mCollisionConfig.get()));
-	mSolver.reset(new btSequentialImpulseConstraintSolver());
-	mBroadphase.reset(new btDbvtBroadphase());
-
-	mBtWorld = new btDiscreteDynamicsWorld(mDispatcher.get(), mBroadphase.get(), mSolver.get(),
-											mCollisionConfig.get());
-	mBtWorld->setGravity(Convert::toBullet(gravity));
-	mBtWorld->setInternalTickCallback(onTick);
-}
-
-btRigidBody* DynamicsWorld::addRigidBody(float mass, const Ogre::Entity* ent, ColliderType ct, CollisionListener* listener)
-{
-    auto node = ent->getParentSceneNode();
-	OgreAssert(node, "entity must be attached");
-    RigidBodyState* state = new RigidBodyState(node);
-
-    btCollisionShape* cs = NULL;
-    switch (ct)
+    class VertexIndexToShape
     {
-    case CT_BOX:
-        cs = createBoxCollider(ent);
-        break;
-    case CT_SPHERE:
-        cs = createSphereCollider(ent);
-        break;
-    case CT_TRIMESH:
-        cs = StaticMeshToShapeConverter(ent).createTrimesh();
-        break;
-    case CT_HULL:
-        cs = StaticMeshToShapeConverter(ent).createConvex();
-        break;
-    }
+    public:
+        VertexIndexToShape(const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+        ~VertexIndexToShape();
 
-    btVector3 inertia(0, 0, 0);
-    if(mass != 0) // mass = 0 -> static
-        cs->calculateLocalInertia(mass, inertia);
-    
-    auto rb = new btRigidBody(mass, state, cs, inertia);
-    mBtWorld->addRigidBody(rb);
-	rb->setUserPointer(new EntityCollisionListener{ent, listener});
+        Ogre::Real getRadius();
+        Ogre::Vector3 getSize();
 
-    // transfer ownership to node
-    auto bodyWrapper = std::make_shared<RigidBody>(rb, mBtWorld);
-    node->getUserObjectBindings().setUserAny("BtRigidBody", bodyWrapper);
 
-	return rb;
-}
+        btSphereShape* createSphere();
+        btBoxShape* createBox();
+        btBvhTriangleMeshShape* createTrimesh();
+        btCylinderShape* createCylinder();
+        btConvexHullShape* createConvex();
+        btCapsuleShape* createCapsule();
 
-DynamicsWorld::~DynamicsWorld()
-{
-    delete mBtWorld;
-}
+        const Ogre::Vector3* getVertices();
+        unsigned int getVertexCount();
+        const unsigned int* getIndices();
+        unsigned int getIndexCount();
 
-/*
- * =============================================================================================
- * BtOgre::VertexIndexToShape
- * =============================================================================================
- */
+    protected:
 
-	void VertexIndexToShape::addStaticVertexData(const VertexData *vertex_data)
+        void addStaticVertexData(const Ogre::VertexData *vertex_data);
+
+        void addAnimatedVertexData(const Ogre::VertexData *vertex_data,
+                                   const Ogre::VertexData *blended_data,
+                                   const Ogre::Mesh::IndexMap *indexMap);
+
+        void addIndexData(Ogre::IndexData *data, const unsigned int offset = 0);
+
+
+    protected:
+        Ogre::Vector3*	    mVertexBuffer;
+        unsigned int*       mIndexBuffer;
+        unsigned int        mVertexCount;
+        unsigned int        mIndexCount;
+
+        Ogre::Vector3		mBounds;
+        Ogre::Real		    mBoundRadius;
+
+        BoneIndex           *mBoneIndex;
+
+        Ogre::Matrix4		mTransform;
+
+        Ogre::Vector3		mScale;
+    };
+
+    //For static (non-animated) meshes.
+    class StaticMeshToShapeConverter : public VertexIndexToShape
+    {
+    public:
+
+        StaticMeshToShapeConverter(Ogre::Renderable *rend, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+        StaticMeshToShapeConverter(const Ogre::Entity *entity,   const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+        StaticMeshToShapeConverter();
+
+        ~StaticMeshToShapeConverter();
+
+        void addEntity(const Ogre::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
+        void addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+
+
+    protected:
+
+        const Ogre::Entity* mEntity;
+        Ogre::SceneNode*	mNode;
+    };
+
+    //For animated meshes.
+    class AnimatedMeshToShapeConverter : public VertexIndexToShape
+    {
+    public:
+
+        AnimatedMeshToShapeConverter(Ogre::Entity *entity, const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+        AnimatedMeshToShapeConverter();
+        ~AnimatedMeshToShapeConverter();
+
+        void addEntity(Ogre::Entity *entity,const Ogre::Matrix4 &transform = Ogre::Matrix4::IDENTITY);
+        void addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform);
+
+        btBoxShape* createAlignedBox(unsigned char bone,
+                                     const Ogre::Vector3 &bonePosition,
+                                     const Ogre::Quaternion &boneOrientation);
+
+        btBoxShape* createOrientedBox(unsigned char bone,
+                                      const Ogre::Vector3 &bonePosition,
+                                      const Ogre::Quaternion &boneOrientation);
+
+    protected:
+
+        bool getBoneVertices(unsigned char bone,
+                             unsigned int &vertex_count,
+                             Ogre::Vector3* &vertices,
+                             const Ogre::Vector3 &bonePosition);
+
+        bool getOrientedBox(unsigned char bone,
+                            const Ogre::Vector3 &bonePosition,
+                            const Ogre::Quaternion &boneOrientation,
+                            Ogre::Vector3 &extents,
+                            Ogre::Vector3 *axis,
+                            Ogre::Vector3 &center);
+
+
+        Ogre::Entity*		mEntity;
+        Ogre::SceneNode*	mNode;
+
+        Ogre::Vector3       *mTransformedVerticesTemp;
+        size_t               mTransformedVerticesTempSize;
+    };
+
+    void VertexIndexToShape::addStaticVertexData(const Ogre::VertexData *vertex_data)
 	{
 		if (!vertex_data)
 			return;
 
-		const VertexData *data = vertex_data;
+		const Ogre::VertexData *data = vertex_data;
 
 		const unsigned int prev_size = mVertexCount;
 		mVertexCount += (unsigned int)data->vertexCount;
@@ -185,7 +163,7 @@ DynamicsWorld::~DynamicsWorld()
 		Ogre::Vector3* tmp_vert = new Ogre::Vector3[mVertexCount];
 		if (mVertexBuffer)
 		{
-			memcpy(tmp_vert, mVertexBuffer, sizeof(Vector3) * prev_size);
+			memcpy(tmp_vert, mVertexBuffer, sizeof(Ogre::Vector3) * prev_size);
 			delete[] mVertexBuffer;
 		}
 		mVertexBuffer = tmp_vert;
@@ -224,13 +202,13 @@ DynamicsWorld::~DynamicsWorld()
 		// Get the bone index element
 		assert(vertex_data);
 
-		const VertexData *data = blend_data;
+		const Ogre::VertexData *data = blend_data;
 		const unsigned int prev_size = mVertexCount;
 		mVertexCount += (unsigned int)data->vertexCount;
 		Ogre::Vector3* tmp_vert = new Ogre::Vector3[mVertexCount];
 		if (mVertexBuffer)
 		{
-			memcpy(tmp_vert, mVertexBuffer, sizeof(Vector3) * prev_size);
+			memcpy(tmp_vert, mVertexBuffer, sizeof(Ogre::Vector3) * prev_size);
 			delete[] mVertexBuffer;
 		}
 		mVertexBuffer = tmp_vert;
@@ -304,7 +282,7 @@ DynamicsWorld::~DynamicsWorld()
 		}
 	}
 	//------------------------------------------------------------------------------------------------
-	void VertexIndexToShape::addIndexData(IndexData *data, const unsigned int offset)
+	void VertexIndexToShape::addIndexData(Ogre::IndexData *data, const unsigned int offset)
 	{
 		const unsigned int prev_size = mIndexCount;
 		mIndexCount += (unsigned int)data->indexCount;
@@ -318,13 +296,13 @@ DynamicsWorld::~DynamicsWorld()
 		mIndexBuffer = tmp_ind;
 
 		const unsigned int numTris = (unsigned int) data->indexCount / 3;
-		HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
-		const bool use32bitindexes = (ibuf->getType() == HardwareIndexBuffer::IT_32BIT);
+        Ogre::HardwareIndexBufferSharedPtr ibuf = data->indexBuffer;
+		const bool use32bitindexes = (ibuf->getType() == Ogre::HardwareIndexBuffer::IT_32BIT);
 		unsigned int index_offset = prev_size;
 
 		if (use32bitindexes)
 		{
-			const unsigned int* pInt = static_cast<unsigned int*>(ibuf->lock(HardwareBuffer::HBL_READ_ONLY));
+			const unsigned int* pInt = static_cast<unsigned int*>(ibuf->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
 			for(unsigned int k = 0; k < numTris; ++k)
 			{
 				mIndexBuffer[index_offset ++] = offset + *pInt++;
@@ -335,7 +313,7 @@ DynamicsWorld::~DynamicsWorld()
 		}
 		else
 		{
-			const unsigned short* pShort = static_cast<unsigned short*>(ibuf->lock(HardwareBuffer::HBL_READ_ONLY));
+			const unsigned short* pShort = static_cast<unsigned short*>(ibuf->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
 			for(unsigned int k = 0; k < numTris; ++k)
 			{
 				mIndexBuffer[index_offset ++] = offset + static_cast<unsigned int> (*pShort++);
@@ -347,7 +325,7 @@ DynamicsWorld::~DynamicsWorld()
 
 	}
 	//------------------------------------------------------------------------------------------------
-	Real VertexIndexToShape::getRadius()
+    Ogre::Real VertexIndexToShape::getRadius()
 	{
 		if (mBoundRadius == (-1))
 		{
@@ -357,7 +335,7 @@ DynamicsWorld::~DynamicsWorld()
 		return mBoundRadius;
 	}
 	//------------------------------------------------------------------------------------------------
-	Vector3 VertexIndexToShape::getSize()
+    Ogre::Vector3 VertexIndexToShape::getSize()
 	{
 		const unsigned int vCount = getVertexCount();
 		if (mBounds == Ogre::Vector3(-1,-1,-1) && vCount > 0)
@@ -412,10 +390,10 @@ DynamicsWorld::~DynamicsWorld()
 	{
 		const Ogre::Real rad = getRadius();
 		assert((rad > 0.0) &&
-			("Sphere radius must be greater than zero"));
+               ("Sphere radius must be greater than zero"));
 		btSphereShape* shape = new btSphereShape(rad);
 
-		shape->setLocalScaling(Convert::toBullet(mScale));
+		shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -425,11 +403,11 @@ DynamicsWorld::~DynamicsWorld()
 		const Ogre::Vector3 sz = getSize();
 
 		assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
-			("Size of box must be greater than zero on all axes"));
+               ("Size of box must be greater than zero on all axes"));
 
-		btBoxShape* shape = new btBoxShape(Convert::toBullet(sz * 0.5));
+		btBoxShape* shape = new btBoxShape(ogreVec2Bullet(sz * 0.5));
 
-		shape->setLocalScaling(Convert::toBullet(mScale));
+		shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -439,11 +417,11 @@ DynamicsWorld::~DynamicsWorld()
 		const Ogre::Vector3 sz = getSize();
 
 		assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
-			("Size of Cylinder must be greater than zero on all axes"));
+               ("Size of Cylinder must be greater than zero on all axes"));
 
-		btCylinderShape* shape = new btCylinderShapeX(Convert::toBullet(sz * 0.5));
+		btCylinderShape* shape = new btCylinderShapeX(ogreVec2Bullet(sz * 0.5));
 
-		shape->setLocalScaling(Convert::toBullet(mScale));
+		shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -451,11 +429,11 @@ DynamicsWorld::~DynamicsWorld()
 	btConvexHullShape* VertexIndexToShape::createConvex()
 	{
 		assert(mVertexCount && (mIndexCount >= 6) &&
-			("Mesh must have some vertices and at least 6 indices (2 triangles)"));
+               ("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
-		btConvexHullShape* shape = new btConvexHullShape((btScalar*) &mVertexBuffer[0].x, mVertexCount, sizeof(Vector3));
+		btConvexHullShape* shape = new btConvexHullShape((btScalar*) &mVertexBuffer[0].x, mVertexCount, sizeof(Ogre::Vector3));
 
-		shape->setLocalScaling(Convert::toBullet(mScale));
+		shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -463,31 +441,31 @@ DynamicsWorld::~DynamicsWorld()
 	btBvhTriangleMeshShape* VertexIndexToShape::createTrimesh()
 	{
 		assert(mVertexCount && (mIndexCount >= 6) &&
-			("Mesh must have some vertices and at least 6 indices (2 triangles)"));
+               ("Mesh must have some vertices and at least 6 indices (2 triangles)"));
 
 		unsigned int numFaces = mIndexCount / 3;
 
 		btTriangleMesh *trimesh = new btTriangleMesh();
 		unsigned int *indices = mIndexBuffer;
-		Vector3 *vertices = mVertexBuffer;
+        Ogre::Vector3 *vertices = mVertexBuffer;
 
 		btVector3    vertexPos[3];
 		for (unsigned int n = 0; n < numFaces; ++n)
 		{
 			{
-				const Vector3 &vec = vertices[*indices];
+				const Ogre::Vector3 &vec = vertices[*indices];
 				vertexPos[0][0] = vec.x;
 				vertexPos[0][1] = vec.y;
 				vertexPos[0][2] = vec.z;
 			}
 			{
-				const Vector3 &vec = vertices[*(indices + 1)];
+				const Ogre::Vector3 &vec = vertices[*(indices + 1)];
 				vertexPos[1][0] = vec.x;
 				vertexPos[1][1] = vec.y;
 				vertexPos[1][2] = vec.z;
 			}
 			{
-				const Vector3 &vec = vertices[*(indices + 2)];
+				const Ogre::Vector3 &vec = vertices[*(indices + 2)];
 				vertexPos[2][0] = vec.x;
 				vertexPos[2][1] = vec.y;
 				vertexPos[2][2] = vec.z;
@@ -501,7 +479,7 @@ DynamicsWorld::~DynamicsWorld()
 		const bool useQuantizedAABB = true;
 		btBvhTriangleMeshShape *shape = new btBvhTriangleMeshShape(trimesh, useQuantizedAABB);
 
-	        shape->setLocalScaling(Convert::toBullet(mScale));
+        shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -510,7 +488,7 @@ DynamicsWorld::~DynamicsWorld()
 		const Ogre::Vector3 sz = getSize();
 
 		assert((sz.x > 0.0) && (sz.y > 0.0) && (sz.z > 0.0) &&
-			("Size of the capsule must be greater than zero on all axes"));
+               ("Size of the capsule must be greater than zero on all axes"));
 
 		btScalar height = std::max(sz.x,std::max(sz.y,sz.z));
 		btScalar radius;
@@ -528,7 +506,7 @@ DynamicsWorld::~DynamicsWorld()
 			shape = new btCapsuleShapeZ(radius *0.5,height *0.5);
 		}
 
-		shape->setLocalScaling(Convert::toBullet(mScale));
+		shape->setLocalScaling(ogreVec2Bullet(mScale));
 
 		return shape;
 	}
@@ -550,12 +528,12 @@ DynamicsWorld::~DynamicsWorld()
 		}
 	}
 	//------------------------------------------------------------------------------------------------
-	VertexIndexToShape::VertexIndexToShape(const Matrix4 &transform) :
+	VertexIndexToShape::VertexIndexToShape(const Ogre::Matrix4 &transform) :
 		mVertexBuffer (0),
 		mIndexBuffer (0),
 		mVertexCount (0),
 		mIndexCount (0),
-		mBounds (Vector3(-1,-1,-1)),
+		mBounds (Ogre::Vector3(-1,-1,-1)),
 		mBoundRadius (-1),
 		mBoneIndex (0),
 		mTransform (transform),
@@ -570,7 +548,7 @@ DynamicsWorld::~DynamicsWorld()
  */
 
 	StaticMeshToShapeConverter::StaticMeshToShapeConverter() :
-	VertexIndexToShape(),
+        VertexIndexToShape(),
 		mEntity (0),
 		mNode (0)
 	{
@@ -580,7 +558,7 @@ DynamicsWorld::~DynamicsWorld()
 	{
 	}
 	//------------------------------------------------------------------------------------------------
-	StaticMeshToShapeConverter::StaticMeshToShapeConverter(const Entity *entity,  const Matrix4 &transform) :
+	StaticMeshToShapeConverter::StaticMeshToShapeConverter(const Ogre::Entity *entity,  const Ogre::Matrix4 &transform) :
 		VertexIndexToShape(transform),
 		mEntity (0),
 		mNode (0)
@@ -588,12 +566,12 @@ DynamicsWorld::~DynamicsWorld()
 		addEntity(entity, transform);
 	}
 	//------------------------------------------------------------------------------------------------
-	StaticMeshToShapeConverter::StaticMeshToShapeConverter(Renderable *rend, const Matrix4 &transform) :
+	StaticMeshToShapeConverter::StaticMeshToShapeConverter(Ogre::Renderable *rend, const Ogre::Matrix4 &transform) :
 		VertexIndexToShape(transform),
 		mEntity (0),
 		mNode (0)
 	{
-		RenderOperation op;
+		Ogre::RenderOperation op;
 		rend->getRenderOperation(op);
 		VertexIndexToShape::addStaticVertexData(op.vertexData);
 		if(op.useIndexes)
@@ -601,7 +579,7 @@ DynamicsWorld::~DynamicsWorld()
 
 	}
 	//------------------------------------------------------------------------------------------------
-	void StaticMeshToShapeConverter::addEntity(const Entity *entity,const Matrix4 &transform)
+	void StaticMeshToShapeConverter::addEntity(const Ogre::Entity *entity,const Ogre::Matrix4 &transform)
 	{
 		// Each entity added need to reset size and radius
 		// next time getRadius and getSize are asked, they're computed.
@@ -609,7 +587,7 @@ DynamicsWorld::~DynamicsWorld()
 		mBoundRadius = -1;
 
 		mEntity = entity;
-		mNode = (SceneNode*)(mEntity->getParentNode());
+		mNode = (Ogre::SceneNode*)(mEntity->getParentNode());
 		mTransform = transform;
 		mScale = mNode ? mNode->getScale() : Ogre::Vector3(1,1,1);
 
@@ -620,7 +598,7 @@ DynamicsWorld::~DynamicsWorld()
 
 		for (unsigned int i = 0;i < mEntity->getNumSubEntities();++i)
 		{
-			SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
+			Ogre::SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
 
 			if (!sub_mesh->useSharedVertices)
 			{
@@ -635,7 +613,7 @@ DynamicsWorld::~DynamicsWorld()
 		}
 	}
 	//------------------------------------------------------------------------------------------------
-	void StaticMeshToShapeConverter::addMesh(const MeshPtr &mesh, const Matrix4 &transform)
+	void StaticMeshToShapeConverter::addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform)
 	{
 		// Each entity added need to reset size and radius
 		// next time getRadius and getSize are asked, they're computed.
@@ -656,7 +634,7 @@ DynamicsWorld::~DynamicsWorld()
 
 		for(unsigned int i = 0;i < mesh->getNumSubMeshes();++i)
 		{
-			SubMesh *sub_mesh = mesh->getSubMesh(i);
+			Ogre::SubMesh *sub_mesh = mesh->getSubMesh(i);
 
 			if (!sub_mesh->useSharedVertices)
 			{
@@ -677,7 +655,7 @@ DynamicsWorld::~DynamicsWorld()
  * =============================================================================================
  */
 
-	AnimatedMeshToShapeConverter::AnimatedMeshToShapeConverter(Entity *entity,const Matrix4 &transform) :
+	AnimatedMeshToShapeConverter::AnimatedMeshToShapeConverter(Ogre::Entity *entity,const Ogre::Matrix4 &transform) :
 	VertexIndexToShape(transform),
 	mEntity (0),
 	mNode (0),
@@ -701,7 +679,7 @@ DynamicsWorld::~DynamicsWorld()
 		delete[] mTransformedVerticesTemp;
 	}
 	//------------------------------------------------------------------------------------------------
-	void AnimatedMeshToShapeConverter::addEntity(Entity *entity,const Matrix4 &transform)
+	void AnimatedMeshToShapeConverter::addEntity(Ogre::Entity *entity,const Ogre::Matrix4 &transform)
 	{
 		// Each entity added need to reset size and radius
 		// next time getRadius and getSize are asked, they're computed.
@@ -709,7 +687,7 @@ DynamicsWorld::~DynamicsWorld()
 		mBoundRadius = -1;
 
 		mEntity = entity;
-		mNode = (SceneNode*)(mEntity->getParentNode());
+		mNode = (Ogre::SceneNode*)(mEntity->getParentNode());
 		mTransform = transform;
 
 		assert (entity->getMesh()->hasSkeleton ());
@@ -726,7 +704,7 @@ DynamicsWorld::~DynamicsWorld()
 
 		for (unsigned int i = 0;i < mEntity->getNumSubEntities();++i)
 		{
-			SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
+			Ogre::SubMesh *sub_mesh = mEntity->getSubEntity(i)->getSubMesh();
 
 			if (!sub_mesh->useSharedVertices)
 			{
@@ -746,7 +724,7 @@ DynamicsWorld::~DynamicsWorld()
 		mEntity->removeSoftwareAnimationRequest(false);
 	}
 	//------------------------------------------------------------------------------------------------
-	void AnimatedMeshToShapeConverter::addMesh(const MeshPtr &mesh, const Matrix4 &transform)
+	void AnimatedMeshToShapeConverter::addMesh(const Ogre::MeshPtr &mesh, const Ogre::Matrix4 &transform)
 	{
 		// Each entity added need to reset size and radius
 		// next time getRadius and getSize are asked, they're computed.
@@ -768,7 +746,7 @@ DynamicsWorld::~DynamicsWorld()
 
 		for(unsigned int i = 0;i < mesh->getNumSubMeshes();++i)
 		{
-			SubMesh *sub_mesh = mesh->getSubMesh(i);
+			Ogre::SubMesh *sub_mesh = mesh->getSubMesh(i);
 
 			if (!sub_mesh->useSharedVertices)
 			{
@@ -789,7 +767,7 @@ DynamicsWorld::~DynamicsWorld()
 	bool AnimatedMeshToShapeConverter::getBoneVertices(unsigned char bone,
 														 unsigned int &vertex_count,
 														 Ogre::Vector3* &vertices,
-														 const Vector3 &bonePosition)
+														 const Ogre::Vector3 &bonePosition)
 	{
 		BoneIndex::iterator i = mBoneIndex->find(bone);
 
@@ -827,17 +805,17 @@ DynamicsWorld::~DynamicsWorld()
 	}
 	//------------------------------------------------------------------------------------------------
 	btBoxShape* AnimatedMeshToShapeConverter::createAlignedBox(unsigned char bone,
-															   const Vector3 &bonePosition,
-															   const Quaternion &boneOrientation)
+															   const Ogre::Vector3 &bonePosition,
+															   const Ogre::Quaternion &boneOrientation)
 	{
 		unsigned int vertex_count;
-		Vector3* vertices;
+		Ogre::Vector3* vertices;
 
 		if (!getBoneVertices(bone, vertex_count, vertices, bonePosition))
 			return 0;
 
-		Vector3 min_vec(vertices[0]);
-		Vector3 max_vec(vertices[0]);
+		Ogre::Vector3 min_vec(vertices[0]);
+		Ogre::Vector3 max_vec(vertices[0]);
 
 		for(unsigned int j = 1; j < vertex_count ;j++)
 		{
@@ -850,7 +828,7 @@ DynamicsWorld::~DynamicsWorld()
 			max_vec.z = std::max(max_vec.z,vertices[j].z);
 		}
 		const Ogre::Vector3 maxMinusMin(max_vec - min_vec);
-		btBoxShape* box = new btBoxShape(Convert::toBullet(maxMinusMin));
+		btBoxShape* box = new btBoxShape(ogreVec2Bullet(maxMinusMin));
 
 		/*const Ogre::Vector3 pos
 			(min_vec.x + (maxMinusMin.x * 0.5),
@@ -863,19 +841,19 @@ DynamicsWorld::~DynamicsWorld()
 	}
 	//------------------------------------------------------------------------------------------------
 	bool AnimatedMeshToShapeConverter::getOrientedBox(unsigned char bone,
-						 const Vector3 &bonePosition,
-						 const Quaternion &boneOrientation,
-						 Vector3 &box_afExtent,
-						 Vector3 *box_akAxis,
-						 Vector3 &box_kCenter)
+						 const Ogre::Vector3 &bonePosition,
+						 const Ogre::Quaternion &boneOrientation,
+						 Ogre::Vector3 &box_afExtent,
+						 Ogre::Vector3 *box_akAxis,
+						 Ogre::Vector3 &box_kCenter)
 	{
 		unsigned int vertex_count;
-		Vector3* vertices;
+		Ogre::Vector3* vertices;
 
 		if (!getBoneVertices(bone, vertex_count, vertices, bonePosition))
 			return false;
 
-		 box_kCenter = Vector3::ZERO;
+		 box_kCenter = Ogre::Vector3::ZERO;
 
 		 {
 			 for(unsigned int c = 0 ;c < vertex_count;c++)
@@ -885,7 +863,7 @@ DynamicsWorld::~DynamicsWorld()
 			 const Ogre::Real invVertexCount = 1.0 / vertex_count;
 			 box_kCenter *= invVertexCount;
 		 }
-		Quaternion orient = boneOrientation;
+		Ogre::Quaternion orient = boneOrientation;
 		orient.ToAxes(box_akAxis);
 
 		// Let C be the box center and let U0, U1, and U2 be the box axes.  Each
@@ -923,9 +901,9 @@ DynamicsWorld::~DynamicsWorld()
 				fY2Max = fY2;
 		}
 
-		box_afExtent.x = ((Real)0.5)*(fY0Max - fY0Min);
-		box_afExtent.y = ((Real)0.5)*(fY1Max - fY1Min);
-		box_afExtent.z = ((Real)0.5)*(fY2Max - fY2Min);
+		box_afExtent.x = ((Ogre::Real)0.5)*(fY0Max - fY0Min);
+		box_afExtent.y = ((Ogre::Real)0.5)*(fY1Max - fY1Min);
+		box_afExtent.z = ((Ogre::Real)0.5)*(fY2Max - fY2Min);
 
 		box_kCenter += (0.5*(fY0Max+fY0Min))*box_akAxis[0] +
 			(0.5*(fY1Max+fY1Min))*box_akAxis[1] +
@@ -937,8 +915,8 @@ DynamicsWorld::~DynamicsWorld()
 	}
 	//------------------------------------------------------------------------------------------------
 	btBoxShape *AnimatedMeshToShapeConverter::createOrientedBox(unsigned char bone,
-																	   const Vector3 &bonePosition,
-																	   const Quaternion &boneOrientation)
+																	   const Ogre::Vector3 &bonePosition,
+																	   const Ogre::Quaternion &boneOrientation)
 	{
 		Ogre::Vector3 box_akAxis[3];
 		Ogre::Vector3 box_afExtent;
@@ -950,41 +928,52 @@ DynamicsWorld::~DynamicsWorld()
 							box_afCenter))
 			return 0;
 
-		btBoxShape *geom = new btBoxShape(Convert::toBullet(box_afExtent));
+		btBoxShape *geom = new btBoxShape(ogreVec2Bullet(box_afExtent));
 		//geom->setOrientation(Quaternion(box_akAxis[0],box_akAxis[1],box_akAxis[2]));
 		//geom->setPosition(box_afCenter);
 		return geom;
 	}
+}
 
-/*
- * =============================================================================================
- * BtOgre::DebugDrawer
- * =============================================================================================
+static btBoxShape* createBoxCollider(const Ogre::MovableObject* mo)
+{
+	OgreAssert(mo->getParentSceneNode(), "MovableObject must be attached");
+
+	auto shape = new btBoxShape(ogreVec2Bullet(mo->getBoundingBox().getHalfSize()));
+	shape->setLocalScaling(ogreVec2Bullet(mo->getParentSceneNode()->getScale()));
+
+	return shape;
+}
+
+static btSphereShape* createSphereCollider(const Ogre::MovableObject* mo)
+{
+	OgreAssert(mo->getParentSceneNode(), "MovableObject must be attached");
+
+	auto shape = new btSphereShape(mo->getBoundingRadius());
+	shape->setLocalScaling(ogreVec2Bullet(mo->getParentSceneNode()->getScale()));
+
+	return shape;
+}
+
+// Keep this function last
+/**
+ * Calculates the collision shape for the given Ogre entity according
+ * to the given ColliderType. The returned btCollisionShape has to be
+ * freed by the caller.
  */
-	//------------------------------------------------------------------------------------------------
-	void DebugDrawer::drawLine(const btVector3& from,const btVector3& to,const btVector3& color)
-	{
-        if (mLines.getSections().empty())
-        {
-            const char* matName = "Ogre/Debug/LinesMat";
-            auto mat = Ogre::MaterialManager::getSingleton().getByName(matName, Ogre::RGN_INTERNAL);
-            if (!mat)
-            {
-                mat = Ogre::MaterialManager::getSingleton().create(matName, Ogre::RGN_INTERNAL);
-                auto p = mat->getTechnique(0)->getPass(0);
-                p->setLightingEnabled(false);
-                p->setVertexColourTracking(Ogre::TVC_AMBIENT);
-            }
-            mLines.setBufferUsage(Ogre::HBU_CPU_TO_GPU);
-            mLines.begin(mat, Ogre::RenderOperation::OT_LINE_LIST);
-        }
-        else if (mLines.getCurrentVertexCount() == 0)
-            mLines.beginUpdate(0);
-		
-		Ogre::ColourValue col(color.x(), color.x(), color.z());
-		mLines.position(Convert::toOgre(from));
-        mLines.colour(col);
-        mLines.position(Convert::toOgre(to));
-        mLines.colour(col);
-	}
+btCollisionShape* PhysicsSystem::calculateCollisionShape(Ogre::Entity* p_entity, ColliderType ctype)
+{
+    switch (ctype) {
+    case ColliderType::box:
+        return createBoxCollider(p_entity);
+    case ColliderType::sphere:
+        return createSphereCollider(p_entity);
+    case ColliderType::trimesh:
+        return StaticMeshToShapeConverter(p_entity).createTrimesh();
+    case ColliderType::hull:
+        return StaticMeshToShapeConverter(p_entity).createConvex();
+    } // No default to provoke compiler warnings
+
+    assert(false);
+    return nullptr;
 }

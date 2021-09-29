@@ -72,7 +72,8 @@ DummyScene::DummyScene()
 
 DummyScene::~DummyScene()
 {
-    //delete mp_player;
+    delete mp_player;
+    delete mp_ground;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
