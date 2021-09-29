@@ -10,6 +10,8 @@ public:
     Actor();
     virtual ~Actor();
 
+    virtual void collide(Actor& other);
+
     inline float getMass() const { return m_mass; }
     inline Ogre::SceneNode* getSceneNode() const { return mp_scene_node; }
 protected:

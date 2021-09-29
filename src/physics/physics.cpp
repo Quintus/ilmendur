@@ -152,5 +152,22 @@ void PhysicsEngine::update()
      * to transform an object due to physics. This is more efficient
      * then iterating over m_actors here. */
 
+    // Now iterate the collisions found and tell the objects about them.
+    int num_collisions = m_bullet_colldispatcher.getNumManifolds();
+    for(int i=0; i < num_collisions; i++) {
+        const btPersistentManifold* p_contact = m_bullet_colldispatcher.getManifoldByIndexInternal(i);
+        const btRigidBody* p_obj1 = static_cast<const btRigidBody*>(p_contact->getBody0());
+        const btRigidBody* p_obj2 = static_cast<const btRigidBody*>(p_contact->getBody1());
+
+        Actor* p_actor1 = reinterpret_cast<Actor*>(p_obj1->getUserPointer());
+        Actor* p_actor2 = reinterpret_cast<Actor*>(p_obj2->getUserPointer());
+
+        p_actor1->collide(*p_actor2);
+        p_actor2->collide(*p_actor1);
+
+        // Bullet offers to read the collision points on both objects
+        // via p_contact->getContactPoint(), but that's not needed for now.
+    }
+
     mp_debug_drawer->update();
 }

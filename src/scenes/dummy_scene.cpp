@@ -65,7 +65,7 @@ DummyScene::DummyScene()
 
     // Add player figure
     mp_player = new Freya(mp_scene_manager->getRootSceneNode()->createChildSceneNode());
-    mp_player->getSceneNode()->setPosition(Ogre::Vector3(25, 0, 2));
+    mp_player->getSceneNode()->setPosition(Ogre::Vector3(25, 0, 10));
     mp_player->getSceneNode()->attachObject(mp_scene_manager->createEntity("freya.mesh"));
     m_physics.addActor(mp_player);
 }
