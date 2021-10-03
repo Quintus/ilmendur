@@ -1,15 +1,13 @@
 #include "freya.hpp"
+#include "../scenes/scene.hpp"
 #include "../physics/physics.hpp"
-#include <cassert>
 
-Freya::Freya(SceneSystem::Scene& scene, Ogre::SceneNode* p_node)
+Freya::Freya(SceneSystem::Scene& scene)
     : Actor(scene)
 {
-    assert(p_node);
     m_mass = 0.63f;
     m_colltype = PhysicsSystem::ColliderType::box;
-
-    mp_scene_node = p_node; // DEBUG! FIXME!
+    mp_scene_node->attachObject(m_scene.getSceneManager().createEntity("freya.mesh"));
 }
 
 Freya::~Freya()

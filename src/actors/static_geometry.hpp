@@ -5,7 +5,7 @@
 class StaticGeometry: public Actor
 {
 public:
-    StaticGeometry(SceneSystem::Scene& scene, Ogre::SceneNode* p_node);
+    StaticGeometry(SceneSystem::Scene& scene, Ogre::SceneNode* p_scene_node);
     virtual ~StaticGeometry();
 };
 

@@ -15,7 +15,7 @@ namespace SceneSystem {
 
 class Actor {
 public:
-    Actor(SceneSystem::Scene& scene);
+    Actor(SceneSystem::Scene& scene, Ogre::SceneNode* p_scene_node = nullptr);
     virtual ~Actor();
 
     inline float getMass() const { return m_mass; }

@@ -5,7 +5,7 @@
 class Freya: public Actor
 {
 public:
-    Freya(SceneSystem::Scene& scene, Ogre::SceneNode* p_node);
+    Freya(SceneSystem::Scene& scene);
     virtual ~Freya();
 };
 

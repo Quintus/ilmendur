@@ -5,12 +5,27 @@
 
 using namespace std;
 
-Actor::Actor(SceneSystem::Scene& scene)
+/**
+ * Creates a new actor for the given scene. If `p_scene_node` is
+ * given, the Actor is "wrapped around" that Ogre scene node. If
+ * `p_scene_node` is not given, a new empty Ogre::SceneNode is created
+ * for the given scene automatically.
+ *
+ * Note that on destruction, the used Ogre::SceneNode will be detached
+ * from the Ogre scene regardless of whether `p_scene_node` was manually
+ * specified here or not.
+ */
+Actor::Actor(SceneSystem::Scene& scene, Ogre::SceneNode* p_scene_node)
     : m_scene(scene),
-      mp_scene_node(nullptr),
+      mp_scene_node(p_scene_node ? p_scene_node : m_scene.getSceneManager().getRootSceneNode()->createChildSceneNode()),
       m_mass(0.0f),
       m_colltype(PhysicsSystem::ColliderType::box)
 {
+    // Ensure the scene node really belongs to the passed scene
+    // if it was manually specified.
+    if (p_scene_node) {
+        assert(&scene.getSceneManager() == p_scene_node->getCreator());
+    }
 }
 
 Actor::~Actor()
@@ -21,6 +36,8 @@ Actor::~Actor()
     if (m_scene.getPhysicsEngine().hasActor(this)) {
         m_scene.getPhysicsEngine().removeActor(this);
     }
+
+    m_scene.getSceneManager().getRootSceneNode()->removeChild(mp_scene_node);
 }
 
 void Actor::collide(Actor& other)
