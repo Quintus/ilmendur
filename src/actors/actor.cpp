@@ -34,7 +34,7 @@ void Actor::collide(Actor& other)
  * in case this actor is subject to physics. If it is,
  * the physics engine is told about the updated position.
  *
- * For physics-enabled actors, it is better to use the physics
+ * For physics-enabled actors, it is often better to use the physics
  * engine usually by applying forces to the actor.
  */
 void Actor::setPosition(float x, float y, float z)
@@ -42,7 +42,24 @@ void Actor::setPosition(float x, float y, float z)
     mp_scene_node->setPosition(Ogre::Vector3(x, y, z));
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
-        cerr << "WARNING: Actor::setPosition() called on a physics-enabled object!" << endl;
-        m_scene.getPhysicsEngine().moveActor(this, Ogre::Vector3(x, y, z));
+        m_scene.getPhysicsEngine().resetActor(this);
+    }
+}
+
+/**
+ * This function forcibly resets the actor to the given
+ * orientation. That is, it circumvents the physics engine
+ * in case this actor is subject to physics. If it is,
+ * the physics engine is told about the updated orientation.
+ *
+ * For physics-enabled actors, it is often better to use the physics
+ * engine usually by applying forces to the actor.
+ */
+void Actor::setOrientation(float angle, float ax, float ay, float az)
+{
+    mp_scene_node->setOrientation(Ogre::Quaternion(Ogre::Degree(angle), Ogre::Vector3(ax, ay, az)));
+
+    if (m_scene.getPhysicsEngine().hasActor(this)) {
+        m_scene.getPhysicsEngine().resetActor(this);
     }
 }

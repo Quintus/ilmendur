@@ -126,15 +126,20 @@ bool PhysicsEngine::hasActor(Actor* p_actor)
 }
 
 /**
- * Warps the given actor's rigid body to the given position under
- * circumvention of physics. Use sparingly. This method is not
- * needed for kinematic rigid bodies, because Bullet pulls the
- * world transform for them every frame on itself (see Bullet
- * manual version 2.83, p. 22). Static rigid modies may not
- * be moved at all (Bullet manual version 2.83, p. 19 f.).
- * So this method is only useful for dynamic rigid bodies.
+ * Resync the actor's position and orientation in bullet's world with
+ * those in the Ogre world.
+ *
+ * This method completely ignores physics. It forcibly resets
+ * position and orientation so that it matches whatever is
+ * current in the Ogre scene graph. Use this method sparingly.
+ * Specifically, this method is not needed for kinematic rigid bodies,
+ * because Bullet pulls the world transform for them every frame on
+ * itself (see Bullet manual version 2.83, p. 22). Static rigid bodies
+ * may not be moved at all (Bullet manual version 2.83, p. 19 f.). So
+ * this method is only useful for dynamic rigid bodies. For those,
+ * the repositioning methods of Actor automatically call this method.
  */
-void PhysicsEngine::moveActor(Actor* p_actor, const Ogre::Vector3& pos)
+void PhysicsEngine::resetActor(Actor* p_actor)
 {
     RigidBody* p_rbody = m_actors[p_actor];
 
@@ -142,7 +147,16 @@ void PhysicsEngine::moveActor(Actor* p_actor, const Ogre::Vector3& pos)
     // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
     assert(p_actor->getMass() != 0.0f || ((p_rbody->mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
 
-    p_rbody->mp_bullet_rbody->translate(ogreVec2Bullet(pos));
+    /* There appears to be no other sensible way to force a resync
+     * than to entirely remove the rigid body and re-add it. Simply
+     * resetting the world transform is insufficient; it leaves forces
+     * in place and even worse, appearently some
+     * has-touched-the-ground flag. Resetting a still object resting
+     * on the ground into the air makes it float in the air. To
+     * circumvent that, do it the brutalist way and remove and re-add
+     * the rigid body. */
+    removeActor(p_actor);
+    addActor(p_actor);
 }
 
 /**

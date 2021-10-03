@@ -24,6 +24,7 @@ public:
     virtual void collide(Actor& other);
 
     void setPosition(float x, float y, float z);
+    void setOrientation(float angle, float ax, float ay, float az);
 
     inline Ogre::SceneNode* getSceneNode() const { return mp_scene_node; }
 protected:

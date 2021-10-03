@@ -67,7 +67,7 @@ namespace PhysicsSystem {
         void addActor(Actor* p_actor);
         void removeActor(Actor* p_actor);
         bool hasActor(Actor* p_actor);
-        void moveActor(Actor* p_actor, const Ogre::Vector3& pos);
+        void resetActor(Actor* p_actor);
         void clear();
 
         void update();

@@ -10,6 +10,7 @@
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/OgreMath.h>
 #include <btBulletDynamicsCommon.h>
+#include <iostream>
 
 using namespace std;
 using namespace SceneSystem;
@@ -119,7 +120,9 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         mp_cam_node->pitch(Ogre::Angle(-1));
         break;
     case GLFW_KEY_X:
-        mp_area_node->translate(Ogre::Vector3(0, 0, 1));
+        cout << "Repositioning!" << endl;
+        mp_player->setPosition(25, 0, 10);
+        mp_player->setOrientation(0, 0, 1, 0);
         break;
         //default:
         // Ignore
