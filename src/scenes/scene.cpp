@@ -9,7 +9,8 @@ using namespace SceneSystem;
 using namespace std;
 
 Scene::Scene(const string& name)
-    : mp_scene_manager(Ogre::Root::getSingleton().createSceneManager()),
+    : mp_physics(nullptr),
+      mp_scene_manager(Ogre::Root::getSingleton().createSceneManager()),
       m_name(name),
       m_finish(false)
 {

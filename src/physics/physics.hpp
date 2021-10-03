@@ -38,6 +38,8 @@ namespace PhysicsSystem {
         Ogre::SceneNode* mp_node;
     };
 
+    class PhysicsEngine;
+
     /**
      * Internal object for managing the memory bullet associates
      * with a rigid body.
@@ -63,8 +65,9 @@ namespace PhysicsSystem {
         ~PhysicsEngine();
 
         void addActor(Actor* p_actor);
-        void addStaticGeometry(StaticGeometry* p_geometry);
         void removeActor(Actor* p_actor);
+        bool hasActor(Actor* p_actor);
+        void moveActor(Actor* p_actor, const Ogre::Vector3& pos);
         void clear();
 
         void update();

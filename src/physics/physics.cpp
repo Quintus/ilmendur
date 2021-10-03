@@ -44,6 +44,11 @@ void PhysicsMotionState::getWorldTransform(btTransform& trans) const
 
 void PhysicsMotionState::setWorldTransform(const btTransform& trans)
 {
+    /* Note: Do NOT use Actor::setPosition() or similar functions here --
+     * instead apply the transform directly to the Ogre::SceneNode.
+     * Otherwise this would cause a call to PhysicsEngine::moveActor(),
+     * duplicating the operation. Bullet already knows where the
+     * rigid body is in the physics world. */
     mp_node->setOrientation(bulletQuat2Ogre(trans.getRotation()));
     mp_node->setPosition(bulletVec2Ogre(trans.getOrigin()));
 }
@@ -99,7 +104,7 @@ void PhysicsEngine::addActor(Actor* p_actor)
 
     RigidBody* p_rbody = new RigidBody(static_cast<Ogre::Entity*>(p_actor->getSceneNode()->getAttachedObject(0)),
                                        p_actor->getMass(),
-                                       ColliderType::box);
+                                       p_actor->getColliderType());
     p_rbody->mp_bullet_rbody->setUserPointer(p_actor);
     m_actors[p_actor] = p_rbody;
     m_bullet_world.addRigidBody(p_rbody->mp_bullet_rbody);
@@ -115,20 +120,29 @@ void PhysicsEngine::removeActor(Actor* p_actor)
     delete p_rbody;
 }
 
-void PhysicsEngine::addStaticGeometry(StaticGeometry* p_geometry)
+bool PhysicsEngine::hasActor(Actor* p_actor)
 {
-    // An actor to be added to the physics universe must have one and only one
-    // attached mesh.
-    assert(p_geometry->getSceneNode()->numAttachedObjects() == 1);
-    assert(p_geometry->getMass() == 0.0f); // Bullet mandates zero mass for static objects
-    assert(m_actors.count(p_geometry) == 0);
+    return m_actors.count(p_actor) != 0;
+}
 
-    RigidBody* p_rbody = new RigidBody(static_cast<Ogre::Entity*>(p_geometry->getSceneNode()->getAttachedObject(0)),
-                                       p_geometry->getMass(),
-                                       ColliderType::trimesh);
-    p_rbody->mp_bullet_rbody->setUserPointer(p_geometry);
-    m_actors[p_geometry] = p_rbody;
-    m_bullet_world.addRigidBody(p_rbody->mp_bullet_rbody);
+/**
+ * Warps the given actor's rigid body to the given position under
+ * circumvention of physics. Use sparingly. This method is not
+ * needed for kinematic rigid bodies, because Bullet pulls the
+ * world transform for them every frame on itself (see Bullet
+ * manual version 2.83, p. 22). Static rigid modies may not
+ * be moved at all (Bullet manual version 2.83, p. 19 f.).
+ * So this method is only useful for dynamic rigid bodies.
+ */
+void PhysicsEngine::moveActor(Actor* p_actor, const Ogre::Vector3& pos)
+{
+    RigidBody* p_rbody = m_actors[p_actor];
+
+    // Zero-mass rigid bodies may only be moved if they have been flagged
+    // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
+    assert(p_actor->getMass() != 0.0f || ((p_rbody->mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
+
+    p_rbody->mp_bullet_rbody->translate(ogreVec2Bullet(pos));
 }
 
 /**

@@ -16,12 +16,14 @@ using namespace SceneSystem;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
-      m_physics(mp_scene_manager->getRootSceneNode()),
       mp_area_node(nullptr),
       mp_cam_node(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr)
 {
+    // Enable physics
+    mp_physics = new PhysicsSystem::PhysicsEngine(mp_scene_manager->getRootSceneNode());
+
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -60,20 +62,24 @@ DummyScene::DummyScene()
     replaceBlenderEntities(mp_area_node);
 
     // Extract ground from the loaded scene and add it into the physics system
-    mp_ground = new StaticGeometry(mp_scene_manager->getSceneNode("Ground"));
-    m_physics.addStaticGeometry(mp_ground);
+    mp_ground = new StaticGeometry(*this, mp_scene_manager->getSceneNode("Ground"));
+    mp_physics->addActor(mp_ground);
 
     // Add player figure
-    mp_player = new Freya(mp_scene_manager->getRootSceneNode()->createChildSceneNode());
-    mp_player->getSceneNode()->setPosition(Ogre::Vector3(25, 0, 10));
+    mp_player = new Freya(*this, mp_scene_manager->getRootSceneNode()->createChildSceneNode());
     mp_player->getSceneNode()->attachObject(mp_scene_manager->createEntity("freya.mesh"));
-    m_physics.addActor(mp_player);
+    mp_player->setPosition(25, 0, 10);
+    mp_physics->addActor(mp_player);
 }
 
 DummyScene::~DummyScene()
 {
+    mp_physics->removeActor(mp_player);
+    mp_physics->removeActor(mp_ground);
+
     delete mp_player;
     delete mp_ground;
+    delete mp_physics;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
@@ -81,7 +87,7 @@ DummyScene::~DummyScene()
 
 void DummyScene::update()
 {
-    m_physics.update();
+    mp_physics->update();
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
