@@ -175,6 +175,9 @@ void PhysicsEngine::resetActor(Actor* p_actor)
     // Zero-mass rigid bodies may only be moved if they have been flagged
     // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
     assert(p_actor->getMass() != 0.0f || ((p_rbody->mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
+    // Please leave this assert in even if the ŕigid body is actually
+    // removed and re-added below. There might turn up a better option
+    // in the future.
 
     /* There appears to be no other sensible way to force a resync
      * than to entirely remove the rigid body and re-add it. Simply
