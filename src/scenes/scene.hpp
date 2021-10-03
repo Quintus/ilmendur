@@ -1,11 +1,7 @@
 #ifndef ILMENDUR_SCENE_HPP
 #define ILMENDUR_SCENE_HPP
 #include <string>
-
-namespace Ogre {
-    class SceneManager;
-    class SceneNode;
-}
+#include <OGRE/Ogre.h>
 
 namespace PhysicsSystem {
     class PhysicsEngine;

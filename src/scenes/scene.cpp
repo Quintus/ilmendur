@@ -1,7 +1,6 @@
 #include "scene.hpp"
 #include "../entities/entity.hpp"
 #include "../exttexts/exttexts.hpp"
-#include <OGRE/Ogre.h>
 #include <cassert>
 #include <iostream>
 

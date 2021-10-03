@@ -1,13 +1,10 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 #include <string>
-#include <stdexcept>
+#include <OGRE/Ogre.h>
 
 // Library forward declarations
 struct GLFWwindow;
-namespace Ogre {
-    class RenderWindow;
-}
 
 namespace Core {
 

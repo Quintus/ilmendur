@@ -5,7 +5,6 @@
 #include "../actors/static_geometry.hpp"
 #include "../actors/freya.hpp"
 #include <GLFW/glfw3.h>
-#include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/OgreMath.h>
@@ -68,7 +67,7 @@ DummyScene::DummyScene()
 
     // Add player figure
     mp_player = new Freya(*this);
-    mp_player->setPosition(25, 0, 10);
+    mp_player->setPosition(Ogre::Vector3(25, 0, 10));
     mp_physics->addActor(mp_player);
 }
 
@@ -120,8 +119,7 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         break;
     case GLFW_KEY_X:
         cout << "Repositioning!" << endl;
-        mp_player->setPosition(25, 0, 10);
-        mp_player->setOrientation(0, 0, 1, 0);
+        mp_player->reposition(Ogre::Vector3(25, 0, 10), Ogre::Quaternion(Ogre::Degree(0), Ogre::Vector3::UNIT_Y));
         break;
         //default:
         // Ignore

@@ -1,9 +1,6 @@
 #ifndef ILMENDURACTOR_HPP
 #define ILMENDURACTOR_HPP
-
-namespace Ogre {
-    class SceneNode;
-}
+#include <OGRE/Ogre.h>
 
 namespace PhysicsSystem {
     enum class ColliderType;
@@ -23,8 +20,12 @@ public:
 
     virtual void collide(Actor& other);
 
-    void setPosition(float x, float y, float z);
-    void setOrientation(float angle, float ax, float ay, float az);
+    void setPosition(const Ogre::Vector3& newpos);
+    void setOrientation(const Ogre::Quaternion& neworient);
+    void reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& neworient);
+
+    Ogre::Vector3 getPosition() const;
+    Ogre::Quaternion getOrientation() const;
 
     inline Ogre::SceneNode* getSceneNode() const { return mp_scene_node; }
 protected:

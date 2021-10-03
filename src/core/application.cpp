@@ -5,7 +5,6 @@
 #include "../scenes/dummy_scene.hpp"
 #include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
-#include <OGRE/Ogre.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OgreGL3PlusPlugin.h>

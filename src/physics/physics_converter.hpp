@@ -1,8 +1,8 @@
 #ifndef ILMENDUR_PHYSICS_CONVERTER_HPP
 #define ILMENDUR_PHYSICS_CONVERTER_HPP
+#include <OGRE/Ogre.h>
 
 class btCollisionShape;
-namespace Ogre { class Entity; }
 
 namespace PhysicsSystem {
 

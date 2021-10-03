@@ -28,7 +28,7 @@
 #ifndef ILMENDUR_DEBUG_DRAWER_HPP
 #define ILMENDUR_DEBUG_DRAWER_HPP
 #include <btBulletDynamicsCommon.h>
-#include <Ogre.h>
+#include <OGRE/Ogre.h>
 
 namespace PhysicsSystem {
 

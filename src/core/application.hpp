@@ -3,11 +3,7 @@
 #include <vector>
 #include <stack>
 #include <memory>
-
-// Library forward declarations
-namespace Ogre {
-    class Plugin;
-}
+#include <OGRE/Ogre.h>
 
 namespace SceneSystem {
     class Scene;

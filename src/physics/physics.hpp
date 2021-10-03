@@ -3,7 +3,7 @@
 #include <map>
 #include <chrono>
 #include <btBulletDynamicsCommon.h>
-#include <Ogre.h>
+#include <OGRE/Ogre.h>
 
 class Actor;
 

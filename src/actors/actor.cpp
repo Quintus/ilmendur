@@ -54,9 +54,9 @@ void Actor::collide(Actor& other)
  * For physics-enabled actors, it is often better to use the physics
  * engine usually by applying forces to the actor.
  */
-void Actor::setPosition(float x, float y, float z)
+void Actor::setPosition(const Ogre::Vector3& newpos)
 {
-    mp_scene_node->setPosition(Ogre::Vector3(x, y, z));
+    mp_scene_node->setPosition(newpos);
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
         m_scene.getPhysicsEngine().resetActor(this);
@@ -72,11 +72,37 @@ void Actor::setPosition(float x, float y, float z)
  * For physics-enabled actors, it is often better to use the physics
  * engine usually by applying forces to the actor.
  */
-void Actor::setOrientation(float angle, float ax, float ay, float az)
+void Actor::setOrientation(const Ogre::Quaternion& newrot)
 {
-    mp_scene_node->setOrientation(Ogre::Quaternion(Ogre::Degree(angle), Ogre::Vector3(ax, ay, az)));
+    mp_scene_node->setOrientation(newrot);
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
         m_scene.getPhysicsEngine().resetActor(this);
     }
+}
+
+/**
+ * Both of setPosition() and setOrientation() in one method. For
+ * physics-enabled actors, this is more efficient than calling both
+ * functions in a row, because the physics engine will be updated only
+ * once rather than twice.
+ */
+void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newrot)
+{
+    mp_scene_node->setPosition(newpos);
+    mp_scene_node->setOrientation(newrot);
+
+    if (m_scene.getPhysicsEngine().hasActor(this)) {
+        m_scene.getPhysicsEngine().resetActor(this);
+    }
+}
+
+Ogre::Vector3 Actor::getPosition() const
+{
+    return mp_scene_node->getPosition();
+}
+
+Ogre::Quaternion Actor::getOrientation() const
+{
+    return mp_scene_node->getOrientation();
 }

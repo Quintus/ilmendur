@@ -27,7 +27,6 @@
 
 #include "physics_converter.hpp"
 #include "physics.hpp"
-#include <Ogre.h>
 #include <btBulletDynamicsCommon.h>
 
 using namespace PhysicsSystem;

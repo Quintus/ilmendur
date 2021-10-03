@@ -27,7 +27,6 @@
 
 #include "debug_drawer.hpp"
 #include "physics.hpp"
-#include <Ogre.h>
 
 using namespace PhysicsSystem;
 
