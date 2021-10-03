@@ -10,6 +10,35 @@ using namespace PhysicsSystem;
 /// Gravity the world is exposed to, in m/s².
 static const float GRAVITY_ACCEL = -9.81f;
 
+/**
+ * Internal object for managing the memory bullet associates
+ * with a rigid body.
+ */
+class PhysicsSystem::RigidBody {
+    /**
+     * Internal callback object used by bullet to indicate an object
+     * is transformed due to physics. See bullet manual version 2.83,
+     * pp. 20 f.
+     */
+    class PhysicsMotionState: public btMotionState {
+    public:
+        PhysicsMotionState(Ogre::SceneNode* p_node);
+        virtual void getWorldTransform(btTransform& trans) const;
+        virtual void setWorldTransform(const btTransform& trans);
+    private:
+        Ogre::SceneNode* mp_node;
+    };
+
+public:
+    RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype);
+    ~RigidBody();
+
+    ColliderType          m_colltype;
+    btCollisionShape*     mp_bullet_collshape;
+    PhysicsMotionState*   mp_bullet_motionstate;
+    btRigidBody*          mp_bullet_rbody;
+};
+
 btQuaternion PhysicsSystem::ogreQuat2Bullet(const Ogre::Quaternion& q)
 {
     return btQuaternion(q.x, q.y, q.z, q.w);
@@ -30,19 +59,19 @@ Ogre::Vector3 PhysicsSystem::bulletVec2Ogre(const btVector3& v)
     return Ogre::Vector3(v.x(), v.y(), v.z());
 }
 
-PhysicsMotionState::PhysicsMotionState(Ogre::SceneNode* p_node)
+RigidBody::PhysicsMotionState::PhysicsMotionState(Ogre::SceneNode* p_node)
     : mp_node(p_node)
 {
     assert(mp_node);
 }
 
-void PhysicsMotionState::getWorldTransform(btTransform& trans) const
+void RigidBody::PhysicsMotionState::getWorldTransform(btTransform& trans) const
 {
     trans.setRotation(ogreQuat2Bullet(mp_node->getOrientation()));
     trans.setOrigin(ogreVec2Bullet(mp_node->getPosition()));
 }
 
-void PhysicsMotionState::setWorldTransform(const btTransform& trans)
+void RigidBody::PhysicsMotionState::setWorldTransform(const btTransform& trans)
 {
     /* Note: Do NOT use Actor::setPosition() or similar functions here --
      * instead apply the transform directly to the Ogre::SceneNode.
@@ -67,7 +96,7 @@ RigidBody::RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype)
         mp_bullet_collshape->calculateLocalInertia(mass, local_inertia);
     }
 
-    mp_bullet_motionstate = new PhysicsMotionState(p_entity->getParentSceneNode());
+    mp_bullet_motionstate = new RigidBody::PhysicsMotionState(p_entity->getParentSceneNode());
 
     btRigidBody::btRigidBodyConstructionInfo args(mass, mp_bullet_motionstate, mp_bullet_collshape, local_inertia);
     mp_bullet_rbody = new btRigidBody(args);
@@ -176,7 +205,7 @@ void PhysicsEngine::update()
     m_last_update = now;
 
     /* Bullet in stepSimulation() calls the callback functions
-     * in the PhysicsMotionState object when it is necessary
+     * in the RigidBody::PhysicsMotionState object when it is necessary
      * to transform an object due to physics. This is more efficient
      * then iterating over m_actors here. */
 

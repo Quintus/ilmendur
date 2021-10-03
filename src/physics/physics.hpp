@@ -6,11 +6,11 @@
 #include <Ogre.h>
 
 class Actor;
-class StaticGeometry;
 
 namespace PhysicsSystem {
 
     class DebugDrawer;
+    class RigidBody;
 
     /**
      * Collision skin types. Any mesh that participates in physics
@@ -21,38 +21,6 @@ namespace PhysicsSystem {
         sphere,  ///< Use a collision sphere.
         trimesh, ///< Use an exactly fitting triangle mesh (expensive)
         hull     ///< ?
-    };
-
-    /**
-     * Internal callback object used by bullet to indicate an object
-     * is transformed due to physics. See bullet manual version 2.83,
-     * pp. 20 f.
-     */
-    class PhysicsMotionState: public btMotionState
-    {
-    public:
-        PhysicsMotionState(Ogre::SceneNode* p_node);
-        virtual void getWorldTransform(btTransform& trans) const;
-        virtual void setWorldTransform(const btTransform& trans);
-    private:
-        Ogre::SceneNode* mp_node;
-    };
-
-    class PhysicsEngine;
-
-    /**
-     * Internal object for managing the memory bullet associates
-     * with a rigid body.
-     */
-    class RigidBody {
-    public:
-        RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype);
-        ~RigidBody();
-
-        ColliderType          m_colltype;
-        btCollisionShape*     mp_bullet_collshape;
-        PhysicsMotionState*   mp_bullet_motionstate;
-        btRigidBody*          mp_bullet_rbody;
     };
 
     /**
