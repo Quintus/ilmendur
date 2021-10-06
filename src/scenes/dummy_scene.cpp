@@ -121,6 +121,10 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         cout << "Repositioning!" << endl;
         mp_player->reposition(Ogre::Vector3(25, 0, 10), Ogre::Quaternion(Ogre::Degree(0), Ogre::Vector3::UNIT_Y));
         break;
+    case GLFW_KEY_A:
+        cout << "Applying upwards force" << endl;
+        mp_physics->applyForce(mp_player, Ogre::Vector3(0, 0, 100), Ogre::Vector3(0, 0, 0));
+        break;
         //default:
         // Ignore
     }

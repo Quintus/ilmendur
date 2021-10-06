@@ -231,3 +231,36 @@ void PhysicsEngine::update()
 
     mp_debug_drawer->update();
 }
+
+/**
+ * Apply a force to the actor.
+ *
+ * \param[in] p_actor
+ * Actor to apply the force to.
+ *
+ * \param[in] force
+ * Force vector. To give you a measure: to lift a typical
+ * human figure upwards in Ilmendur, you'll need to apply at least
+ * about 100 force units into positive Z direction.
+ *
+ * \param[in] offset
+ * The force is normally applied to the actor's mesh's origin.
+ * By specifying this parameter, you can apply the force at a different
+ * position -- this will result in the actor gaining spin into the
+ * respective direction. Normally that probably is not what you want.
+ *
+ * \remark Ilmendur's Z axis points upwards from the ground. That is,
+ * the coordinate system is equivalent to Blender's rather than Ogre's
+ * default one, which has the Z axis pointing to the viewer.
+ */
+void PhysicsEngine::applyForce(Actor* p_actor, const Ogre::Vector3& force, const Ogre::Vector3& offset)
+{
+    m_actors[p_actor]->mp_bullet_rbody->applyForce(ogreVec2Bullet(force), ogreVec2Bullet(offset));
+
+    /* For performance reasons, Bullet does not include rigid bodies
+     * into its calculations once they have come to a rest. They are
+     * set to sleep state. Calling activate() disables the sleep
+     * state once and makes Bullet check again.
+     * See <https://gamedev.stackexchange.com/a/70618> .*/
+    m_actors[p_actor]->mp_bullet_rbody->activate();
+}
