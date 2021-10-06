@@ -87,13 +87,13 @@ void Actor::setOrientation(const Ogre::Quaternion& newrot)
  * functions in a row, because the physics engine will be updated only
  * once rather than twice.
  */
-void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newrot)
+void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newrot, bool clear_forces)
 {
     mp_scene_node->setPosition(newpos);
     mp_scene_node->setOrientation(newrot);
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this);
+        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
     }
 }
 

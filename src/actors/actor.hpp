@@ -22,7 +22,7 @@ public:
 
     void setPosition(const Ogre::Vector3& newpos);
     void setOrientation(const Ogre::Quaternion& neworient);
-    void reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& neworient);
+    void reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& neworient, bool clear_forces = false);
 
     Ogre::Vector3 getPosition() const;
     Ogre::Quaternion getOrientation() const;

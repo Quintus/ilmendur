@@ -158,7 +158,15 @@ bool PhysicsEngine::hasActor(Actor* p_actor)
  * Resync the actor's position and orientation in bullet's world with
  * those in the Ogre world.
  *
- * This method completely ignores physics. It forcibly resets
+ * \param[in] p_actor
+ * Target actor.
+ *
+ * \param[in] clear_forces (default: false)
+ * If set to true, additionally clears all forces on the
+ * object. With this set to false, if you reset a moving
+ * object, it would continue moving at the new position.
+ *
+ * \remark This method completely ignores physics. It forcibly resets
  * position and orientation so that it matches whatever is
  * current in the Ogre scene graph. Use this method sparingly.
  * Specifically, this method is not needed for kinematic rigid bodies,
@@ -168,27 +176,27 @@ bool PhysicsEngine::hasActor(Actor* p_actor)
  * this method is only useful for dynamic rigid bodies. For those,
  * the repositioning methods of Actor automatically call this method.
  */
-void PhysicsEngine::resetActor(Actor* p_actor)
+void PhysicsEngine::resetActor(Actor* p_actor, bool clear_forces)
 {
     RigidBody* p_rbody = m_actors[p_actor];
 
     // Zero-mass rigid bodies may only be moved if they have been flagged
     // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
     assert(p_actor->getMass() != 0.0f || ((p_rbody->mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
-    // Please leave this assert in even if the ŕigid body is actually
-    // removed and re-added below. There might turn up a better option
-    // in the future.
 
-    /* There appears to be no other sensible way to force a resync
-     * than to entirely remove the rigid body and re-add it. Simply
-     * resetting the world transform is insufficient; it leaves forces
-     * in place and even worse, appearently some
-     * has-touched-the-ground flag. Resetting a still object resting
-     * on the ground into the air makes it float in the air. To
-     * circumvent that, do it the brutalist way and remove and re-add
-     * the rigid body. */
-    removeActor(p_actor);
-    addActor(p_actor);
+    // Bullet has no method to forcibly re-read the world transform
+    // appearently, so do it manually.
+    btTransform trans;
+    p_rbody->mp_bullet_motionstate->getWorldTransform(trans);
+    p_rbody->mp_bullet_rbody->setWorldTransform(trans);
+
+    if (clear_forces) {
+        p_rbody->mp_bullet_rbody->clearForces();
+        p_rbody->mp_bullet_rbody->setLinearVelocity(btVector3(0, 0, 0));
+        p_rbody->mp_bullet_rbody->setAngularVelocity(btVector3(0, 0, 0));
+    }
+
+    p_rbody->mp_bullet_rbody->activate(); // Wake up the object so bullet notices it has changed
 }
 
 /**

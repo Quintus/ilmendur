@@ -35,7 +35,7 @@ namespace PhysicsSystem {
         void addActor(Actor* p_actor);
         void removeActor(Actor* p_actor);
         bool hasActor(Actor* p_actor);
-        void resetActor(Actor* p_actor);
+        void resetActor(Actor* p_actor, bool clear_forces = false);
         void clear();
 
         void applyForce(Actor* p_actor, const Ogre::Vector3& force, const Ogre::Vector3& offset = Ogre::Vector3(0, 0, 0));
