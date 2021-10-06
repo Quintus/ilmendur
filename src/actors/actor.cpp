@@ -54,12 +54,12 @@ void Actor::collide(Actor& other)
  * For physics-enabled actors, it is often better to use the physics
  * engine usually by applying forces to the actor.
  */
-void Actor::setPosition(const Ogre::Vector3& newpos)
+void Actor::setPosition(const Ogre::Vector3& newpos, bool clear_forces)
 {
     mp_scene_node->setPosition(newpos);
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this);
+        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
     }
 }
 
@@ -72,12 +72,12 @@ void Actor::setPosition(const Ogre::Vector3& newpos)
  * For physics-enabled actors, it is often better to use the physics
  * engine usually by applying forces to the actor.
  */
-void Actor::setOrientation(const Ogre::Quaternion& newrot)
+void Actor::setOrientation(const Ogre::Quaternion& newrot, bool clear_forces)
 {
     mp_scene_node->setOrientation(newrot);
 
     if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this);
+        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
     }
 }
 

@@ -20,8 +20,8 @@ public:
 
     virtual void collide(Actor& other);
 
-    void setPosition(const Ogre::Vector3& newpos);
-    void setOrientation(const Ogre::Quaternion& neworient);
+    void setPosition(const Ogre::Vector3& newpos, bool clear_forces = false);
+    void setOrientation(const Ogre::Quaternion& neworient, bool clear_forces = false);
     void reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& neworient, bool clear_forces = false);
 
     Ogre::Vector3 getPosition() const;
