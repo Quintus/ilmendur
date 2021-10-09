@@ -23,7 +23,7 @@ namespace SceneSystem {
         PhysicsSystem::PhysicsEngine& getPhysicsEngine() const { return *mp_physics; }
         Ogre::SceneManager& getSceneManager() const { return *mp_scene_manager; }
 
-        virtual void processKeyInput(int key, int scancode, int action, int mods) {};
+        virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void update() {};
 
         void finish();

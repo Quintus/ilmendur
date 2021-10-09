@@ -78,3 +78,16 @@ void Scene::replaceBlenderEntity(Ogre::SceneNode* p_scene_node, entity_type etyp
 
     p_scene_node->attachObject(p_new_entity);
 }
+
+/**
+ * Called from the main loop when a keyboard key is pressed.
+ * Please note that, regardless of whatever locale the user
+ * has active, the `key` will always be the US keyboard key.
+ * This is a restriction enforced by GLFW itself, see
+ * <https://www.glfw.org/docs/3.3/group__keys.html>.
+ *
+ * This method does nothing by default.
+ */
+void Scene::processKeyInput(int key, int scancode, int action, int mods)
+{
+}
