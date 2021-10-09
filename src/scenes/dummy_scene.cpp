@@ -69,6 +69,7 @@ DummyScene::DummyScene()
     mp_player = new Freya(*this);
     mp_player->setPosition(Ogre::Vector3(25, 0, 10));
     mp_physics->addActor(mp_player);
+    mp_physics->lockRotation(mp_player);
 }
 
 DummyScene::~DummyScene()

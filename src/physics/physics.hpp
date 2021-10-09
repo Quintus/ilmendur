@@ -38,6 +38,7 @@ namespace PhysicsSystem {
         void resetActor(Actor* p_actor, bool clear_forces = false);
         void clear();
 
+        void lockRotation(Actor* p_actor);
         void applyForce(Actor* p_actor, const Ogre::Vector3& force, const Ogre::Vector3& offset = Ogre::Vector3(0, 0, 0));
 
         void update();

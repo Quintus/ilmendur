@@ -272,3 +272,22 @@ void PhysicsEngine::applyForce(Actor* p_actor, const Ogre::Vector3& force, const
      * See <https://gamedev.stackexchange.com/a/70618> .*/
     m_actors[p_actor]->mp_bullet_rbody->activate();
 }
+
+/**
+ * Exempts the given actor from having changed its orientation by
+ * physics. Any rotation will thus have to be conducted through
+ * Actor’s methods. This is particularly useful for characters,
+ * which you'd typically not want to fall sideways like a static object.
+ *
+ * \remark This method implements the suggestion from p. 26 of v. 2.83 of
+ * the Bullet Manual (i.e. uses setAngularFactor()).
+ *
+ * \remark Beware that you cannot call this method before addActor().
+ * So unless you add the actor to the physics engine *inside the
+ * actor’s constructor*, calling this method inside the constructor
+ * will segfault the programme with a null pointer dereference.
+ */
+void PhysicsEngine::lockRotation(Actor* p_actor)
+{
+    m_actors[p_actor]->mp_bullet_rbody->setAngularFactor(btVector3(0, 0, 0));
+}
