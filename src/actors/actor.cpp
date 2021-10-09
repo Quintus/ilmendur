@@ -1,7 +1,6 @@
 #include "actor.hpp"
 #include "../physics/physics.hpp"
 #include "../scenes/scene.hpp"
-#include <iostream>
 
 using namespace std;
 
@@ -42,7 +41,6 @@ Actor::~Actor()
 
 void Actor::collide(Actor& other)
 {
-    cout << this << " collided with " << &other << endl;
 }
 
 /**
