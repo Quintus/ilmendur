@@ -35,6 +35,7 @@ namespace Core {
         void loadOgreResources();
         void setupOgreRTSS();
         void shutdownOgreRTSS();
+        void configureJoystick();
 
         Window* mp_window;
         SGTechniqueResolverListener* mp_sglistener;

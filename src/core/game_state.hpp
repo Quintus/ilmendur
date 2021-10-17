@@ -21,6 +21,12 @@ namespace Core {
         FREYA = 1
     };
 
+    struct axisconf {
+        int axisno = 0;
+        float max = 1.0f;
+        float min = -1.0f;
+    };
+
     /**
      * Global game state object. This nested structure is what is
      * stored inside save game files. It is globally accessible
@@ -38,6 +44,11 @@ namespace Core {
         struct {
             int bombs = 0;
         } equipment[2]; // one equipment struct per player; use "players" enum indices for access
+        struct {
+            int joy_index = 0;
+            axisconf joy_vertical;
+            axisconf joy_horizontal;
+        } config[2];
 
         static GameState instance;
     };

@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "resolver.hpp"
 #include "window.hpp"
+#include "game_state.hpp"
 #include "../os/paths.hpp"
 #include "../scenes/dummy_scene.hpp"
 #include <buildconfig.hpp>
@@ -13,12 +14,29 @@
 #include <OgreDotSceneLoader.h>
 #include <iostream>
 #include <filesystem>
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 using namespace std;
 using namespace Core;
 
 static Application* sp_application = nullptr;
+
+static void findPressedAxis(const int& len, const float joyaxes[], int& axisno, float& limit)
+{
+    assert(len > 0);
+
+    float maxval = joyaxes[0];
+    axisno = 0;
+    for(int i=0; i < len; i++) {
+        if (abs(joyaxes[i]) > maxval) {
+            axisno = i;
+            maxval = abs(joyaxes[i]);
+        }
+    }
+
+    limit = joyaxes[axisno];
+}
 
 static void processGLFWKeys(GLFWwindow* p_glfw_window,
                             int key, int scancode, int action, int mods)
@@ -76,6 +94,13 @@ void Application::setupGlfw()
     if (!glfwInit()) {
         throw(runtime_error("Failed to initialise glfw!"));
     }
+
+    if (!glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        throw(runtime_error("No joystick found! It is required to play the game."));
+    }
+
+    // FIXME: This should be proper in the UI rather than on the console here...
+    configureJoystick();
 }
 
 void Application::shutdownGlfw()
@@ -231,4 +256,45 @@ void Application::run()
     shutdownOgreRTSS();
     delete mp_window;
     mp_window = nullptr;
+}
+
+void Application::configureJoystick()
+{
+    int axescount = 0;
+    const float* joyaxes = nullptr;
+
+    glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    cout << "Your joystick has " << axescount << " axes." << endl;
+
+    cout << "Configuring joystick axes. Each prompt waits 2 seconds. Press Enter to start.";
+    cin.get();
+
+    int axis = 0;
+    float axislimit = 0.0f;
+    cout << "Press UP axis!" << endl;
+    sleep(2);
+    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    findPressedAxis(axescount, joyaxes, axis, axislimit);
+    GameState::instance.config[FREYA].joy_vertical.axisno = axis;
+    GameState::instance.config[FREYA].joy_vertical.max = axislimit;
+    GameState::instance.config[FREYA].joy_vertical.min = -axislimit;
+    cout << "Vertical axis is " << axis << " with upwards as " << axislimit << "." << endl;
+
+    cout << "Press Enter to continue." << endl;
+    cin.get();
+
+    cout << "Press LEFT axis!" << endl;
+    sleep(2);
+    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    findPressedAxis(axescount, joyaxes, axis, axislimit);
+    GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
+    GameState::instance.config[FREYA].joy_horizontal.max = axislimit;
+    GameState::instance.config[FREYA].joy_horizontal.min = -axislimit;
+    cout << "Horizontal axis is " << axis << " with leftwards as " << axislimit << "." << endl;
+
+    GameState::instance.config[FREYA].joy_index = GLFW_JOYSTICK_1;
+    cout << "Configuring joystick done." << endl;
+
+    cout << "Press Enter to continue.";
+    cin.get();
 }
