@@ -21,10 +21,14 @@ namespace Core {
         FREYA = 1
     };
 
+    /**
+     * Information about a single joystick axis, being
+     * the axes index for GLFW and whether the axis is
+     * inverted.
+     */
     struct axisconf {
         int axisno = 0;
-        float max = 1.0f;
-        float min = -1.0f;
+        bool inverted = false;
     };
 
     /**
@@ -48,6 +52,7 @@ namespace Core {
             int joy_index = 0;
             axisconf joy_vertical;
             axisconf joy_horizontal;
+            float joy_dead_zone = 0.0f;
         } config[2];
 
         static GameState instance;

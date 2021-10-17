@@ -1,6 +1,7 @@
 #include "dummy_scene.hpp"
 #include "../core/application.hpp"
 #include "../core/window.hpp"
+#include "../core/game_state.hpp"
 #include "../audio/music.hpp"
 #include "../actors/static_geometry.hpp"
 #include "../actors/freya.hpp"
@@ -13,13 +14,15 @@
 
 using namespace std;
 using namespace SceneSystem;
+using namespace Core;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
       mp_area_node(nullptr),
       mp_cam_node(nullptr),
       mp_ground(nullptr),
-      mp_player(nullptr)
+      mp_player(nullptr),
+      m_run_threshold(0.0f)
 {
     // Enable physics
     mp_physics = new PhysicsSystem::PhysicsEngine(mp_scene_manager->getRootSceneNode());
@@ -70,6 +73,8 @@ DummyScene::DummyScene()
     mp_player->setPosition(Ogre::Vector3(25, 0, 10));
     mp_physics->addActor(mp_player);
     mp_physics->lockRotation(mp_player);
+
+    calculateJoyZones();
 }
 
 DummyScene::~DummyScene()
@@ -88,6 +93,22 @@ DummyScene::~DummyScene()
 void DummyScene::update()
 {
     mp_physics->update();
+
+    const float* joyaxes = nullptr;
+    int axescount = 0;
+    joyaxes = glfwGetJoystickAxes(GameState::instance.config[FREYA].joy_index, &axescount);
+    if (!joyaxes) {
+        throw("Joystick removed during play");
+    }
+
+    if (fabs(joyaxes[GameState::instance.config[FREYA].joy_vertical.axisno]) >= GameState::instance.config[FREYA].joy_dead_zone) {
+        cout << "Moving vertically!" << endl;
+    }
+
+    if (fabs(joyaxes[GameState::instance.config[FREYA].joy_horizontal.axisno]) >= GameState::instance.config[FREYA].joy_dead_zone) {
+        cout << "Moving horizontally!" << endl;
+    }
+
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
@@ -129,4 +150,29 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         //default:
         // Ignore
     }
+}
+
+/**
+ * Calculates m_run_threshold. The joystick is divided like this (cut
+ * off at zero; mirror the graphic below zero for the complete
+ * picture). GLFW sends values normalised between -1 and 1 as the
+ * extreme positions, 0 being the exact null position.
+ *
+ *     ^ 1
+ *     |       player will
+ *     |            run
+ *     |
+ *     +   <--- m_run_threshold
+ *     |       player will
+ *     |            walk
+ *     -  dead zone below (no movement at all)
+ *     - 0
+ *
+ * m_run_threshold is calculated to be at 1/3 of the space
+ * above the dead zone.
+ */
+void DummyScene::calculateJoyZones()
+{
+    float usable_zone = 1.0f - GameState::instance.config[FREYA].joy_dead_zone;
+    m_run_threshold = 0.3333f * usable_zone;
 }

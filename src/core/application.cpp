@@ -29,9 +29,9 @@ static void findPressedAxis(const int& len, const float joyaxes[], int& axisno, 
     float maxval = joyaxes[0];
     axisno = 0;
     for(int i=0; i < len; i++) {
-        if (abs(joyaxes[i]) > maxval) {
+        if (fabs(joyaxes[i]) > maxval) {
             axisno = i;
-            maxval = abs(joyaxes[i]);
+            maxval = fabs(joyaxes[i]);
         }
     }
 
@@ -276,21 +276,24 @@ void Application::configureJoystick()
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findPressedAxis(axescount, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_vertical.axisno = axis;
-    GameState::instance.config[FREYA].joy_vertical.max = axislimit;
-    GameState::instance.config[FREYA].joy_vertical.min = -axislimit;
-    cout << "Vertical axis is " << axis << " with upwards as " << axislimit << "." << endl;
+    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit < 0.0f;
+    cout << "Vertical axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
 
     cout << "Press Enter to continue." << endl;
     cin.get();
 
-    cout << "Press LEFT axis!" << endl;
+    cout << "Press RIGHT axis!" << endl;
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findPressedAxis(axescount, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
-    GameState::instance.config[FREYA].joy_horizontal.max = axislimit;
-    GameState::instance.config[FREYA].joy_horizontal.min = -axislimit;
-    cout << "Horizontal axis is " << axis << " with leftwards as " << axislimit << "." << endl;
+    GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
+    cout << "Horizontal axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
+
+    float deadpercent = 0.0f;
+    cout << "How large is the dead zone (zone in which to ignore input from the axes), in percent?" << endl;
+    cin >> deadpercent;
+    GameState::instance.config[FREYA].joy_dead_zone = deadpercent / 100.0f;
 
     GameState::instance.config[FREYA].joy_index = GLFW_JOYSTICK_1;
     cout << "Configuring joystick done." << endl;
