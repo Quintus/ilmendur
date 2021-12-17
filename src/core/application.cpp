@@ -263,6 +263,18 @@ void Application::configureJoystick()
     int axescount = 0;
     const float* joyaxes = nullptr;
 
+    /*
+     * Querying the joystick axes. The player presses UP and RIGHT,
+     * from which the below code induces which axis is the vertical
+     * and which axis is the horizontal axis. The Ilmendur code
+     * assumes that the joystick vertical axis is positive towards
+     * DOWN, and the horizontal axis is positive towards RIGHT. If
+     * that conflicts with what is read from the player's input here,
+     * the axis attribute `inverted' is set for the respective axis.
+     * It is up to the code reading the axes values to use this
+     * information to normalise the input before processing it.
+     */
+
     glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     cout << "Your joystick has " << axescount << " axes." << endl;
 
@@ -271,18 +283,18 @@ void Application::configureJoystick()
 
     int axis = 0;
     float axislimit = 0.0f;
-    cout << "Press UP axis!" << endl;
+    cout << "Press UP!" << endl;
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findPressedAxis(axescount, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_vertical.axisno = axis;
-    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit < 0.0f;
-    cout << "Vertical axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
+    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
+    cout << "Vertical axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
 
     cout << "Press Enter to continue." << endl;
     cin.get();
 
-    cout << "Press RIGHT axis!" << endl;
+    cout << "Press RIGHT!" << endl;
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findPressedAxis(axescount, joyaxes, axis, axislimit);

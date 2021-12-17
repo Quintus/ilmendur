@@ -11,6 +11,7 @@
 #include <OGRE/OgreMath.h>
 #include <btBulletDynamicsCommon.h>
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 using namespace SceneSystem;
@@ -94,20 +95,106 @@ void DummyScene::update()
 {
     mp_physics->update();
 
+    const auto& config = GameState::instance.config[FREYA];
     const float* joyaxes = nullptr;
     int axescount = 0;
-    joyaxes = glfwGetJoystickAxes(GameState::instance.config[FREYA].joy_index, &axescount);
+    joyaxes = glfwGetJoystickAxes(config.joy_index, &axescount);
     if (!joyaxes) {
         throw("Joystick removed during play");
     }
 
-    if (fabs(joyaxes[GameState::instance.config[FREYA].joy_vertical.axisno]) >= GameState::instance.config[FREYA].joy_dead_zone) {
-        cout << "Moving vertically!" << endl;
+    // Any values in the dead zone are to be treated as zero.
+    // It would be confusing if the dead value is used just because
+    // the other axis is outside of the dead zone.
+    Ogre::Vector3 vec(joyaxes[config.joy_horizontal.axisno], joyaxes[config.joy_vertical.axisno], 0.0f);
+    if (fabs(vec.x) < config.joy_dead_zone) {
+        vec.x = 0.0f;
+    }
+    if (fabs(vec.y) < config.joy_dead_zone) {
+        vec.y = 0.0f;
+    }
+    if (vec.isZeroLength()) {
+        return;
     }
 
-    if (fabs(joyaxes[GameState::instance.config[FREYA].joy_horizontal.axisno]) >= GameState::instance.config[FREYA].joy_dead_zone) {
-        cout << "Moving horizontally!" << endl;
+    // Player rotation by joystick input follows //
+
+    // Normalise out inverted axes so that UP and LEFT are always the
+    // negative values and DOWN and RIGHT always the positive ones.
+    if (config.joy_vertical.inverted) {
+        vec.y *= -1;
     }
+    if (config.joy_horizontal.inverted) {
+        vec.x *= -1;
+    }
+
+    // The goal is to rotate the player figure relative to the camera
+    // direction by the offset offset that `vec' has from the
+    // joystick's Y axis (which points from (0|0) upwards to (0|1)):
+
+    // Calculate the angle between the y-axis vector (0, 1) and the read input vector
+    // by reversing the scalar product.
+    float angle_rad = acosf((vec.y * vec.y) / ((vec.x * vec.x) + (vec.y * vec.y)) );
+
+    // Convert it to a part of the full circle, counter-clockwise
+    if (vec.x == 0.0f && vec.y == -1.0f) {
+        // Rotating by 360° is nonsense, do not rotate in that case
+        angle_rad = 0.0f;
+    } else {
+        if (vec.x < 0.0f) {
+            if (vec.y < 0.0f) {
+                // angle_rad = angle_rad // Change nothing
+            } else {
+                angle_rad = M_PI - angle_rad;
+            }
+        } else {
+            if (vec.y < 0.0f) {
+                angle_rad = 2 * M_PI - angle_rad;
+            } else {
+                angle_rad = M_PI + angle_rad;
+            }
+        }
+    }
+
+    // At this point, an angle of zero degrees means the player pressed
+    // the joystick straight UP, whereas 180 degrees means straight DOWN.
+    // 90 degrees is RIGHT, and 270 degrees is LEFT. Beware `angle_rad' is
+    // in radians, not in angles.
+
+    // Get the vector the camera is looking down
+    Ogre::Quaternion cam_orient = mp_cam_node->getOrientation();
+    Ogre::Vector3 lookdir = cam_orient * -Ogre::Vector3::UNIT_Z;
+    lookdir.normalise();
+
+    // Rotate the player figure so it aligns with the camera look vector,
+    // then rotate it again by the amount of degrees calculated above.
+    //
+    // FIXME: It should be possible to calculate the target quaternion without
+    // resorting to lookAt() and instead using mp_player->setOrientation().
+    // That would be much cleaner and probably more performant.
+    mp_player->getSceneNode()->lookAt(mp_player->getPosition() + lookdir, Ogre::Node::TS_WORLD, Ogre::Vector3::UNIT_X);
+    mp_player->getSceneNode()->rotate(Ogre::Vector3::UNIT_Z, Ogre::Radian(angle_rad));
+    mp_physics->resetActor(mp_player, false);
+
+    /*
+    // HIER -- Das dreht nicht um die Kameraachse, sondern um die allgemeine Z-Achse...
+
+    // Depending on how strong is pressed, move fast or slow forward
+    // into this direction.
+    if (vec.length() > m_run_threshold) {
+        //mp_player->moveForward(1);
+        Ogre::Vector3 newpos(mp_player->getOrientation().yAxis().y + 1.0f,
+                             mp_player->getOrientation().xAxis().x + 1.0f,
+                             0.0f);
+            mp_player->setPosition(newpos);
+    }
+    else {
+        Ogre::Vector3 newpos(mp_player->getOrientation().yAxis().y + 0.5,
+                             mp_player->getOrientation().xAxis().x + 0.5,
+                             0);
+            mp_player->setPosition(newpos);
+        //mp_player->moveForward(0.5);
+        }*/
 
 }
 
@@ -175,4 +262,7 @@ void DummyScene::calculateJoyZones()
 {
     float usable_zone = 1.0f - GameState::instance.config[FREYA].joy_dead_zone;
     m_run_threshold = 0.3333f * usable_zone;
+    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+    cout << "Dead zone=" << GameState::instance.config[FREYA].joy_dead_zone << endl;
+    cout << "m_run_threshold=" << m_run_threshold << endl;
 }

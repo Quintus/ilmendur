@@ -7,7 +7,7 @@ Freya::Freya(SceneSystem::Scene& scene)
 {
     m_mass = 0.63f;
     m_colltype = PhysicsSystem::ColliderType::box;
-    mp_scene_node->attachObject(m_scene.getSceneManager().createEntity("freya.mesh"));
+    mp_scene_node->attachObject(m_scene.getSceneManager().createEntity("sign.mesh"));
 }
 
 Freya::~Freya()
