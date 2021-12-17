@@ -129,7 +129,7 @@ void DummyScene::update()
     }
 
     // The goal is to rotate the player figure relative to the camera
-    // direction by the offset offset that `vec' has from the
+    // direction by the offset that `vec' has from the
     // joystick's Y axis (which points from (0|0) upwards to (0|1)):
 
     // Calculate the angle between the y-axis vector (0, 1) and the read input vector
@@ -172,30 +172,30 @@ void DummyScene::update()
     // FIXME: It should be possible to calculate the target quaternion without
     // resorting to lookAt() and instead using mp_player->setOrientation().
     // That would be much cleaner and probably more performant.
+    // UNIT_X as the third argument because all models (including the player)
+    // always look down the X axis in their initial rotation as per the
+    // instructions for artists .
     mp_player->getSceneNode()->lookAt(mp_player->getPosition() + lookdir, Ogre::Node::TS_WORLD, Ogre::Vector3::UNIT_X);
     mp_player->getSceneNode()->rotate(Ogre::Vector3::UNIT_Z, Ogre::Radian(angle_rad));
-    mp_physics->resetActor(mp_player, false);
-
-    /*
-    // HIER -- Das dreht nicht um die Kameraachse, sondern um die allgemeine Z-Achse...
 
     // Depending on how strong is pressed, move fast or slow forward
     // into this direction.
+    Ogre::Vector3 translation = mp_player->getOrientation() * Ogre::Vector3::UNIT_X;
+    //translation.z = 0.0f; // Leave Z modification to the physics engine
+    translation.normalise();
+    printf("Translation: X=%.4f Y=%.4f Z=%.4f\n", translation.x, translation.y, translation.z);
     if (vec.length() > m_run_threshold) {
-        //mp_player->moveForward(1);
-        Ogre::Vector3 newpos(mp_player->getOrientation().yAxis().y + 1.0f,
-                             mp_player->getOrientation().xAxis().x + 1.0f,
-                             0.0f);
-            mp_player->setPosition(newpos);
+        translation *= 0.5;
     }
     else {
-        Ogre::Vector3 newpos(mp_player->getOrientation().yAxis().y + 0.5,
-                             mp_player->getOrientation().xAxis().x + 0.5,
-                             0);
-            mp_player->setPosition(newpos);
-        //mp_player->moveForward(0.5);
-        }*/
+        translation *= 0.2;
+    }
 
+    mp_player->getSceneNode()->translate(translation);
+    mp_physics->resetActor(mp_player, false);
+
+    Ogre::Vector3 newpos = mp_player->getPosition();
+    printf("New position: X=%.4f Y=%.4f Z=%.4f\n", newpos.x, newpos.y, newpos.z);
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
