@@ -94,7 +94,11 @@ DummyScene::~DummyScene()
 void DummyScene::update()
 {
     mp_physics->update();
+    handleJoyInput();
+}
 
+void DummyScene::handleJoyInput()
+{
     const auto& config = GameState::instance.config[FREYA];
     const float* joyaxes = nullptr;
     int axescount = 0;
@@ -116,8 +120,6 @@ void DummyScene::update()
     if (vec.isZeroLength()) {
         return;
     }
-
-    // Player rotation by joystick input follows //
 
     // Normalise out inverted axes so that UP and LEFT are always the
     // negative values and DOWN and RIGHT always the positive ones.

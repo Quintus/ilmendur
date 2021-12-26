@@ -18,6 +18,7 @@ namespace SceneSystem {
         virtual void update();
     private:
         void calculateJoyZones();
+        void handleJoyInput();
 
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;
