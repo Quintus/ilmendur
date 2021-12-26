@@ -156,54 +156,37 @@ void DummyScene::update()
         }
     }
 
-    // At this point, an angle of zero degrees means the player pressed
-    // the joystick straight UP, whereas 180 degrees means straight DOWN.
-    // 90 degrees is RIGHT, and 270 degrees is LEFT. Beware `angle_rad' is
-    // in radians, not in angles.
+    /* At this point, an angle of zero degrees means the player pressed
+     * the joystick straight UP, whereas 180 degrees means straight DOWN.
+     * 90 degrees is RIGHT, and 270 degrees is LEFT. Beware `angle_rad' is
+     * in radians, not in angles. */
 
     // Get the vector the camera is looking down
     Ogre::Quaternion cam_orient = mp_cam_node->getOrientation();
     Ogre::Vector3 lookdir = cam_orient * -Ogre::Vector3::UNIT_Z;
     lookdir.normalise();
-    printf("Lookdir: X=%.4f Y=%.4f Z=%.4f\n", lookdir.x, lookdir.y, lookdir.z);
 
-    // Calculate the angle between lookdir and the player model's natural looking direction
-    // (which is UNIT_X as per instructions for the artists). From that,
-    // find the required counter-clockwise rotation required to make the
-    // player look into the camera direction. Note that offsets smaller than 180°
-    // need to be calculated by subtracting from the full circle.
+    /* Calculate the angle between `lookdir' and the player model's
+     * natural looking direction (which is UNIT_X as per instructions
+     * for the artists; also note that the `lookdir' and `UNIT_X'
+     * vectors are of length 1, which is quite helpful for the acosf()
+     * calculation used below). From that, find the required
+     * counter-clockwise rotation required to make the player look
+     * into the camera direction. Note that offsets smaller than 180°
+     * need to be calculated by subtracting from the full circle. */
     float offset_rad = acosf(Ogre::Vector3::UNIT_X.dotProduct(lookdir));
     if (lookdir.y < 0.0f) {
         offset_rad = 2 * M_PI - offset_rad;
     }
-
-    printf("Calculated offset natural->camera as %.2f\n", offset_rad * 180 / M_PI);
-
-    printf("Offset camera->joystick is %.2f\n", angle_rad * 180 / M_PI);
-    printf("Final offset natural->joystick is %.2f\n", (offset_rad + angle_rad) * 180 / M_PI);
     Ogre::Quaternion player_orient(Ogre::Radian(offset_rad + angle_rad), Ogre::Vector3::UNIT_Z);
     mp_player->getSceneNode()->setOrientation(player_orient);
 
-    // Rotate the player figure so it aligns with the camera look vector,
-    // then rotate it again by the amount of degrees calculated above.
-    //
-    // FIXME: It should be possible to calculate the target quaternion without
-    // resorting to lookAt() and instead using mp_player->setOrientation().
-    // That would be much cleaner and probably more performant.
-    // UNIT_X as the third argument because all models (including the player)
-    // always look down the X axis in their initial rotation as per the
-    // instructions for artists .
-    //mp_player->getSceneNode()->lookAt(mp_player->getPosition() + lookdir, Ogre::Node::TS_WORLD, Ogre::Vector3::UNIT_X);
-    //mp_player->getSceneNode()->rotate(Ogre::Vector3::UNIT_Z, Ogre::Radian(angle_rad));
-
-    //Ogre::Quaternion player_orient = mp_player->getSceneNode()->getOrientation();
-    printf("New orient: X=%.4f Y=%.4f Z=%.4f w=%.4f\n", player_orient.x, player_orient.y, player_orient.z, (player_orient.w * 180) / M_PI);
-    // Depending on how strong is pressed, move fast or slow forward
-    // into this direction.
-    Ogre::Vector3 translation = mp_player->getOrientation() * Ogre::Vector3::UNIT_X;
-    //translation.z = 0.0f; // Leave Z modification to the physics engine
+    /* Depending on how strong is pressed, move fast or slow forward
+     * into this direction. The quaternion `player_orient' is rotating
+     * around the Z axis, and UNIT_X is the model's natural looking
+     * direction as per instructions for the artists. */
+    Ogre::Vector3 translation = player_orient * Ogre::Vector3::UNIT_X;
     translation.normalise();
-    //printf("Translation: X=%.4f Y=%.4f Z=%.4f\n", translation.x, translation.y, translation.z);
     if (vec.length() > m_run_threshold) {
         translation *= 0.5;
     }
@@ -213,10 +196,6 @@ void DummyScene::update()
 
     mp_player->getSceneNode()->translate(translation);
     mp_physics->resetActor(mp_player, false);
-
-    Ogre::Vector3 newpos = mp_player->getPosition();
-    printf("New position: X=%.4f Y=%.4f Z=%.4f\n", newpos.x, newpos.y, newpos.z);
-    printf("---------------------------\n");
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
