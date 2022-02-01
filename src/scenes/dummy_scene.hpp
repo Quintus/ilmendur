@@ -19,6 +19,7 @@ namespace SceneSystem {
     private:
         void calculateJoyZones();
         void handleJoyInput();
+        void adjustCamera();
 
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_cam_node;

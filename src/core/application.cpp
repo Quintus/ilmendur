@@ -14,6 +14,7 @@
 #include <OgreDotSceneLoader.h>
 #include <iostream>
 #include <filesystem>
+#include <chrono>
 #include <unistd.h>
 
 namespace fs = std::filesystem;
@@ -47,7 +48,8 @@ static void processGLFWKeys(GLFWwindow* p_glfw_window,
 }
 
 Application::Application()
-    : mp_window(nullptr),
+    : m_fps(0.0f),
+      mp_window(nullptr),
       mp_sglistener(nullptr)
 {
     if (sp_application) {
@@ -236,7 +238,14 @@ void Application::run()
     glfwSetKeyCallback(mp_window->getGLFWWindow(), processGLFWKeys);
 
     // Main loop
+    chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+    chrono::high_resolution_clock::time_point t2 = t1;
     while (m_scene_stack.size() > 0) {
+        t2 = chrono::high_resolution_clock::now();
+        m_fps = 1000.0f / chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
+        t1 = t2;
+        printf("FPS: %.2f\n", m_fps);
+
         m_scene_stack.top()->update();
 
         Ogre::Root::getSingleton().renderOneFrame();

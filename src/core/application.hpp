@@ -24,6 +24,8 @@ namespace Core {
         Window& getWindow();
         SceneSystem::Scene& currentScene();
 
+        inline float getFPS() { return m_fps; }
+
         void run();
     private:
         void setupGlfw();
@@ -36,6 +38,7 @@ namespace Core {
         void setupOgreRTSS();
         void shutdownOgreRTSS();
         void configureJoystick();
+        float m_fps;
 
         Window* mp_window;
         SGTechniqueResolverListener* mp_sglistener;

@@ -2,6 +2,7 @@
 #include "../core/application.hpp"
 #include "../core/window.hpp"
 #include "../core/game_state.hpp"
+#include "../core/timer.hpp"
 #include "../audio/music.hpp"
 #include "../actors/static_geometry.hpp"
 #include "../actors/freya.hpp"
@@ -16,6 +17,8 @@
 using namespace std;
 using namespace SceneSystem;
 using namespace Core;
+
+const float CAMERA_HEIGHT = 1.0f;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
@@ -40,25 +43,6 @@ DummyScene::DummyScene()
     // without light we would just get a black screen
     mp_scene_manager->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
-    // also need to tell where we are
-    mp_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
-    mp_cam_node->setPosition(20, 20, 1.75);
-    /* Align camera with Blender's axes. Blender has Z pointing upwards
-     * while Ogre's camera by default faces down the Z axis, i.e. Ogre
-     * treats the Y axis as the height. The below line rotates the camera
-     * so that it look in -Y axis direction, making the +Z axis the upwards direction
-     * like it is in Blender. */
-    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z) * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
-
-    // create the camera
-    Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
-    p_camera->setNearClipDistance(0.1);
-    p_camera->setAutoAspectRatio(true);
-    mp_cam_node->attachObject(p_camera);
-
-    // Add a viewport with the given camera to the render window.
-    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
-
     // Load the test area. Note the test area model has the floor in the XY plane.
     mp_area_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
     Ogre::ResourceGroupManager::getSingleton().setWorldResourceGroupName("scenes/test_scene");
@@ -74,6 +58,26 @@ DummyScene::DummyScene()
     mp_player->setPosition(Ogre::Vector3(25, 0, 10));
     mp_physics->addActor(mp_player);
     mp_physics->lockRotation(mp_player);
+
+    // also need to tell where we are
+    mp_cam_node = mp_player->getSceneNode()->createChildSceneNode();
+    mp_cam_node->setPosition(-5, 0, CAMERA_HEIGHT);
+    /* Align camera with Blender's axes. Blender has Z pointing upwards
+     * while Ogre's camera by default faces down the Z axis, i.e. Ogre
+     * treats the Y axis as the height. The below line rotates the camera
+     * so that it look in -Y axis direction, making the +Z axis the upwards direction
+     * like it is in Blender. */
+    //mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z) * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
+    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X) * Ogre::Quaternion(Ogre::Degree(270), Ogre::Vector3::UNIT_Y));
+
+    // create the camera
+    Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
+    p_camera->setNearClipDistance(0.1);
+    p_camera->setAutoAspectRatio(true);
+    mp_cam_node->attachObject(p_camera);
+
+    // Add a viewport with the given camera to the render window.
+    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
 
     calculateJoyZones();
 }
@@ -94,7 +98,11 @@ DummyScene::~DummyScene()
 void DummyScene::update()
 {
     mp_physics->update();
-    handleJoyInput();
+    //handleJoyInput();
+    ////adjustCamera();
+
+    static Timer t(100.0f, true, [this](){handleJoyInput();});
+    t.update();
 }
 
 void DummyScene::handleJoyInput()
@@ -164,8 +172,9 @@ void DummyScene::handleJoyInput()
      * in radians, not in angles. */
 
     // Get the vector the camera is looking down
-    Ogre::Quaternion cam_orient = mp_cam_node->getOrientation();
-    Ogre::Vector3 lookdir = cam_orient * -Ogre::Vector3::UNIT_Z;
+    //Ogre::Quaternion cam_orient = mp_cam_node->getOrientation();
+    Ogre::Quaternion cam_orient = mp_player->getSceneNode()->getOrientation();
+    Ogre::Vector3 lookdir = cam_orient * Ogre::Vector3::UNIT_X;
     lookdir.normalise();
 
     /* Calculate the angle between `lookdir' and the player model's
@@ -183,6 +192,11 @@ void DummyScene::handleJoyInput()
     Ogre::Quaternion player_orient(Ogre::Radian(offset_rad + angle_rad), Ogre::Vector3::UNIT_Z);
     mp_player->getSceneNode()->setOrientation(player_orient);
 
+    Ogre::Vector3 v;
+    Ogre::Degree d;
+    cam_orient.ToAngleAxis(d, v);
+    printf("q=(%+07.2f,%+07.2f,%+07.2f,%+07.2f),l=(%+07.2f|%+07.2f|%+07.2f); o=%+07.2f\n", v.x, v.y, v.z, d.valueDegrees(), lookdir.x, lookdir.y, lookdir.z, Ogre::Radian(offset_rad).valueDegrees());
+
     /* Depending on how strong is pressed, move fast or slow forward
      * into this direction. The quaternion `player_orient' is rotating
      * around the Z axis, and UNIT_X is the model's natural looking
@@ -198,6 +212,34 @@ void DummyScene::handleJoyInput()
 
     mp_player->getSceneNode()->translate(translation);
     mp_physics->resetActor(mp_player, false);
+}
+
+void DummyScene::adjustCamera()
+{
+    Ogre::Vector3 player_pos = mp_player->getSceneNode()->getPosition();
+    Ogre::Quaternion player_orient = mp_player->getSceneNode()->getOrientation();
+
+    Ogre::Vector3 lookdir = player_orient * Ogre::Vector3::UNIT_X; // Reads looking direction
+    lookdir.normalise();
+    lookdir *= 3;
+
+    printf("Lookdir: X=%.2f Y=%.2f Z=%.2f\n", lookdir.x, lookdir.y, lookdir.z);
+
+    Ogre::Vector3 newpos = player_pos - lookdir + Ogre::Vector3(0.0f, 0.0f, CAMERA_HEIGHT);
+
+    printf("Playerpos: X=%.2f Y=%.2f Z=%.2f\n", player_pos.x, player_pos.y, player_pos.z);
+    printf("Campos: X=%.2f Y=%.2f Z=%.2f\n", newpos.x,  newpos.y, newpos.z);
+
+    Ogre::Vector3 axis;
+    Ogre::Degree rot;
+    player_orient.ToAngleAxis(rot, axis);
+    printf("Player orient: X=%.2f Y=%.2f Z=%.2f w=%.2f\n", axis.x, axis.y, axis.z, rot.valueDegrees());
+    mp_cam_node->setPosition(newpos);
+
+    //float offset_rad = acosf(Ogre::Vector3::UNIT_X.dotProduct(lookdir));
+    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X) * Ogre::Quaternion(Ogre::Degree(270), Ogre::Vector3::UNIT_Y));
+    ////mp_cam_node->setOrientation(mp_player->getSceneNode()->getOrientation() * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
+    printf("----------------\n");
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
@@ -233,8 +275,8 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         mp_player->reposition(Ogre::Vector3(25, 0, 10), Ogre::Quaternion(Ogre::Degree(0), Ogre::Vector3::UNIT_Y));
         break;
     case GLFW_KEY_A:
-        cout << "Applying upwards force" << endl;
-        mp_physics->applyForce(mp_player, Ogre::Vector3(0, 0, 100), Ogre::Vector3(0, 0, 0));
+        cout << "Applying" << endl;
+        mp_cam_node->lookAt(mp_player->getSceneNode()->getPosition(), Ogre::Node::TransformSpace::TS_WORLD);
         break;
         //default:
         // Ignore
@@ -264,7 +306,4 @@ void DummyScene::calculateJoyZones()
 {
     float usable_zone = 1.0f - GameState::instance.config[FREYA].joy_dead_zone;
     m_run_threshold = 0.3333f * usable_zone;
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-    cout << "Dead zone=" << GameState::instance.config[FREYA].joy_dead_zone << endl;
-    cout << "m_run_threshold=" << m_run_threshold << endl;
 }
