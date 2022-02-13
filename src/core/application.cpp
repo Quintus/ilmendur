@@ -13,9 +13,18 @@
 #include <OgreSTBICodec.h>
 #include <OgreDotSceneLoader.h>
 #include <iostream>
-#include <filesystem>
 #include <chrono>
 #include <unistd.h>
+
+// Remove this once OpenSUSE shops GCC >= 8
+#if defined(__GNUC__) && __GNUC__ < 8
+#include <experimental/filesystem>
+namespace std {
+    namespace filesystem = std::experimental::filesystem;
+}
+#else
+#include <filesystem>
+#endif
 
 namespace fs = std::filesystem;
 using namespace std;

@@ -2,7 +2,12 @@
 #include <buildconfig.hpp>
 #include <string>
 #include <iostream>
+
+#if defined(__GNUC__) && __GNUC__ < 8
+#include <experimental/filesystem>
+#else
 #include <filesystem>
+#endif
 
 #if defined(_WIN32)
 #include <windows.h>

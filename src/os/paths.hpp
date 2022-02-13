@@ -1,6 +1,15 @@
 #ifndef ILMENDUR_OS_PATHS_HPP
 #define ILMENDUR_OS_PATHS_HPP
+
+// Remove this once OpenSUSE shops GCC >= 8
+#if defined(__GNUC__) && __GNUC__ < 8
+#include <experimental/filesystem>
+namespace std {
+    namespace filesystem = std::experimental::filesystem;
+}
+#else
 #include <filesystem>
+#endif
 
 namespace OS {
 
