@@ -66,6 +66,13 @@
 
 include(ExternalProject)
 
+# On some systems, GCC appearently places some libraries in lib64 instead
+# of lib (e.g. on OpenSUSE). That confuses the dependency detecttion
+# systems and overcomplicates things. Hence, just link lib64 to lib
+# so it can all be treated alike.
+file(MAKE_DIRECTORY ${ILMENDUR_DEPS_INSTALL_DIR}/lib)
+file(CREATE_LINK ${ILMENDUR_DEPS_INSTALL_DIR}/lib ${ILMENDUR_DEPS_INSTALL_DIR}/lib64 SYMBOLIC)
+
 ExternalProject_Add(pugixml
   URL "https://github.com/zeux/pugixml/releases/download/v1.11.4/pugixml-1.11.4.tar.gz"
   URL_HASH SHA256=8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716
