@@ -32,20 +32,20 @@ using namespace Core;
 
 static Application* sp_application = nullptr;
 
-static void findPressedAxis(const int& len, const float joyaxes[], int& axisno, float& limit)
+static void findChangedAxis(const int& len, const float neutral_joyaxes[], const float joyaxes[], int& axisno, float& limit)
 {
+    static float tolerance = 0.25f; // Reading from the joystick will not yield always the exact same values even if the sticks are left alone. Allow some tolerance.
     assert(len > 0);
 
-    float maxval = joyaxes[0];
-    axisno = 0;
     for(int i=0; i < len; i++) {
-        if (fabs(joyaxes[i]) > maxval) {
+        printf("Axis %d has %.2f at neutral and %.2f now\n", i, neutral_joyaxes[i], joyaxes[i]);
+        if (fabs(neutral_joyaxes[i] - joyaxes[i]) > tolerance) {
+            printf(">>> Axis %d differs from neutral position\n", i);
             axisno = i;
-            maxval = fabs(joyaxes[i]);
+            limit = joyaxes[i];
+            return;
         }
     }
-
-    limit = joyaxes[axisno];
 }
 
 static void processGLFWKeys(GLFWwindow* p_glfw_window,
@@ -253,7 +253,7 @@ void Application::run()
         t2 = chrono::high_resolution_clock::now();
         m_fps = 1000.0f / chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
         t1 = t2;
-        printf("FPS: %.2f\n", m_fps);
+        //printf("FPS: %.2f\n", m_fps);
 
         m_scene_stack.top()->update();
 
@@ -280,6 +280,7 @@ void Application::configureJoystick()
 {
     int axescount = 0;
     const float* joyaxes = nullptr;
+    float* neutral_joyaxes = nullptr;
 
     /*
      * Querying the joystick axes. The player presses UP and RIGHT,
@@ -293,32 +294,36 @@ void Application::configureJoystick()
      * information to normalise the input before processing it.
      */
 
-    glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    cout << "Your joystick has " << axescount << " axes." << endl;
-
-    cout << "Configuring joystick axes. Each prompt waits 2 seconds. Press Enter to start.";
+    cout << "Configuring your joystick." << endl;
+    cout << "Determining neutral positions. Please do not touch your joystick until the next prompt appears. Press Enter to start.";
     cin.get();
+    sleep(2);
+    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    neutral_joyaxes = new float[axescount];
+    memcpy(neutral_joyaxes, joyaxes, sizeof(float) * axescount);
+    cout << "Your joystick has " << axescount << " axes." << endl;
 
     int axis = 0;
     float axislimit = 0.0f;
-    cout << "Press UP!" << endl;
+    cout << "Determining vertical axis. Please press UP until the next prompt appears. Press Enter to start.";
+    cin.get();
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findPressedAxis(axescount, joyaxes, axis, axislimit);
+    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_vertical.axisno = axis;
     GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
     cout << "Vertical axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
 
-    cout << "Press Enter to continue." << endl;
+    cout << "Determining horizontal axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
     cin.get();
-
-    cout << "Press RIGHT!" << endl;
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findPressedAxis(axescount, joyaxes, axis, axislimit);
+    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
     GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
     cout << "Horizontal axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
+
+    delete[] neutral_joyaxes;
 
     float deadpercent = 0.0f;
     cout << "How large is the dead zone (zone in which to ignore input from the axes), in percent?" << endl;
