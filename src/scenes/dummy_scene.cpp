@@ -156,7 +156,7 @@ void DummyScene::handleJoyInput()
      * The mp_cam_node is a child of mp_camera_target and placed CAMERA_MINDIST
      * units off it, so rotating the mp_camera_target makes the camera fly around
      * the player. */
-    mp_camera_target->rotate(Ogre::Vector3::UNIT_Z, Ogre::Degree(vec.x * 5.0f));
+    mp_camera_target->rotate(Ogre::Vector3::UNIT_Z, Ogre::Degree(vec.x * 2.5f));
 
     /* Camera distance (“zooming”) from the player within the X/Z plane, i.e.
      * the following leaves the Y axis alone. Note that the
@@ -179,7 +179,7 @@ void DummyScene::handleJoyInput()
     if (fabs(vec.y) > config.joy_dead_zone) {
         float x = mp_cam_node->getPosition().x + CAMERA_MINDIST;
         float z = mp_cam_node->getPosition().z;
-        CameraFunctions::hyperbolicCamera(vec.y, x, z);
+        CameraFunctions::linearCamera(vec.y, x, z);
         mp_cam_node->setPosition(Ogre::Vector3(x - CAMERA_MINDIST, 0, z));
         mp_cam_node->lookAt(mp_camera_target->getPosition(), Ogre::Node::TS_WORLD);
     }

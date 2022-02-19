@@ -29,3 +29,27 @@ void CameraFunctions::hyperbolicCamera(float velocity, float& x, float& z)
 
     z = -1.0f/(x-1); // Camera Z function determing the new position on the hyberbole
 }
+
+/**
+ * This function places the camera along a linear line defined as:
+ *
+ *   z(x) = -0.5x
+ *
+ * Camera limits are [0, -10], that is, any values outside this range
+ * are clamped. The X movement is calculated as a fourth of the
+ * actual velocity value given, i.e. of the value read from the joystick.
+ * As a result, the camera movement achieved by this camera function
+ * is really smooth.
+ */
+void CameraFunctions::linearCamera(float velocity, float& x, float& z)
+{
+    x = x - velocity * 0.25;
+
+    if (x < -10.0f) {
+        x = -10.0f;
+    } else if (x > 0.0f) {
+        x = 0.0f;
+    }
+
+    z = -0.5 * x;
+}

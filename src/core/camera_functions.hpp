@@ -16,6 +16,7 @@ namespace Core {
      * and return the new X value. */
     namespace CameraFunctions {
         void hyperbolicCamera(float velocity, float& x, float& z);
+        void linearCamera(float velocity, float& x, float& z);
     }
 
 }
