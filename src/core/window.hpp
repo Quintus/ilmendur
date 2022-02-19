@@ -24,6 +24,8 @@ namespace Core {
         inline GLFWwindow* getGLFWWindow() { return mp_glfw_window; }
         inline Ogre::RenderWindow* getOgreRenderWindow() { return mp_ogre_window; }
     private:
+        static void onWindowResize(GLFWwindow* p_win, int width, int height);
+
         GLFWwindow* mp_glfw_window;
         Ogre::RenderWindow* mp_ogre_window;
     };

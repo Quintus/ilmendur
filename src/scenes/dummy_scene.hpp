@@ -22,6 +22,7 @@ namespace SceneSystem {
         void adjustCamera();
 
         Ogre::SceneNode* mp_area_node;
+        Ogre::SceneNode* mp_camera_target;
         Ogre::SceneNode* mp_cam_node;
         StaticGeometry* mp_ground;
         Freya* mp_player;

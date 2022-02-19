@@ -1,6 +1,8 @@
 #include "window.hpp"
+#include "application.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/Ogre.h>
+#include <cassert>
 
 using namespace Core;
 
@@ -34,6 +36,8 @@ Window::Window(int width, int height, std::string title)
         throw(std::runtime_error("Failed to create GLFW window!"));
     }
 
+    glfwSetWindowSizeCallback(mp_glfw_window, Window::onWindowResize);
+
     ////////////////////////////////////////
     // Create Ogre window
 
@@ -64,4 +68,16 @@ void Window::activate()
 {
     glfwMakeContextCurrent(mp_glfw_window);
     mp_ogre_window->setVisible(true);
+}
+
+void Window::onWindowResize(GLFWwindow* p_win, int width, int height)
+{
+    /* Note: This function is not the place to enforce a certain aspect
+     * ratio. Do this on the viewport level. The purpose of this function
+     * is simply to make Ogre (and thereby OpenGL) aware of the actual
+     * window size. */
+
+    Window& instance = Application::getSingleton().getWindow();
+    assert(instance.mp_glfw_window == p_win);
+    instance.mp_ogre_window->resize(width, height);
 }

@@ -23,6 +23,7 @@ const float CAMERA_HEIGHT = 1.0f;
 DummyScene::DummyScene()
     : Scene("dummy scene"),
       mp_area_node(nullptr),
+      mp_camera_target(nullptr),
       mp_cam_node(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr),
@@ -59,8 +60,14 @@ DummyScene::DummyScene()
     mp_physics->addActor(mp_player);
     mp_physics->lockRotation(mp_player);
 
+    // This special object is always inside the player by means of update(),
+    // but without the player’s rotation. This allows to attach the camera
+    // to it and control the camera independently from the player's current
+    // rotation.
+    mp_camera_target = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
+
     // also need to tell where we are
-    mp_cam_node = mp_player->getSceneNode()->createChildSceneNode();
+    mp_cam_node = mp_camera_target->createChildSceneNode();
     mp_cam_node->setPosition(-5, 0, CAMERA_HEIGHT);
     /* Align camera with Blender's axes. Blender has Z pointing upwards
      * while Ogre's camera by default faces down the Z axis, i.e. Ogre
@@ -101,8 +108,11 @@ void DummyScene::update()
     //handleJoyInput();
     ////adjustCamera();
 
-    static Timer t(100.0f, true, [this](){handleJoyInput();});
-    t.update();
+    mp_camera_target->setPosition(mp_player->getSceneNode()->getPosition());
+    handleJoyInput();
+
+    //static Timer t(10.0f, true, [this](){handleJoyInput();});
+    //t.update();
 }
 
 void DummyScene::handleJoyInput()
@@ -137,6 +147,10 @@ void DummyScene::handleJoyInput()
     if (config.joy_horizontal.inverted) {
         vec.x *= -1;
     }
+
+    mp_camera_target->rotate(Ogre::Vector3::UNIT_Z, Ogre::Degree(vec.x * 5.0f));
+
+    return;
 
     // The goal is to rotate the player figure relative to the camera
     // direction by the offset that `vec' has from the
@@ -196,6 +210,8 @@ void DummyScene::handleJoyInput()
     Ogre::Degree d;
     cam_orient.ToAngleAxis(d, v);
     printf("q=(%+07.2f,%+07.2f,%+07.2f,%+07.2f),l=(%+07.2f|%+07.2f|%+07.2f); o=%+07.2f\n", v.x, v.y, v.z, d.valueDegrees(), lookdir.x, lookdir.y, lookdir.z, Ogre::Radian(offset_rad).valueDegrees());
+
+    return;
 
     /* Depending on how strong is pressed, move fast or slow forward
      * into this direction. The quaternion `player_orient' is rotating

@@ -232,7 +232,7 @@ SceneSystem::Scene& Application::currentScene()
  */
 void Application::run()
 {
-    mp_window = new Window(800, 600, "Ilmendur");
+    mp_window = new Window(1280, 720, "Ilmendur"); // 16:9 ratio
     mp_window->activate();
 
     // Initialising the RTSS requires an active window.
