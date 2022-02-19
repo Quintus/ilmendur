@@ -40,6 +40,8 @@ namespace PhysicsSystem {
 
         void lockRotation(Actor* p_actor);
         void applyForce(Actor* p_actor, const Ogre::Vector3& force, const Ogre::Vector3& offset = Ogre::Vector3(0, 0, 0));
+        void setVelocity(Actor* p_actor, const Ogre::Vector3& velocity);
+        void setVelocity(Actor* p_actor, const Ogre::Vector2& velocity);
 
         void update();
     private:

@@ -274,6 +274,30 @@ void PhysicsEngine::applyForce(Actor* p_actor, const Ogre::Vector3& force, const
 }
 
 /**
+ * Magically sets the actor's velocity to the given one, skipping
+ * the need to call applyForce() with an appropriate value.
+ */
+void PhysicsEngine::setVelocity(Actor* p_actor, const Ogre::Vector3& velocity)
+{
+    m_actors[p_actor]->mp_bullet_rbody->setLinearVelocity(ogreVec2Bullet(velocity));
+    m_actors[p_actor]->mp_bullet_rbody->activate(); // See applyForce() for a comment on this
+}
+
+/**
+ * Magically sets the actor's velocity to the given one, skipping
+ * the need to call applyForce() with an appropriate value.
+ * This variant takes a Vector2 rather than a Vector3. It leaves
+ * the Z velocity (i.e. the velocity caused by gravity) alone.
+ */
+void PhysicsEngine::setVelocity(Actor* p_actor, const Ogre::Vector2& velocity)
+{
+    btVector3 currvel = m_actors[p_actor]->mp_bullet_rbody->getLinearVelocity();
+
+    m_actors[p_actor]->mp_bullet_rbody->setLinearVelocity(btVector3(velocity.x, velocity.y, currvel.z()));
+    m_actors[p_actor]->mp_bullet_rbody->activate(); // See applyForce() for a comment on this
+}
+
+/**
  * Exempts the given actor from having changed its orientation by
  * physics. Any rotation will thus have to be conducted through
  * Actor’s methods. This is particularly useful for characters,
