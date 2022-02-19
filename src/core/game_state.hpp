@@ -52,6 +52,8 @@ namespace Core {
             int joy_index = 0;
             axisconf joy_vertical;
             axisconf joy_horizontal;
+            axisconf joy_cam_vertical;
+            axisconf joy_cam_horizontal;
             float joy_dead_zone = 0.0f;
         } config[2];
 

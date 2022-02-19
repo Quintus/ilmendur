@@ -305,23 +305,41 @@ void Application::configureJoystick()
 
     int axis = 0;
     float axislimit = 0.0f;
-    cout << "Determining vertical axis. Please press UP until the next prompt appears. Press Enter to start.";
+    cout << "Determining vertical MOVEMENT axis. Please press UP until the next prompt appears. Press Enter to start.";
     cin.get();
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_vertical.axisno = axis;
     GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
-    cout << "Vertical axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
+    cout << "Vertical movement axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
 
-    cout << "Determining horizontal axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
+    cout << "Determining horizontal MOVEMENT axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
     cin.get();
     sleep(2);
     joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
     findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
     GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
     GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
-    cout << "Horizontal axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
+    cout << "Horizontal movement axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
+
+    cout << "Determining vertical CAMERA STEERING axis. Please press UP until the next prompt appears. Press Enter to start.";
+    cin.get();
+    sleep(2);
+    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
+    GameState::instance.config[FREYA].joy_cam_vertical.axisno = axis;
+    GameState::instance.config[FREYA].joy_cam_vertical.inverted = axislimit > 0.0f;
+    cout << "Vertical camera steering axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
+
+    cout << "Determining horizontal CAMERA STEERING axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
+    cin.get();
+    sleep(2);
+    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
+    GameState::instance.config[FREYA].joy_cam_horizontal.axisno = axis;
+    GameState::instance.config[FREYA].joy_cam_horizontal.inverted = axislimit < 0.0f;
+    cout << "Horizontal camera steering axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
 
     delete[] neutral_joyaxes;
 

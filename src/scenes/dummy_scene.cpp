@@ -132,7 +132,7 @@ void DummyScene::handleJoyInput()
     // Any values in the dead zone are to be treated as zero.
     // It would be confusing if the dead value is used just because
     // the other axis is outside of the dead zone.
-    Ogre::Vector3 vec(joyaxes[config.joy_horizontal.axisno], joyaxes[config.joy_vertical.axisno], 0.0f);
+    Ogre::Vector3 vec(joyaxes[config.joy_cam_horizontal.axisno], joyaxes[config.joy_cam_vertical.axisno], 0.0f);
     if (fabs(vec.x) < config.joy_dead_zone) {
         vec.x = 0.0f;
     }
@@ -145,10 +145,10 @@ void DummyScene::handleJoyInput()
 
     // Normalise out inverted axes so that UP and LEFT are always the
     // negative values and DOWN and RIGHT always the positive ones.
-    if (config.joy_vertical.inverted) {
+    if (config.joy_cam_vertical.inverted) {
         vec.y *= -1;
     }
-    if (config.joy_horizontal.inverted) {
+    if (config.joy_cam_horizontal.inverted) {
         vec.x *= -1;
     }
 
