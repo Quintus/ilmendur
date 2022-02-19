@@ -121,6 +121,12 @@ void DummyScene::update()
 
 void DummyScene::handleJoyInput()
 {
+    handleCamJoyInput();
+    handleMoveJoyInput();
+}
+
+void DummyScene::handleCamJoyInput()
+{
     const auto& config = GameState::instance.config[FREYA];
     const float* joyaxes = nullptr;
     int axescount = 0;
@@ -183,84 +189,77 @@ void DummyScene::handleJoyInput()
         mp_cam_node->setPosition(Ogre::Vector3(x - CAMERA_MINDIST, 0, z));
         mp_cam_node->lookAt(mp_camera_target->getPosition(), Ogre::Node::TS_WORLD);
     }
+}
 
-    return;
-
-    // The goal is to rotate the player figure relative to the camera
-    // direction by the offset that `vec' has from the
-    // joystick's Y axis (which points from (0|0) upwards to (0|1)):
-
-    // Calculate the angle between the y-axis vector (0, 1) and the read input vector
-    // by reversing the scalar product.
-    float angle_rad = acosf((vec.y * vec.y) / ((vec.x * vec.x) + (vec.y * vec.y)) );
-
-    // Convert it to a part of the full circle, counter-clockwise
-    if (vec.x == 0.0f && vec.y == -1.0f) {
-        // Rotating by 360° is nonsense, do not rotate in that case
-        angle_rad = 0.0f;
-    } else {
-        if (vec.x < 0.0f) {
-            if (vec.y < 0.0f) {
-                // angle_rad = angle_rad // Change nothing
-            } else {
-                angle_rad = M_PI - angle_rad;
-            }
-        } else {
-            if (vec.y < 0.0f) {
-                angle_rad = 2 * M_PI - angle_rad;
-            } else {
-                angle_rad = M_PI + angle_rad;
-            }
-        }
+void DummyScene::handleMoveJoyInput()
+{
+    const auto& config = GameState::instance.config[FREYA];
+    const float* joyaxes = nullptr;
+    int axescount = 0;
+    joyaxes = glfwGetJoystickAxes(config.joy_index, &axescount);
+    if (!joyaxes) {
+        throw("Joystick removed during play");
     }
 
-    /* At this point, an angle of zero degrees means the player pressed
-     * the joystick straight UP, whereas 180 degrees means straight DOWN.
-     * 90 degrees is RIGHT, and 270 degrees is LEFT. Beware `angle_rad' is
-     * in radians, not in angles. */
-
-    // Get the vector the camera is looking down
-    //Ogre::Quaternion cam_orient = mp_cam_node->getOrientation();
-    Ogre::Quaternion cam_orient = mp_player->getSceneNode()->getOrientation();
-    Ogre::Vector3 lookdir = cam_orient * Ogre::Vector3::UNIT_X;
-    lookdir.normalise();
-
-    /* Calculate the angle between `lookdir' and the player model's
-     * natural looking direction (which is UNIT_X as per instructions
-     * for the artists; also note that the `lookdir' and `UNIT_X'
-     * vectors are of length 1, which is quite helpful for the acosf()
-     * calculation used below). From that, find the required
-     * counter-clockwise rotation required to make the player look
-     * into the camera direction. Note that offsets smaller than 180°
-     * need to be calculated by subtracting from the full circle. */
-    float offset_rad = acosf(Ogre::Vector3::UNIT_X.dotProduct(lookdir));
-    if (lookdir.y < 0.0f) {
-        offset_rad = 2 * M_PI - offset_rad;
+    // Any values in the dead zone are to be treated as zero.
+    // It would be confusing if the dead value is used just because
+    // the other axis is outside of the dead zone.
+    Ogre::Vector2 vec(joyaxes[config.joy_horizontal.axisno], joyaxes[config.joy_vertical.axisno]);
+    if (fabs(vec.x) < config.joy_dead_zone) {
+        vec.x = 0.0f;
     }
-    Ogre::Quaternion player_orient(Ogre::Radian(offset_rad + angle_rad), Ogre::Vector3::UNIT_Z);
-    mp_player->getSceneNode()->setOrientation(player_orient);
+    if (fabs(vec.y) < config.joy_dead_zone) {
+        vec.y = 0.0f;
+    }
+    if (vec.isZeroLength()) {
+        return;
+    }
 
-    Ogre::Vector3 v;
-    Ogre::Degree d;
-    cam_orient.ToAngleAxis(d, v);
-    printf("q=(%+07.2f,%+07.2f,%+07.2f,%+07.2f),l=(%+07.2f|%+07.2f|%+07.2f); o=%+07.2f\n", v.x, v.y, v.z, d.valueDegrees(), lookdir.x, lookdir.y, lookdir.z, Ogre::Radian(offset_rad).valueDegrees());
+    // Normalise out inverted axes so that UP and LEFT are always the
+    // negative values and DOWN and RIGHT always the positive ones.
+    if (config.joy_vertical.inverted) {
+        vec.y *= -1;
+    }
+    if (config.joy_horizontal.inverted) {
+        vec.x *= -1;
+    }
 
-    return;
+    /* The goal is to rotate the player figure relative to the camera
+     * direction by the offset that `vec' has from the joystick's Y
+     * axis. For that, first calculate the angle offset from the
+     * joystick's Y axis. Then, align the player figure with the
+     * camera. Then, rotate the calculated amount of offset around the
+     * Z axis. */
+    Ogre::Radian angle_rad(vec.angleTo(-Ogre::Vector2::UNIT_Y));
 
-    /* Depending on how strong is pressed, move fast or slow forward
-     * into this direction. The quaternion `player_orient' is rotating
-     * around the Z axis, and UNIT_X is the model's natural looking
-     * direction as per instructions for the artists. */
-    Ogre::Vector3 translation = player_orient * Ogre::Vector3::UNIT_X;
-    translation.normalise();
+    // Align the player with the camera looking direction. Models are
+    // required to face down UNIT_X as per the instructions for
+    // artists, and the Ogre camera also faces down X by default.
+    Ogre::Quaternion cam_orient    = mp_camera_target->getOrientation();
+    Ogre::Quaternion player_orient = mp_player->getSceneNode()->getOrientation();
+    Ogre::Vector3 cam_lookdir      = cam_orient * Ogre::Vector3::UNIT_X;
+    Ogre::Vector3 player_lookdir   = player_orient * Ogre::Vector3::UNIT_X;
+    cam_lookdir.normalise();
+    player_lookdir.normalise();
+
+    Ogre::Quaternion deltaq         = player_lookdir.getRotationTo(cam_lookdir, Ogre::Vector3::UNIT_Z);
+    Ogre::Quaternion joystickoffset = Ogre::Quaternion(angle_rad, Ogre::Vector3::UNIT_Z);
+    mp_player->getSceneNode()->rotate(deltaq * joystickoffset);
+
+    // Get the new orientation
+    player_lookdir = mp_player->getSceneNode()->getOrientation() * Ogre::Vector3::UNIT_X;
+    player_lookdir.normalise();
+
+    // Depending on how strong is pressed, move fast or slow forward
+    // into this direction.
     if (vec.length() > m_run_threshold) {
-        translation *= 0.5;
+        player_lookdir *= 0.15;
     }
     else {
-        translation *= 0.2;
+        player_lookdir *= 0.05;
     }
 
-    mp_player->getSceneNode()->translate(translation);
+    mp_player->getSceneNode()->translate(player_lookdir);
     mp_physics->resetActor(mp_player, false);
 }
 
