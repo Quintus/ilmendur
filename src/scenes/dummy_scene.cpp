@@ -1,5 +1,6 @@
 #include "dummy_scene.hpp"
 #include "../core/application.hpp"
+#include "../core/camera_functions.hpp"
 #include "../core/window.hpp"
 #include "../core/game_state.hpp"
 #include "../core/timer.hpp"
@@ -19,6 +20,9 @@ using namespace SceneSystem;
 using namespace Core;
 
 const float CAMERA_HEIGHT = 1.0f;
+
+// The minimum distance the camera has from the player.
+const float CAMERA_MINDIST = 5.0f;
 
 DummyScene::DummyScene()
     : Scene("dummy scene"),
@@ -61,14 +65,14 @@ DummyScene::DummyScene()
     mp_physics->lockRotation(mp_player);
 
     // This special object is always inside the player by means of update(),
-    // but without the player’s rotation. This allows to attach the camera
+    // but without the player's rotation. This allows to attach the camera
     // to it and control the camera independently from the player's current
     // rotation.
     mp_camera_target = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
 
     // also need to tell where we are
     mp_cam_node = mp_camera_target->createChildSceneNode();
-    mp_cam_node->setPosition(-5, 0, CAMERA_HEIGHT);
+    mp_cam_node->setPosition(-CAMERA_MINDIST, 0, 0);
     /* Align camera with Blender's axes. Blender has Z pointing upwards
      * while Ogre's camera by default faces down the Z axis, i.e. Ogre
      * treats the Y axis as the height. The below line rotates the camera
@@ -148,7 +152,37 @@ void DummyScene::handleJoyInput()
         vec.x *= -1;
     }
 
+    /* Camera rotation around the player around the Z axis within the X/Y plane.
+     * The mp_cam_node is a child of mp_camera_target and placed CAMERA_MINDIST
+     * units off it, so rotating the mp_camera_target makes the camera fly around
+     * the player. */
     mp_camera_target->rotate(Ogre::Vector3::UNIT_Z, Ogre::Degree(vec.x * 5.0f));
+
+    /* Camera distance (“zooming”) from the player within the X/Z plane, i.e.
+     * the following leaves the Y axis alone. Note that the
+     * neutral position for mp_cam_node is (-CAMERA_MINDIST, 0, 0).
+     * The camera in/out movement is relative to the current position, i.e.
+     * the camera is only moved if the joystick on its vertical axis (Y) is
+     * outside of the dead zone and is continued to move until it either returns
+     * into the dead zone or the camera limit is hit (the latter is determined
+     * by the camera function in use). The camera functions are expected to return
+     * a value between 0 (no movement) and 1 (very fast movement). They receive
+     * the current position on the camera Z function as input and return the new
+     * position onthe camera Z function, plus, to faciliate the API, the new X
+     * value as well (this allows to move the camera zoom velocity code into
+     * the camera function as it may not be equal for all camera functions).
+     * In order to have the camera Z function receive values between 0 and 1 as
+     * input, it is required to remove the -CAMERA_MINDIST offset which is set
+     * on mp_cam_node before passing the current X position into the camera Z
+     * function. After the camera Z function returns, the CAMERA_MINDIST needs
+     * to be applied again. Both is done below. */
+    if (fabs(vec.y) > config.joy_dead_zone) {
+        float x = mp_cam_node->getPosition().x + CAMERA_MINDIST;
+        float z = mp_cam_node->getPosition().z;
+        CameraFunctions::hyperbolicCamera(vec.y, x, z);
+        mp_cam_node->setPosition(Ogre::Vector3(x - CAMERA_MINDIST, 0, z));
+        mp_cam_node->lookAt(mp_camera_target->getPosition(), Ogre::Node::TS_WORLD);
+    }
 
     return;
 
