@@ -242,8 +242,8 @@ list(APPEND ILMENDUR_DEPENDENCIES
 #   where necessary.
 ExternalProject_Add(ogre3d
   DEPENDS pugixml zlib freetype
-  URL "https://github.com/OGRECave/ogre/archive/v13.0.1.zip"
-  URL_HASH SHA256=27f5c95e4640c4d106134d37ae0d587d680053f7f8a51fb8a5b56729b1edae18
+  URL "https://github.com/OGRECave/ogre/archive/v13.3.1.zip"
+  URL_HASH SHA256=98d0798de7500e6e103b3573c32d393b5e6cdab0123cad555749cdbe9254a89b
   SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/ogre
   INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
