@@ -212,6 +212,8 @@ void DummyScene::handleMoveJoyInput()
         vec.y = 0.0f;
     }
     if (vec.isZeroLength()) {
+        // Immediately stop moving when the player leaves the joystick alone
+        mp_physics->setVelocity(mp_player, Ogre::Vector2(0.0f, 0.0f));
         return;
     }
 
@@ -253,13 +255,13 @@ void DummyScene::handleMoveJoyInput()
     // Depending on how strong is pressed, move fast or slow forward
     // into this direction.
     if (vec.length() > m_run_threshold) {
-        player_lookdir *= 0.15;
+        player_lookdir *= 8;
     }
     else {
-        player_lookdir *= 0.05;
+        player_lookdir *= 2;
     }
 
-    mp_player->getSceneNode()->translate(player_lookdir);
+    mp_physics->setVelocity(mp_player, Ogre::Vector2(player_lookdir.x, player_lookdir.y));
     mp_physics->resetActor(mp_player, false);
 }
 
