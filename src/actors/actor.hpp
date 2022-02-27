@@ -30,6 +30,9 @@ public:
     inline PhysicsSystem::RigidBody* getRigidBody() const { return mp_rigid_body; }
 
 protected:
+    PhysicsSystem::RigidBody& addRigidBody(float mass, PhysicsSystem::ColliderType colltype);
+    void removeRigidBody();
+private:
     SceneSystem::Scene& m_scene;
     PhysicsSystem::RigidBody* mp_rigid_body;
     Ogre::SceneNode* mp_scene_node;

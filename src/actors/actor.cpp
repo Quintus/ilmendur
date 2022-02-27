@@ -91,3 +91,53 @@ void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newr
         mp_rigid_body->reset(clear_forces);
     }
 }
+
+/**
+ * Adds a rigid body to this actor, i.e., makes it participate in the physics
+ * of the current scene. Only call this in scenes which have the physics engine
+ * enabled, otherwise this function will crash with an assertion failure.
+ *
+ * \param mass
+ * Object mass in kg. Setting this to zero (0.0f) will create a Bullet
+ * static rigid body, which generates collisions, but may not move.
+ * If you want to make a kinematic rigid body, call
+ * PhysicsEngine::RigidBody::setKinematic() on the returned object.
+ * Refer to the Bullet manual for the distinction of dynamic, static,
+ * and kinematic rigid bodies.
+ *
+ * \param colltype
+ * This determines how the bounding “box” is calculated. If in doubt,
+ * use PhysicsSystem::ColliderType::box, which makes the physics engine
+ * use a traditional bounding box. Other shapes are possible, see
+ * the documentation of PhysicsSystem::ColliderType.
+ *
+ * \returns
+ * The generated rigid body. This is the same object that is returned
+ * by getRigidBody() after this method has completed. It is owned
+ * by Actor and destroyed either in the destructor or in removeRigidBody(),
+ * so do not delete it yourself.
+ *
+ * \remark
+ * From the point on that this method has returned, the Actor instance
+ * is subject to physics, which includes gravity. Consequently, it will
+ * immediately start moving downwards until it comes to a rest on something.
+ */
+PhysicsSystem::RigidBody& Actor::addRigidBody(float mass, PhysicsSystem::ColliderType colltype)
+{
+    assert(!mp_rigid_body); // May only be called once
+
+    m_mass = mass;
+    m_colltype = colltype;
+    mp_rigid_body = new PhysicsSystem::RigidBody(this);
+    return *mp_rigid_body;
+}
+
+void Actor::removeRigidBody()
+{
+    assert(mp_rigid_body); // Only call after addRigidBody()
+
+    m_mass = 0.0f;
+    m_colltype = PhysicsSystem::ColliderType::box;
+    delete mp_rigid_body;
+    mp_rigid_body = nullptr;
+}
