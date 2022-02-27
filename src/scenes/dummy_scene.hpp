@@ -21,7 +21,6 @@ namespace SceneSystem {
         void handleJoyInput();
         void handleCamJoyInput();
         void handleMoveJoyInput();
-        void adjustCamera();
 
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_camera_target;

@@ -103,14 +103,9 @@ DummyScene::~DummyScene()
 void DummyScene::update()
 {
     mp_physics->update();
-    //handleJoyInput();
-    ////adjustCamera();
 
     mp_camera_target->setPosition(mp_player->getSceneNode()->getPosition());
     handleJoyInput();
-
-    //static Timer t(10.0f, true, [this](){handleJoyInput();});
-    //t.update();
 }
 
 void DummyScene::handleJoyInput()
@@ -257,34 +252,6 @@ void DummyScene::handleMoveJoyInput()
 
     mp_player->getRigidBody()->setVelocity(Ogre::Vector2(player_lookdir.x, player_lookdir.y));
     mp_player->getRigidBody()->reset(false);
-}
-
-void DummyScene::adjustCamera()
-{
-    Ogre::Vector3 player_pos = mp_player->getSceneNode()->getPosition();
-    Ogre::Quaternion player_orient = mp_player->getSceneNode()->getOrientation();
-
-    Ogre::Vector3 lookdir = player_orient * Ogre::Vector3::UNIT_X; // Reads looking direction
-    lookdir.normalise();
-    lookdir *= 3;
-
-    printf("Lookdir: X=%.2f Y=%.2f Z=%.2f\n", lookdir.x, lookdir.y, lookdir.z);
-
-    Ogre::Vector3 newpos = player_pos - lookdir + Ogre::Vector3(0.0f, 0.0f, CAMERA_HEIGHT);
-
-    printf("Playerpos: X=%.2f Y=%.2f Z=%.2f\n", player_pos.x, player_pos.y, player_pos.z);
-    printf("Campos: X=%.2f Y=%.2f Z=%.2f\n", newpos.x,  newpos.y, newpos.z);
-
-    Ogre::Vector3 axis;
-    Ogre::Degree rot;
-    player_orient.ToAngleAxis(rot, axis);
-    printf("Player orient: X=%.2f Y=%.2f Z=%.2f w=%.2f\n", axis.x, axis.y, axis.z, rot.valueDegrees());
-    mp_cam_node->setPosition(newpos);
-
-    //float offset_rad = acosf(Ogre::Vector3::UNIT_X.dotProduct(lookdir));
-    mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X) * Ogre::Quaternion(Ogre::Degree(270), Ogre::Vector3::UNIT_Y));
-    ////mp_cam_node->setOrientation(mp_player->getSceneNode()->getOrientation() * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X));
-    printf("----------------\n");
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
