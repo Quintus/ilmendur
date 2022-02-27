@@ -10,6 +10,9 @@ Freya::Freya(SceneSystem::Scene& scene)
     //mp_scene_node->attachObject(m_scene.getSceneManager().createEntity("sign.mesh"));
     mp_scene_node->attachObject(m_scene.getSceneManager().createEntity(Ogre::SceneManager::PrefabType::PT_CUBE));
     mp_scene_node->setScale(0.01, 0.01, 0.01);
+
+    mp_rigid_body = new PhysicsSystem::RigidBody(this);
+    mp_rigid_body->lockRotation();
 }
 
 Freya::~Freya()

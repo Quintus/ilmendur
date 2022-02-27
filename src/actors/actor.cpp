@@ -16,6 +16,7 @@ using namespace std;
  */
 Actor::Actor(SceneSystem::Scene& scene, Ogre::SceneNode* p_scene_node)
     : m_scene(scene),
+      mp_rigid_body(nullptr),
       mp_scene_node(p_scene_node ? p_scene_node : m_scene.getSceneManager().getRootSceneNode()->createChildSceneNode()),
       m_mass(0.0f),
       m_colltype(PhysicsSystem::ColliderType::box)
@@ -29,11 +30,8 @@ Actor::Actor(SceneSystem::Scene& scene, Ogre::SceneNode* p_scene_node)
 
 Actor::~Actor()
 {
-    // Normally the actor should be removed from the physics system by
-    // the creator first before the actor is destructed, but as a
-    // safety measure, do it here as well.
-    if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().removeActor(this);
+    if (mp_rigid_body) {
+        delete mp_rigid_body;
     }
 
     m_scene.getSceneManager().getRootSceneNode()->removeChild(mp_scene_node);
@@ -55,9 +53,8 @@ void Actor::collide(Actor& other)
 void Actor::setPosition(const Ogre::Vector3& newpos, bool clear_forces)
 {
     mp_scene_node->setPosition(newpos);
-
-    if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
+    if (mp_rigid_body) {
+        mp_rigid_body->reset(clear_forces);
     }
 }
 
@@ -74,8 +71,8 @@ void Actor::setOrientation(const Ogre::Quaternion& newrot, bool clear_forces)
 {
     mp_scene_node->setOrientation(newrot);
 
-    if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
+    if (mp_rigid_body) {
+        mp_rigid_body->reset(clear_forces);
     }
 }
 
@@ -90,7 +87,7 @@ void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newr
     mp_scene_node->setPosition(newpos);
     mp_scene_node->setOrientation(newrot);
 
-    if (m_scene.getPhysicsEngine().hasActor(this)) {
-        m_scene.getPhysicsEngine().resetActor(this, clear_forces);
+    if (mp_rigid_body) {
+        mp_rigid_body->reset(clear_forces);
     }
 }

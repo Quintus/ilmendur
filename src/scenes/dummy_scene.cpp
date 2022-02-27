@@ -56,13 +56,10 @@ DummyScene::DummyScene()
 
     // Extract ground from the loaded scene and add it into the physics system
     mp_ground = new StaticGeometry(*this, mp_scene_manager->getSceneNode("Ground"));
-    mp_physics->addActor(mp_ground);
 
     // Add player figure
     mp_player = new Freya(*this);
     mp_player->setPosition(Ogre::Vector3(25, 0, 10));
-    mp_physics->addActor(mp_player);
-    mp_physics->lockRotation(mp_player);
 
     // This special object is always inside the player by means of update(),
     // but without the player's rotation. This allows to attach the camera
@@ -95,9 +92,6 @@ DummyScene::DummyScene()
 
 DummyScene::~DummyScene()
 {
-    mp_physics->removeActor(mp_player);
-    mp_physics->removeActor(mp_ground);
-
     delete mp_player;
     delete mp_ground;
     delete mp_physics;
@@ -213,7 +207,7 @@ void DummyScene::handleMoveJoyInput()
     }
     if (vec.isZeroLength()) {
         // Immediately stop moving when the player leaves the joystick alone
-        mp_physics->setVelocity(mp_player, Ogre::Vector2(0.0f, 0.0f));
+        mp_player->getRigidBody()->setVelocity(Ogre::Vector2(0.0f, 0.0f));
         return;
     }
 
@@ -261,8 +255,8 @@ void DummyScene::handleMoveJoyInput()
         player_lookdir *= 2;
     }
 
-    mp_physics->setVelocity(mp_player, Ogre::Vector2(player_lookdir.x, player_lookdir.y));
-    mp_physics->resetActor(mp_player, false);
+    mp_player->getRigidBody()->setVelocity(Ogre::Vector2(player_lookdir.x, player_lookdir.y));
+    mp_player->getRigidBody()->reset(false);
 }
 
 void DummyScene::adjustCamera()

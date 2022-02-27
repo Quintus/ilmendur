@@ -20,7 +20,7 @@ namespace SceneSystem {
         const std::string& getName() { return m_name; }
 
         bool hasPhysics() const { return mp_physics != nullptr; }
-        PhysicsSystem::PhysicsEngine& getPhysicsEngine() const { return *mp_physics; }
+        PhysicsSystem::PhysicsEngine* getPhysicsEngine() const { return mp_physics; }
         Ogre::SceneManager& getSceneManager() const { return *mp_scene_manager; }
 
         virtual void processKeyInput(int key, int scancode, int action, int mods);

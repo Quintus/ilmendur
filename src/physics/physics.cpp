@@ -3,41 +3,13 @@
 #include "debug_drawer.hpp"
 #include "../actors/actor.hpp"
 #include "../actors/static_geometry.hpp"
+#include "../scenes/scene.hpp"
 
 using namespace std;
 using namespace PhysicsSystem;
 
 /// Gravity the world is exposed to, in m/s².
 static const float GRAVITY_ACCEL = -9.81f;
-
-/**
- * Internal object for managing the memory bullet associates
- * with a rigid body.
- */
-class PhysicsSystem::RigidBody {
-    /**
-     * Internal callback object used by bullet to indicate an object
-     * is transformed due to physics. See bullet manual version 2.83,
-     * pp. 20 f.
-     */
-    class PhysicsMotionState: public btMotionState {
-    public:
-        PhysicsMotionState(Ogre::SceneNode* p_node);
-        virtual void getWorldTransform(btTransform& trans) const;
-        virtual void setWorldTransform(const btTransform& trans);
-    private:
-        Ogre::SceneNode* mp_node;
-    };
-
-public:
-    RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype);
-    ~RigidBody();
-
-    ColliderType          m_colltype;
-    btCollisionShape*     mp_bullet_collshape;
-    PhysicsMotionState*   mp_bullet_motionstate;
-    btRigidBody*          mp_bullet_rbody;
-};
 
 btQuaternion PhysicsSystem::ogreQuat2Bullet(const Ogre::Quaternion& q)
 {
@@ -82,31 +54,156 @@ void RigidBody::PhysicsMotionState::setWorldTransform(const btTransform& trans)
     mp_node->setPosition(bulletVec2Ogre(trans.getOrigin()));
 }
 
-RigidBody::RigidBody(Ogre::Entity* p_entity, float mass, ColliderType ctype)
-    : m_colltype(ctype),
+RigidBody::RigidBody(Actor* p_actor)
+    : mp_actor(p_actor),
       mp_bullet_collshape(nullptr),
       mp_bullet_motionstate(nullptr),
       mp_bullet_rbody(nullptr)
 {
+    // Adding a rigid body to an actor makes only sense if the actor is in a scene
+    // which has physics enabled. ItÄs up to the caller to not instanciate RigidBody
+    // in non-physics scenes.
+    assert(mp_actor->getScene().getPhysicsEngine());
+
+    // An actor to be added to the physics universe must have one and only one
+    // attached mesh.
+    assert(mp_actor->getSceneNode());
+    assert(mp_actor->getSceneNode()->numAttachedObjects() == 1);
+
+    Ogre::Entity* p_entity = static_cast<Ogre::Entity*>(mp_actor->getSceneNode()->getAttachedObject(0));
     assert(p_entity->getParentSceneNode()); // Must be attached to the scene
-    mp_bullet_collshape = calculateCollisionShape(p_entity, ctype);
+    mp_bullet_collshape = calculateCollisionShape(p_entity, mp_actor->getColliderType());
 
     btVector3 local_inertia(0, 0, 0);
-    if (mass != 0.0f) { // zero mass means immobile rigid body to bullet
-        mp_bullet_collshape->calculateLocalInertia(mass, local_inertia);
+    if (mp_actor->getMass() != 0.0f) { // zero mass means immobile rigid body to bullet
+        mp_bullet_collshape->calculateLocalInertia(mp_actor->getMass(), local_inertia);
     }
 
-    mp_bullet_motionstate = new RigidBody::PhysicsMotionState(p_entity->getParentSceneNode());
+    // Bullet calls into this object when it wants to move the Actor
+    // or wants to reset the rigid body to the 3D engine's thinking.
+    mp_bullet_motionstate = new RigidBody::PhysicsMotionState(mp_actor->getSceneNode());
 
-    btRigidBody::btRigidBodyConstructionInfo args(mass, mp_bullet_motionstate, mp_bullet_collshape, local_inertia);
+    // Construct the actual Bullet rigid body
+    btRigidBody::btRigidBodyConstructionInfo args(mp_actor->getMass(), mp_bullet_motionstate, mp_bullet_collshape, local_inertia);
     mp_bullet_rbody = new btRigidBody(args);
+    mp_bullet_rbody->setUserPointer(mp_actor);
+    mp_actor->getScene().getPhysicsEngine()->getBulletWorld()->addRigidBody(mp_bullet_rbody);
 }
 
 RigidBody::~RigidBody()
 {
+    assert(mp_actor->getScene().getPhysicsEngine()); // Physics engine must not be destroyed before the RigidBody!
+    mp_actor->getScene().getPhysicsEngine()->getBulletWorld()->removeRigidBody(mp_bullet_rbody);
     delete mp_bullet_rbody;
     delete mp_bullet_motionstate;
     delete mp_bullet_collshape;
+}
+
+/**
+ * Forcibly resync the rigid body's position and orientation in bullet's world with
+ * those in the Ogre world.
+ *
+ * \param[in] clear_forces (default: false)
+ * If set to true, additionally clears all forces on the
+ * rigid body. With this set to false, if you reset a moving
+ * object, it would continue moving at the new position.
+ *
+ * \remark This method completely ignores physics. It forcibly resets
+ * position and orientation so that it matches whatever is
+ * current in the Ogre scene graph. Use this method sparingly.
+ * Specifically, this method is not needed for kinematic rigid bodies,
+ * because Bullet pulls the world transform for them every frame on
+ * itself (see Bullet manual version 2.83, p. 22). Static rigid bodies
+ * may not be moved at all (Bullet manual version 2.83, p. 19 f.). So
+ * this method is only useful for dynamic rigid bodies.
+ */
+void RigidBody::reset(bool clear_forces)
+{
+    // Zero-mass rigid bodies may only be moved if they have been flagged
+    // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
+    assert(mp_actor->getMass() != 0.0f || ((mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
+
+    // Bullet has no method to forcibly re-read the world transform
+    // appearently, so do it manually.
+    btTransform trans;
+    mp_bullet_motionstate->getWorldTransform(trans);
+    mp_bullet_rbody->setWorldTransform(trans);
+
+    if (clear_forces) {
+        mp_bullet_rbody->clearForces();
+        mp_bullet_rbody->setLinearVelocity(btVector3(0, 0, 0));
+        mp_bullet_rbody->setAngularVelocity(btVector3(0, 0, 0));
+    }
+
+    mp_bullet_rbody->activate(); // Wake up the object so bullet notices it has changed
+}
+
+/**
+ * Apply a force to the rigid body.
+ *
+ * \param[in] force
+ * Force vector. To give you a measure: to lift a typical
+ * human figure upwards in Ilmendur, you'll need to apply at least
+ * about 100 force units into positive Z direction.
+ *
+ * \param[in] offset
+ * The force is normally applied to the actor's mesh's origin.
+ * By specifying this parameter, you can apply the force at a different
+ * position -- this will result in the actor gaining spin into the
+ * respective direction. Normally that probably is not what you want.
+ *
+ * \remark Ilmendur's Z axis points upwards from the ground. That is,
+ * the coordinate system is equivalent to Blender's rather than Ogre's
+ * default one, which has the Z axis pointing to the viewer.
+ */
+void RigidBody::applyForce(const Ogre::Vector3& force, const Ogre::Vector3& offset)
+{
+    mp_bullet_rbody->applyForce(ogreVec2Bullet(force), ogreVec2Bullet(offset));
+
+    /* For performance reasons, Bullet does not include rigid bodies
+     * into its calculations once they have come to a rest. They are
+     * set to sleep state. Calling activate() disables the sleep
+     * state once and makes Bullet check again.
+     * See <https://gamedev.stackexchange.com/a/70618> .*/
+    mp_bullet_rbody->activate();
+}
+
+/**
+ * Magically sets the rigid body's velocity to the given one, skipping
+ * the need to call applyForce() with an appropriate value.
+ */
+void RigidBody::setVelocity(const Ogre::Vector3& velocity)
+{
+    mp_bullet_rbody->setLinearVelocity(ogreVec2Bullet(velocity));
+    mp_bullet_rbody->activate(); // See applyForce() for a comment on this
+}
+
+/**
+ * Magically sets the rigid body's velocity to the given one, skipping
+ * the need to call applyForce() with an appropriate value.
+ * This variant takes a Vector2 rather than a Vector3. It leaves
+ * the Z velocity (i.e. the velocity caused by gravity) alone.
+ */
+void RigidBody::setVelocity(const Ogre::Vector2& velocity)
+{
+    btVector3 currvel = mp_bullet_rbody->getLinearVelocity();
+
+    mp_bullet_rbody->setLinearVelocity(btVector3(velocity.x, velocity.y, currvel.z()));
+    mp_bullet_rbody->activate(); // See applyForce() for a comment on this
+}
+
+/**
+ * Exempts this rigid body from having changed its orientation by
+ * physics. Any rotation will thus have to be conducted manually. This
+ * is particularly useful for characters, which you'd typically not
+ * want to fall sideways like a static object.
+ *
+ * \remark This method implements the suggestion from p. 26 of v. 2.83 of
+ * the Bullet Manual (i.e. uses setAngularFactor()).
+ */
+void RigidBody::lockRotation()
+{
+    mp_bullet_rbody->setAngularFactor(btVector3(0, 0, 0));
 }
 
 PhysicsEngine::PhysicsEngine(Ogre::SceneNode* p_root_node)
@@ -120,93 +217,7 @@ PhysicsEngine::PhysicsEngine(Ogre::SceneNode* p_root_node)
 
 PhysicsEngine::~PhysicsEngine()
 {
-    clear();
     delete mp_debug_drawer;
-}
-
-void PhysicsEngine::addActor(Actor* p_actor)
-{
-    // An actor to be added to the physics universe must have one and only one
-    // attached mesh. It must not already have been added.
-    assert(p_actor->getSceneNode()->numAttachedObjects() == 1);
-    assert(m_actors.count(p_actor) == 0);
-
-    RigidBody* p_rbody = new RigidBody(static_cast<Ogre::Entity*>(p_actor->getSceneNode()->getAttachedObject(0)),
-                                       p_actor->getMass(),
-                                       p_actor->getColliderType());
-    p_rbody->mp_bullet_rbody->setUserPointer(p_actor);
-    m_actors[p_actor] = p_rbody;
-    m_bullet_world.addRigidBody(p_rbody->mp_bullet_rbody);
-}
-
-void PhysicsEngine::removeActor(Actor* p_actor)
-{
-    assert(m_actors.count(p_actor) == 1);
-
-    RigidBody* p_rbody = m_actors[p_actor];
-    m_bullet_world.removeRigidBody(p_rbody->mp_bullet_rbody);
-    m_actors.erase(p_actor);
-    delete p_rbody;
-}
-
-bool PhysicsEngine::hasActor(Actor* p_actor)
-{
-    return m_actors.count(p_actor) != 0;
-}
-
-/**
- * Resync the actor's position and orientation in bullet's world with
- * those in the Ogre world.
- *
- * \param[in] p_actor
- * Target actor.
- *
- * \param[in] clear_forces (default: false)
- * If set to true, additionally clears all forces on the
- * object. With this set to false, if you reset a moving
- * object, it would continue moving at the new position.
- *
- * \remark This method completely ignores physics. It forcibly resets
- * position and orientation so that it matches whatever is
- * current in the Ogre scene graph. Use this method sparingly.
- * Specifically, this method is not needed for kinematic rigid bodies,
- * because Bullet pulls the world transform for them every frame on
- * itself (see Bullet manual version 2.83, p. 22). Static rigid bodies
- * may not be moved at all (Bullet manual version 2.83, p. 19 f.). So
- * this method is only useful for dynamic rigid bodies. For those,
- * the repositioning methods of Actor automatically call this method.
- */
-void PhysicsEngine::resetActor(Actor* p_actor, bool clear_forces)
-{
-    RigidBody* p_rbody = m_actors[p_actor];
-
-    // Zero-mass rigid bodies may only be moved if they have been flagged
-    // as kinematic, see Bullet manual v 2.83, pp. 19 f. and 22.
-    assert(p_actor->getMass() != 0.0f || ((p_rbody->mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT));
-
-    // Bullet has no method to forcibly re-read the world transform
-    // appearently, so do it manually.
-    btTransform trans;
-    p_rbody->mp_bullet_motionstate->getWorldTransform(trans);
-    p_rbody->mp_bullet_rbody->setWorldTransform(trans);
-
-    if (clear_forces) {
-        p_rbody->mp_bullet_rbody->clearForces();
-        p_rbody->mp_bullet_rbody->setLinearVelocity(btVector3(0, 0, 0));
-        p_rbody->mp_bullet_rbody->setAngularVelocity(btVector3(0, 0, 0));
-    }
-
-    p_rbody->mp_bullet_rbody->activate(); // Wake up the object so bullet notices it has changed
-}
-
-/**
- * Removes all actors from the physics world.
- */
-void PhysicsEngine::clear()
-{
-    while (!m_actors.empty()) {
-        removeActor(m_actors.begin()->first);
-    }
 }
 
 void PhysicsEngine::update()
@@ -238,80 +249,4 @@ void PhysicsEngine::update()
     }
 
     mp_debug_drawer->update();
-}
-
-/**
- * Apply a force to the actor.
- *
- * \param[in] p_actor
- * Actor to apply the force to.
- *
- * \param[in] force
- * Force vector. To give you a measure: to lift a typical
- * human figure upwards in Ilmendur, you'll need to apply at least
- * about 100 force units into positive Z direction.
- *
- * \param[in] offset
- * The force is normally applied to the actor's mesh's origin.
- * By specifying this parameter, you can apply the force at a different
- * position -- this will result in the actor gaining spin into the
- * respective direction. Normally that probably is not what you want.
- *
- * \remark Ilmendur's Z axis points upwards from the ground. That is,
- * the coordinate system is equivalent to Blender's rather than Ogre's
- * default one, which has the Z axis pointing to the viewer.
- */
-void PhysicsEngine::applyForce(Actor* p_actor, const Ogre::Vector3& force, const Ogre::Vector3& offset)
-{
-    m_actors[p_actor]->mp_bullet_rbody->applyForce(ogreVec2Bullet(force), ogreVec2Bullet(offset));
-
-    /* For performance reasons, Bullet does not include rigid bodies
-     * into its calculations once they have come to a rest. They are
-     * set to sleep state. Calling activate() disables the sleep
-     * state once and makes Bullet check again.
-     * See <https://gamedev.stackexchange.com/a/70618> .*/
-    m_actors[p_actor]->mp_bullet_rbody->activate();
-}
-
-/**
- * Magically sets the actor's velocity to the given one, skipping
- * the need to call applyForce() with an appropriate value.
- */
-void PhysicsEngine::setVelocity(Actor* p_actor, const Ogre::Vector3& velocity)
-{
-    m_actors[p_actor]->mp_bullet_rbody->setLinearVelocity(ogreVec2Bullet(velocity));
-    m_actors[p_actor]->mp_bullet_rbody->activate(); // See applyForce() for a comment on this
-}
-
-/**
- * Magically sets the actor's velocity to the given one, skipping
- * the need to call applyForce() with an appropriate value.
- * This variant takes a Vector2 rather than a Vector3. It leaves
- * the Z velocity (i.e. the velocity caused by gravity) alone.
- */
-void PhysicsEngine::setVelocity(Actor* p_actor, const Ogre::Vector2& velocity)
-{
-    btVector3 currvel = m_actors[p_actor]->mp_bullet_rbody->getLinearVelocity();
-
-    m_actors[p_actor]->mp_bullet_rbody->setLinearVelocity(btVector3(velocity.x, velocity.y, currvel.z()));
-    m_actors[p_actor]->mp_bullet_rbody->activate(); // See applyForce() for a comment on this
-}
-
-/**
- * Exempts the given actor from having changed its orientation by
- * physics. Any rotation will thus have to be conducted through
- * Actor’s methods. This is particularly useful for characters,
- * which you'd typically not want to fall sideways like a static object.
- *
- * \remark This method implements the suggestion from p. 26 of v. 2.83 of
- * the Bullet Manual (i.e. uses setAngularFactor()).
- *
- * \remark Beware that you cannot call this method before addActor().
- * So unless you add the actor to the physics engine *inside the
- * actor’s constructor*, calling this method inside the constructor
- * will segfault the programme with a null pointer dereference.
- */
-void PhysicsEngine::lockRotation(Actor* p_actor)
-{
-    m_actors[p_actor]->mp_bullet_rbody->setAngularFactor(btVector3(0, 0, 0));
 }
