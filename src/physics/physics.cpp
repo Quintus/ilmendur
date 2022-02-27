@@ -215,6 +215,45 @@ void RigidBody::lockRotation()
     mp_bullet_rbody->setAngularFactor(btVector3(0, 0, 0));
 }
 
+/**
+ * Make a static rigid body into a kinematic rigid body or a kinematic rigid
+ * body into a static rigid body. As per Bullet manual version 2.83 p. 20,
+ * kinematic rigid bodies are a special kind of static rigid body which
+ * contrary to normal static rigid bodies is allowed to be moved by the
+ * caller manually. It will never be moved by Bullet, though. Kinematic
+ * rigid bodies must have zero mass (ibid.). This method crashes with
+ * an assertion failure if this assertion is violated.
+ *
+ * \param val
+ * Whether to turn on (true) or off (false) the kinematic attribute.
+ *
+ * \remark
+ * As recommended by the Bullet manual version 2.83, p. 22, this method
+ * automatically sets DISABLE_ACTIVATION on the object when the kinematic
+ * attribute is being enabled (and turns it off when it is being disbaled).
+ */
+void RigidBody::setKinematic(bool val)
+{
+    assert(mp_actor->getMass() == 0.0f); // Kinematic rigid bodies must have zero mass as per Bullet manual
+
+    if (val) {
+        mp_bullet_rbody->setCollisionFlags(mp_bullet_rbody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+        mp_bullet_rbody->setActivationState(DISABLE_DEACTIVATION);
+    } else {
+        mp_bullet_rbody->setCollisionFlags(mp_bullet_rbody->getCollisionFlags() ^ btCollisionObject::CF_KINEMATIC_OBJECT);
+        mp_bullet_rbody->setActivationState(0); // FIXME: Undocumented, untested, does this work?
+    }
+}
+
+/**
+ * Returns true if this is a static rigid body (= zero mass) which has the
+ * kinematic flag (see setKinematic()) set. Otherwise returns false.
+ */
+bool RigidBody::getKinematic()
+{
+    return mp_actor->getMass() == 0.0f && ((mp_bullet_rbody->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == btCollisionObject::CF_KINEMATIC_OBJECT);
+}
+
 PhysicsEngine::PhysicsEngine(Ogre::SceneNode* p_root_node)
     : m_bullet_colldispatcher(&m_bullet_collconfig),
       m_bullet_world(&m_bullet_colldispatcher, &m_bullet_broadphase, &m_bullet_solver, &m_bullet_collconfig),

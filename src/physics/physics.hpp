@@ -47,6 +47,8 @@ namespace PhysicsSystem {
         void applyForce(const Ogre::Vector3& force, const Ogre::Vector3& offset = Ogre::Vector3(0, 0, 0));
         void setVelocity(const Ogre::Vector3& velocity);
         void setVelocity(const Ogre::Vector2& velocity);
+        void setKinematic(bool val);
+        bool getKinematic();
 
     private:
         Actor*                mp_actor;
