@@ -24,9 +24,6 @@ public:
     void setOrientation(const Ogre::Quaternion& neworient, bool clear_forces = false);
     void reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& neworient, bool clear_forces = false);
 
-    Ogre::Vector3 getPosition() const;
-    Ogre::Quaternion getOrientation() const;
-
     inline Ogre::SceneNode* getSceneNode() const { return mp_scene_node; }
 protected:
     SceneSystem::Scene& m_scene;

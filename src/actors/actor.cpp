@@ -94,13 +94,3 @@ void Actor::reposition(const Ogre::Vector3& newpos, const Ogre::Quaternion& newr
         m_scene.getPhysicsEngine().resetActor(this, clear_forces);
     }
 }
-
-Ogre::Vector3 Actor::getPosition() const
-{
-    return mp_scene_node->getPosition();
-}
-
-Ogre::Quaternion Actor::getOrientation() const
-{
-    return mp_scene_node->getOrientation();
-}
