@@ -11,6 +11,15 @@ using namespace PhysicsSystem;
 /// Gravity the world is exposed to, in m/s².
 static const float GRAVITY_ACCEL = -9.81f;
 
+class RigidBody::PhysicsMotionState: public btMotionState {
+public:
+    PhysicsMotionState(Ogre::SceneNode* p_node);
+    virtual void getWorldTransform(btTransform& trans) const;
+    virtual void setWorldTransform(const btTransform& trans);
+private:
+    Ogre::SceneNode* mp_node;
+};
+
 btQuaternion PhysicsSystem::ogreQuat2Bullet(const Ogre::Quaternion& q)
 {
     return btQuaternion(q.x, q.y, q.z, q.w);

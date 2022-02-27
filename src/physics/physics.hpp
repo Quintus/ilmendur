@@ -36,14 +36,7 @@ namespace PhysicsSystem {
          * is transformed due to physics. See bullet manual version 2.83,
          * pp. 20 f.
          */
-        class PhysicsMotionState: public btMotionState {
-        public:
-            PhysicsMotionState(Ogre::SceneNode* p_node);
-            virtual void getWorldTransform(btTransform& trans) const;
-            virtual void setWorldTransform(const btTransform& trans);
-        private:
-            Ogre::SceneNode* mp_node;
-        };
+        class PhysicsMotionState;
 
     public:
         RigidBody(Actor* p_actor);
