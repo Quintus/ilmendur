@@ -182,6 +182,7 @@ void DummyScene::handleCamJoyInput()
 
 void DummyScene::handleMoveJoyInput()
 {
+    static bool s_moving = false;
     const auto& config = GameState::instance.config[FREYA];
     const float* joyaxes = nullptr;
     int axescount = 0;
@@ -200,9 +201,14 @@ void DummyScene::handleMoveJoyInput()
     if (fabs(vec.y) < config.joy_dead_zone) {
         vec.y = 0.0f;
     }
-    if (vec.isZeroLength()) {
-        // Immediately stop moving when the player leaves the joystick alone
-        mp_player->getRigidBody()->setVelocity(Ogre::Vector2(0.0f, 0.0f));
+
+    if (vec.isZeroLength() ) {
+        Ogre::Vector3 vectest = mp_player->getRigidBody()->getVelocity();
+        if (s_moving && vectest != Ogre::Vector3(0.0f, 0.0f, 0.0f)) {
+            // Immediately stop moving when the player leaves the joystick alone
+            mp_player->getRigidBody()->setVelocity(Ogre::Vector2(0.0f, 0.0f));
+            s_moving = false;
+        }
         return;
     }
 
@@ -250,8 +256,9 @@ void DummyScene::handleMoveJoyInput()
         player_lookdir *= 2;
     }
 
-    mp_player->getRigidBody()->setVelocity(Ogre::Vector2(player_lookdir.x, player_lookdir.y));
     mp_player->getRigidBody()->reset(false);
+    mp_player->getRigidBody()->setVelocity(Ogre::Vector2(player_lookdir.x, player_lookdir.y));
+    s_moving = true;
 }
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
