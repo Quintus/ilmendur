@@ -201,6 +201,11 @@ void RigidBody::setVelocity(const Ogre::Vector2& velocity)
     mp_bullet_rbody->activate(); // See applyForce() for a comment on this
 }
 
+Ogre::Vector3 RigidBody::getVelocity() const
+{
+    return bulletVec2Ogre(mp_bullet_rbody->getLinearVelocity());
+}
+
 /**
  * Exempts this rigid body from having changed its orientation by
  * physics. Any rotation will thus have to be conducted manually. This
