@@ -153,24 +153,29 @@ void UISystem::testFreetype()
     // Programm durchführen und exit()en. Wenn das fehlerfrei läuft, kann man
     // die Anbindung an nuklear-UI durchführen.
 
-    long maxwidth  = labs(p_ftface->bbox.xMin) + labs(p_ftface->bbox.xMax) + 1; // +1 is for a one-pixel dividing space
-    long maxheight = labs(p_ftface->bbox.yMin) + labs(p_ftface->bbox.yMax) + 1; // +1 is for a one-pixel dividing space
-    long num_glyphs = 0x7f;
+    const long maxglyphwidth  = labs(p_ftface->bbox.xMin>>6) + labs(p_ftface->bbox.xMax>>6) + 1; // +1 is for a one-pixel dividing space
+    //const long maxglyphheight = labs(p_ftface->bbox.yMin>>6) + labs(p_ftface->bbox.yMax>>6) + 1; // +1 is for a one-pixel dividing space
+    const long num_glyphs = 0x80; // 0x7f is the last ASCII glyph, 0x0 is NUL
 
-    long atlaswidth  = Ogre::Bitwise::firstPO2From(maxwidth * 32); // arbitrary choice: the font atlas will encompass 32 glyphs in width, the rest needs to be done with the height
-    long atlasheight = Ogre::Bitwise::firstPO2From((num_glyphs / 32 + 1) * maxheight); // How many rows we need to fit all glyphs; +1 to cater for divisions with remainder
+    const long maxglyphheight = 64;
 
-    atlaswidth = 32;
-    atlasheight = 32;
+    cout << "maxglyphwidth=" << maxglyphwidth << endl << "maxglyhheight=" << maxglyphheight << endl;
+
+    // Calculate total expanse of the font atlas in pixels. Graphics card drivers generally
+    // require textures to be a power of 2, so cater for that as well.
+    const size_t atlaswidth  = Ogre::Bitwise::firstPO2From(maxglyphwidth * 32); // arbitrary choice: the font atlas will encompass 32 glyphs in width, the rest needs to be done with the height
+    const size_t atlasheight = Ogre::Bitwise::firstPO2From((num_glyphs / 32 + 1) * maxglyphheight); // How many rows we need to fit all glyphs; +1 to cater for divisions with remainder
+
+    cout << "atlaswidth=" << atlaswidth << endl << "atlasheight=" << atlasheight << endl;
 
     /* Create 2d pixel array for the font atlas, zero out the memory. In this atlas,
      * a value of 0 means to make a pixel transparent, and 255 means to make it all black.
      * This matches the representation used by Freetype. After this code completes, the font
      * atlas is all transparent. */
-    unsigned char** fontatlas = new unsigned char*[32];
-    for(size_t i=0; i<32; i++) {
-        fontatlas[i] = new unsigned char[32];
-        memset(fontatlas[i], 0, 32);
+    unsigned char** fontatlas = new unsigned char*[atlaswidth];
+    for(size_t i=0; i<atlaswidth; i++) {
+        fontatlas[i] = new unsigned char[atlasheight];
+        memset(fontatlas[i], 0, atlasheight);
     }
 
     /* Determine where the font's baseline is. The baseline sits the amount of
@@ -181,23 +186,19 @@ void UISystem::testFreetype()
      * per Freetype docs, rshifting it by 6 gives the amount in pixels.
      * Also note that `descender' is *negative* so it needs to be added
      * instead of subtracted to the cell's height. */
-    size_t baseline = 32 + (p_ftface->descender >> 6);
+    const size_t baseline = maxglyphheight + (p_ftface->descender >> 6);
 
-    unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
-    memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
     size_t targetcell = 0;
-    unsigned char c = 0x61;
-    //for (unsigned char c=0; c <= 0x7f; c++, targetcell++) {
+    for (unsigned char c=0x0; c < num_glyphs; c++, targetcell++) {
         // Get, glyph index, load glyph image into the font slot, convert to bitmap
         if (FT_Load_Char(p_ftface, c, FT_LOAD_RENDER)) {
             cout << "Warning: Failed to render char: " << c << endl;
             return;//continue;
         }
 
-        if (p_ftface->glyph->bitmap.rows > 32) {
-            cout << "Error: Glyph is larger than bounding box" << endl;
-            return;
-        }
+        // If this triggers, the font file is errorneous, because it
+        // sets the max bounding box incorrectly.
+        assert(p_ftface->glyph->bitmap.rows <= maxglyphheight);
 
         // Remember this glyph's metrics (required for calculating a string's width
         // for nuklear UI library).
@@ -210,16 +211,16 @@ void UISystem::testFreetype()
         // where the exact value stored gives the grayness of the pixel
         // as a value between 0 and 255. Other colours do not exist in
         // FT_PIXEL_MODE_GRAY mode.
-        size_t cell_start_x = (targetcell % 32) * 4 * 32;
-        size_t cell_start_y = (targetcell / 32) * 4 * 32;
+        size_t cell_start_x = (targetcell % 32) * maxglyphwidth;
+        size_t cell_start_y = (targetcell / 32) * maxglyphheight;
         assert(p_ftface->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY);
 
-        size_t penx = 0;
-        size_t peny = 0;
+        size_t penx = cell_start_x;
+        size_t peny = cell_start_y;
 
         // Reset Y pen to the baseline, then go to the glyph's vertical
         // starting position above the baseline (`bitmap_top').
-        peny = baseline;
+        peny = cell_start_y + baseline;
         peny -= p_ftface->glyph->bitmap_top;
         for (unsigned int row = 0; row < p_ftface->glyph->bitmap.rows; row++) {
 
@@ -228,7 +229,7 @@ void UISystem::testFreetype()
              * expand below the previous glyph in a text (e.g. cursive "f").
              * The glyph width is in 1/64th of a pixel, thus rshift it by 6
              * as per the freetype docs to get a pixel value. */
-            penx += 32/2 - (p_ftface->glyph->metrics.width>>6) / 2
+            penx += maxglyphwidth/2 - (p_ftface->glyph->metrics.width>>6) / 2
                  + p_ftface->glyph->bitmap_left;
 
             // DEBUG
@@ -239,44 +240,44 @@ void UISystem::testFreetype()
             for(unsigned int x=0; x < p_ftface->glyph->bitmap.width; x++) {
                 unsigned char pixel = p_ftface->glyph->bitmap.buffer[row * p_ftface->glyph->bitmap.pitch + x];
                 fontatlas[penx][peny] = pixel;
-                // Note: Freetype gives (in `pixel') 0 for transparent and 255 for black
+                //                      Note ↑: Freetype gives (in `pixel') 0 for transparent and 255 for black
                 penx++;
             }
 
-            penx = 0;
+            penx = cell_start_x;
             peny++;
         }
-                         //}
+    }
 
-        ofstream bmpfile("/tmp/f/test.pnm", ios::out | ios::binary);
-        bmpfile << "P2" << " " << to_string(atlaswidth) << " " << atlasheight << " " << "255" << "\n";
+    unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
+    memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
 
-        for(long y=0; y < atlasheight; y++) {
-            for(long x=0; x < atlaswidth; x++) {
-                unsigned char pixel = fontatlas[x][y];
-                //size_t targetx = cell_start_x + x * 4;
-                //size_t targety = cell_start_y + row * 4;
+    ofstream bmpfile("/tmp/f/test.pnm", ios::out | ios::binary);
+    bmpfile << "P2" << " " << to_string(atlaswidth) << " " << atlasheight << " " << "255" << "\n";
 
-                if (255-pixel < 100)
-                    bmpfile << " ";
-                if (255-pixel < 10)
-                    bmpfile << " ";
+    for(size_t y=0; y < atlasheight; y++) {
+        for(size_t x=0; x < atlaswidth; x++) {
+            unsigned char pixel = fontatlas[x][y];
+            //size_t targetx = cell_start_x + x * 4;
+            //size_t targety = cell_start_y + row * 4;
+
+            if (255-pixel < 100)
                 bmpfile << " ";
-                bmpfile << to_string(255-pixel);
+            if (255-pixel < 10)
+                bmpfile << " ";
+            bmpfile << " ";
+            bmpfile << to_string(255-pixel);
 
-                //atlas_pixels[targetx+targety+0] = pixel; // R
-                //atlas_pixels[targetx+targety+1] = pixel; // G
-                //atlas_pixels[targetx+targety+2] = pixel; // B
-                //atlas_pixels[targetx+targety+3] = 0xBB;  // A
-            }
-            bmpfile << "\n";
+            //atlas_pixels[targetx+targety+0] = pixel; // R
+            //atlas_pixels[targetx+targety+1] = pixel; // G
+            //atlas_pixels[targetx+targety+2] = pixel; // B
+            //atlas_pixels[targetx+targety+3] = 0xBB;  // A
         }
+        bmpfile << "\n";
+    }
 
     // Final step: Clean up all resources.
-    for (size_t i=0; i<32; i++) {
-        delete[] fontatlas[i];
-    }
-    delete[] fontatlas;
+    // TODO: Deleting fontatlas segfaults?
 
     FT_Done_Face(p_ftface);
     FT_Done_FreeType(p_ftlib);
