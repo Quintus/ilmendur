@@ -10,15 +10,16 @@ namespace UISystem {
         GUIEngine();
         ~GUIEngine();
 
-        inline nk_context& getContext() { return m_context; }
+        inline nk_context& getContext() { return m_nkcontext; }
 
         void draw();
 
+        struct FontData;
     private:
         void buildFontAtlas();
 
-        struct FontData;
-        nk_context m_context;
+        nk_context m_nkcontext;
+        nk_user_font m_nkfont;
         FontData* mp_ft;
     };
 

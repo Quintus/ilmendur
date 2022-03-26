@@ -16,6 +16,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <unicode/unistr.h>
+#include <unicode/schriter.h>
+
 using namespace std;
 using namespace UISystem;
 namespace fs = std::filesystem;
@@ -26,38 +29,43 @@ static const int CELLS_PER_ROW = 32; // How many cells should the font atlas hav
 struct GUIEngine::FontData {
     nk_user_font nkfont;
     GLuint atlas_texid;
-    map<uint32_t,FT_Glyph_Metrics> glyph_metrics;
+    map<unsigned long,FT_Glyph_Metrics> glyph_metrics;
 };
 
 static float textwidthcb(nk_handle handle, float height, const char* text, int len)
-{/*
-    // TODO: Prior to this callback save all glyph geometry info into FontData structure,
-    // then use that info to return the requested length here.
+{
+    GUIEngine::FontData* p_ftdata = static_cast<GUIEngine::FontData*>(handle.ptr);
 
-    FT_FACE ftface = reinterpret_cast<FT_FACE>(handle.ptr);
+    // First, decompose the string into its code points
+    const icu::UnicodeString utf16text = icu::UnicodeString::fromUTF8(icu::StringPiece(text, len));
 
+    // Then, iterate each code point as if we were rendering it,
+    // measuring all advances on the X axis for each code point.
     float result = 0.0f;
-    for(int i=0; i < len; i++) {
-        // TODO: Use ICU to properly get the Unicode code points of `text'.
-        FT_UInt glyph_index = FT_Get_Char_Index(ftface, text[i]);
-        if (FT_Load_Glyph(ftface, glyph_index, FT_LOAD_DEFAULT)) {
-            throw(std::runtime_error("Error loading freetype glyph!"));
-        }
-
-        if (FT_Render_Glyph(ftface->glyph, FT_RENDER_MODE_NORMAL)) {
-            throw(std::runtime_error("Error rendering freetype glyph!"));
-        }
-
-        result += ftface->glyph->bitmap_left + (ftface->glyph->advance.x >> 6); // See Freetype docs for why ">> 6" (advance.x is in 1/64th of a pixel)
+    icu::StringCharacterIterator iter(utf16text);
+    for(UChar32 cp=iter.first32(); cp != icu::StringCharacterIterator::DONE; cp=iter.next32()) {
+        const FT_Glyph_Metrics& metrics = p_ftdata->glyph_metrics[static_cast<unsigned long>(cp)]; // cp can only ever be positive, but ICU uses a signed type for whatever reason
+        result += metrics.horiAdvance >> 6;
     }
 
-    return result;*/
-    return 1.0f;
+    return result;
 }
 
-static int fontglyphcb()
+static void fontglyphcb(nk_handle handle, float font_height, struct nk_user_font_glyph *glyph, nk_rune codepoint, nk_rune next_codepoint)
 {
-    return 0;
+    GUIEngine::FontData* p_ftdata = static_cast<GUIEngine::FontData*>(handle.ptr);
+
+    const FT_Glyph_Metrics& metrics = p_ftdata->glyph_metrics[static_cast<unsigned long>(codepoint)];
+    glyph->width = metrics.width >> 6;
+    glyph->height = metrics.height >> 6;
+    glyph->xadvance = metrics.horiAdvance >> 6;
+    // TODO: Measure properly
+    glyph->uv[0].x = 0;
+    glyph->uv[1].y = 0;
+    glyph->uv[1].x = 32;
+    glyph->uv[1].y = 32;
+    glyph->offset.x = metrics.horiBearingX;
+    glyph->offset.y = metrics.horiBearingY;
 }
 
 GUIEngine::GUIEngine()
@@ -65,18 +73,18 @@ GUIEngine::GUIEngine()
 {
     buildFontAtlas();
 
-    //s_nkfont.userdata.ptr = mp_ft;
-    //s_nkfont.height = FONTSIZE;
-    //s_nkfont.width = textwidthcb;
-    //s_nkfont.query = fontglyphcb;
-    //s_nkfont.texture = mp_ft->atlas_texid;
+    m_nkfont.userdata.ptr = mp_ft;
+    m_nkfont.height = FONTSIZE;
+    m_nkfont.width = textwidthcb;
+    m_nkfont.query = fontglyphcb;
+    m_nkfont.texture.id = mp_ft->atlas_texid;
 
-    //nk_init_default(&m_context, todo_font);
+    nk_init_default(&m_nkcontext, &m_nkfont);
 }
 
 GUIEngine::~GUIEngine()
 {
-    nk_free(&m_context);
+    nk_free(&m_nkcontext);
     delete mp_ft;
 }
 
@@ -183,7 +191,7 @@ void GUIEngine::buildFontAtlas()
 
         // Remember this glyph's metrics (required for calculating a string's width
         // for nuklear UI library).
-        //mp_ft->glyph_metrics.emplace(make_pair(c, p_ftface->glyph->metrics));
+        mp_ft->glyph_metrics.emplace(make_pair(c, p_ftface->glyph->metrics));
 
         // Blit the bitmap onto the font atlas image
         // Note that the target cell in the atlas image is most likely
@@ -214,9 +222,9 @@ void GUIEngine::buildFontAtlas()
                  + p_ftface->glyph->bitmap_left;
 
             // DEBUG
-            if (p_ftface->glyph->bitmap_left != 0) {
-                //printf("!!!!!!!Glyph %d has a nonzero bitmap-left: %d\n", c, p_ftface->glyph->bitmap_left);
-            }
+            //if (p_ftface->glyph->bitmap_left != 0) {
+            //    printf("!!!!!!!Glyph %ld has a nonzero bitmap-left: %d\n", c, p_ftface->glyph->bitmap_left);
+            //}
 
             for(unsigned int x=0; x < p_ftface->glyph->bitmap.width; x++) {
                 unsigned char pixel = p_ftface->glyph->bitmap.buffer[row * p_ftface->glyph->bitmap.pitch + x];
@@ -229,9 +237,6 @@ void GUIEngine::buildFontAtlas()
             peny++;
         }
     }
-
-    //unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
-    //memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
 
     ofstream bmpfile("/tmp/test.pnm", ios::out | ios::binary);
     bmpfile << "P2" << " " << to_string(atlaswidth) << " " << atlasheight << " " << "255" << "\n";
