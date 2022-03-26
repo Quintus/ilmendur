@@ -82,45 +82,6 @@ GUIEngine::~GUIEngine()
 
 void GUIEngine::buildFontAtlas()
 {
-    // TODO: Generate atlas pixels
-/*
-    // Upload font atlas to graphics card
-    glGenTextures(1, &mp_ft->atlas_texid);
-    glBindTexture(GL_TEXTURE_2D, mp_ft->atlas_texid);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlaswidth, atlasheight, 0, GL_RGBA, GL_UINT, atlas_pixels);
-*/
-}
-
-void GUIEngine::draw()
-{
-    nk_convert_config cfg;
-    memset(&cfg, 0, sizeof(nk_convert_config));
-
-    nk_draw_vertex_layout_element vertex_layout[] = {
-        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, 0},
-        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, sizeof(float)*2},
-        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, sizeof(float)*4},
-        {NK_VERTEX_LAYOUT_END}
-    };
-
-    cfg.shape_AA = NK_ANTI_ALIASING_ON;
-    cfg.line_AA = NK_ANTI_ALIASING_ON;
-    cfg.vertex_layout = vertex_layout;
-    cfg.vertex_size = sizeof(float)*8;
-    cfg.vertex_alignment = 0;
-    cfg.circle_segment_count = 22;
-    cfg.curve_segment_count = 22;
-    cfg.arc_segment_count = 22;
-    cfg.global_alpha = 1.0f;
-    //cfg.null = dev->null;
-}
-
-void UISystem::testFreetype()
-{
     std::string fontfilename = "LinLibertine_R.otf";
     // Step 1: Initialise Freetype, load the font file into memory, and
     // request a sensible font size.
@@ -305,4 +266,40 @@ void UISystem::testFreetype()
     FT_Done_Face(p_ftface);
     FT_Done_FreeType(p_ftlib);
     //delete[] atlas_pixels;
+
+    // TODO: Generate atlas pixels
+/*
+    // Upload font atlas to graphics card
+    glGenTextures(1, &mp_ft->atlas_texid);
+    glBindTexture(GL_TEXTURE_2D, mp_ft->atlas_texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlaswidth, atlasheight, 0, GL_RGBA, GL_UINT, atlas_pixels);
+*/
+}
+
+void GUIEngine::draw()
+{
+    nk_convert_config cfg;
+    memset(&cfg, 0, sizeof(nk_convert_config));
+
+    nk_draw_vertex_layout_element vertex_layout[] = {
+        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, 0},
+        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, sizeof(float)*2},
+        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, sizeof(float)*4},
+        {NK_VERTEX_LAYOUT_END}
+    };
+
+    cfg.shape_AA = NK_ANTI_ALIASING_ON;
+    cfg.line_AA = NK_ANTI_ALIASING_ON;
+    cfg.vertex_layout = vertex_layout;
+    cfg.vertex_size = sizeof(float)*8;
+    cfg.vertex_alignment = 0;
+    cfg.circle_segment_count = 22;
+    cfg.curve_segment_count = 22;
+    cfg.arc_segment_count = 22;
+    cfg.global_alpha = 1.0f;
+    //cfg.null = dev->null;
 }
