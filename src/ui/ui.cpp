@@ -261,8 +261,8 @@ void UISystem::testFreetype()
         }
     }
 
-    unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
-    memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
+    //unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
+    //memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
 
     ofstream bmpfile("/tmp/f/test.pnm", ios::out | ios::binary);
     bmpfile << "P2" << " " << to_string(atlaswidth) << " " << atlasheight << " " << "255" << "\n";
@@ -289,9 +289,12 @@ void UISystem::testFreetype()
     }
 
     // Final step: Clean up all resources.
-    // TODO: Deleting fontatlas segfaults?
+    for(size_t i=0; i<atlaswidth; i++) {
+        delete[] fontatlas[i];
+    }
+    delete[] fontatlas;
 
     FT_Done_Face(p_ftface);
     FT_Done_FreeType(p_ftlib);
-    delete[] atlas_pixels;
+    //delete[] atlas_pixels;
 }
