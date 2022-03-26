@@ -31,10 +31,14 @@ DummyScene::DummyScene()
       mp_cam_node(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr),
-      m_run_threshold(0.0f)
+      m_run_threshold(0.0f),
+      mp_ui_system(nullptr)
 {
     // Enable physics
     mp_physics = new PhysicsSystem::PhysicsEngine(mp_scene_manager->getRootSceneNode());
+
+    // Enable UI
+    mp_ui_system = new UISystem::GUIEngine();
 
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
@@ -95,6 +99,7 @@ DummyScene::~DummyScene()
     delete mp_player;
     delete mp_ground;
     delete mp_physics;
+    delete mp_ui_system;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);

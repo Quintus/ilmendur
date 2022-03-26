@@ -60,7 +60,7 @@ static int fontglyphcb()
     return 0;
 }
 
-GUIEngine::GUIEngine(const string& fontfilename)
+GUIEngine::GUIEngine()
     : mp_ft(new FontData())
 {
     buildFontAtlas();
@@ -257,18 +257,17 @@ void GUIEngine::buildFontAtlas()
         bmpfile << "\n";
     }
 
-    // Final step: Clean up all resources.
-    for(size_t i=0; i<atlaswidth; i++) {
-        delete[] fontatlas[i];
+    // Step 3: Convert the entire font atlas into an RGB array for OpenGL.
+    unsigned char* rawpixels = new unsigned char[atlaswidth * atlasheight * 3]; // 3 = 1 value for each of R, G, B
+    unsigned char* ptr = rawpixels;
+    for(size_t y=0; y < atlasheight; y++) {
+        for(size_t x=0; x < atlaswidth; x++) {
+            *ptr++ = 255 - fontatlas[x][y]; // R
+            *ptr++ = 255 - fontatlas[x][y]; // G
+            *ptr++ = 255 - fontatlas[x][y]; // B
+        }
     }
-    delete[] fontatlas;
 
-    FT_Done_Face(p_ftface);
-    FT_Done_FreeType(p_ftlib);
-    //delete[] atlas_pixels;
-
-    // TODO: Generate atlas pixels
-/*
     // Upload font atlas to graphics card
     glGenTextures(1, &mp_ft->atlas_texid);
     glBindTexture(GL_TEXTURE_2D, mp_ft->atlas_texid);
@@ -276,8 +275,18 @@ void GUIEngine::buildFontAtlas()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlaswidth, atlasheight, 0, GL_RGBA, GL_UINT, atlas_pixels);
-*/
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, atlaswidth, atlasheight, 0, GL_RGB, GL_UNSIGNED_BYTE, rawpixels);
+
+    // Final step: Clean up all resources.
+    for(size_t i=0; i<atlaswidth; i++) {
+        delete[] fontatlas[i];
+    }
+    delete[] fontatlas;
+    delete[] rawpixels;
+
+    FT_Done_Face(p_ftface);
+    FT_Done_FreeType(p_ftlib);
+    //delete[] atlas_pixels;
 }
 
 void GUIEngine::draw()

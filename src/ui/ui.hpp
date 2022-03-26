@@ -7,7 +7,7 @@ namespace UISystem {
 
     class GUIEngine {
     public:
-        GUIEngine(const std::string& fontfilename);
+        GUIEngine();
         ~GUIEngine();
 
         inline nk_context& getContext() { return m_context; }
