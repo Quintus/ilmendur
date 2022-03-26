@@ -162,7 +162,16 @@ void UISystem::testFreetype()
 
     atlaswidth = 32;
     atlasheight = 32;
-    unsigned char fontatlas[32][32] = {0};
+
+    /* Create 2d pixel array for the font atlas, zero out the memory. In this atlas,
+     * a value of 0 means to make a pixel transparent, and 255 means to make it all black.
+     * This matches the representation used by Freetype. After this code completes, the font
+     * atlas is all transparent. */
+    unsigned char** fontatlas = new unsigned char*[32];
+    for(size_t i=0; i<32; i++) {
+        fontatlas[i] = new unsigned char[32];
+        memset(fontatlas[i], 0, 32);
+    }
 
     /* Determine where the font's baseline is. The baseline sits the amount of
      * the font's `descender' above each cell's lower edge, that is, it is
@@ -262,26 +271,13 @@ void UISystem::testFreetype()
             }
             bmpfile << "\n";
         }
-        
-    //// Bitmap file header
-    //bmpfile << 0x42 << 0x4d // BM
-    //        << 0x01 << 0x0 << 0x0 << 0x0 // File size
-    //        << 0x0 << 0x0 << 0x0 << 0x0 // Reserved
-    //        << 0x36 << 0x0 << 0x0 << 0x0; // Offset of image data
-    //// Bitmap info header
-    //bmpfile << 0x28 << 0x0 << 0x0 << 0x0 // Size of bitmap info header
-    //        << 0x20 << 0x0 << 0x0 << 0x0 // Width
-    //        << 0x20 << 0x0 << 0x0 << 0x0 << //Height
-    //        << 0x01 << 0x0 // 1 (unused)
-    //        << 0x04 << 0x0 // 4 bits per pixel (RGBA)
-    //        << 0x0 << 0x0 << 0x0 << 0x0 // No Compression
-    //        << 0x0 << 0x0 << 0x0 << 0x0 // No size info
-    //        << 0x0 << 0x0 << 0x0 << 0x0 // No x/m info
-    //        << 0x0 << 0x0 << 0x0 << 0x0; // No y/m info
-
-    //bmpfile.write(reinterpret_cast<char*>(atlas_pixels), atlaswidth * atlasheight * 4);
 
     // Final step: Clean up all resources.
+    for (size_t i=0; i<32; i++) {
+        delete[] fontatlas[i];
+    }
+    delete[] fontatlas;
+
     FT_Done_Face(p_ftface);
     FT_Done_FreeType(p_ftlib);
     delete[] atlas_pixels;
