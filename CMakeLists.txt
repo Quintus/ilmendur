@@ -28,7 +28,7 @@ project(ILMENDUR
   VERSION 0.0.1
   DESCRIPTION "Ilmendur - Heirs to the Elven sword. A Role-Play Game."
   HOMEPAGE_URL "https://redmine.guelker.eu/projects/ilmendur"
-  LANGUAGES CXX)
+  LANGUAGES C CXX)
 
 ########################################
 # Configuring the compiler
@@ -42,6 +42,11 @@ add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter) # Ogre has lots of these
 add_compile_options(-DGLFW_INCLUDE_NONE=1) # Ogre ships its own set of OpenGL headers
 
+# Configuration options for nuklear
+add_compile_options(-DNK_INCLUDE_FIXED_TYPES=1)
+add_compile_options(-DNK_INCLUDE_DEFAULT_ALLOCATOR=1)
+add_compile_options(-DNK_INCLUDE_VERTEX_BUFFER_OUTPUT=1)
+
 if(UNIX)
   # Request POSIX.1-2008
   add_compile_options(-D_POSIX_C_SOURCE=200809L)
@@ -50,7 +55,7 @@ endif()
 ########################################
 # Game source code
 
-file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.hpp")
+file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.c" "src/*.hpp" "src/*.h")
 add_executable(ilmendur ${ilmendur_sources})
 
 ########################################
@@ -72,6 +77,7 @@ set(CMAKE_PREFIX_PATH          ${ILMENDUR_DEPS_INSTALL_DIR})
 # results in $ILMENDUR_DEPENDENCIES being set in this scope.
 include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/bullet
+                    ${ILMENDUR_DEPS_INSTALL_DIR}/include/freetype2
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RenderSystems/GL3Plus
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/RTShaderSystem
