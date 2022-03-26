@@ -20,7 +20,8 @@ using namespace std;
 using namespace UISystem;
 namespace fs = std::filesystem;
 
-static int FONTSIZE = 30; // Desired font size in pixels
+static const int FONTSIZE = 30; // Desired font size in pixels
+static const int CELLS_PER_ROW = 32; // How many cells should the font atlas have per row?
 
 struct GUIEngine::FontData {
     nk_user_font nkfont;
@@ -121,7 +122,8 @@ void GUIEngine::draw()
 void UISystem::testFreetype()
 {
     std::string fontfilename = "1455_gutenberg_b42.otf";
-    // Step 1: Initialise Freetype and load the font file into memory
+    // Step 1: Initialise Freetype, load the font file into memory, and
+    // request a sensible font size.
     fs::path fontpath = OS::game_resource_dir() / fs::u8path("fonts") / fs::u8path(fontfilename);
     ifstream fontfile(fontpath, ios::in | ios::binary);
     string fontfiledata(istreambuf_iterator<char>{fontfile}, {}); // Read all of fontfile into str
@@ -136,10 +138,6 @@ void UISystem::testFreetype()
         throw(std::runtime_error("Error loading the font file with freetype!"));
     }
 
-    // Step 2: Render a sensible set of glyphs into a font atlas for
-    // use by nuklear.
-    // FIXME: For now only does ASCII (Basic Latin Unicode block)
-
     // FIXME: Should better use FT_Set_Char_Size() and calculate
     // the proper relative pixel font size from the current DPI.
     // Note: The pixel value calculated here must be equal to what
@@ -148,23 +146,44 @@ void UISystem::testFreetype()
         throw(std::runtime_error("Failed to set freetype font size!"));
     }
 
-    // HIER: Vorgehen wie folgt: erstmal eine Glyphe in eine BMP-Datei rendern;
-    // dann den äußeren Loop nachbauen. Das kann man erst mal als separates
-    // Programm durchführen und exit()en. Wenn das fehlerfrei läuft, kann man
-    // die Anbindung an nuklear-UI durchführen.
+    // Step 2: Render a sensible set of glyphs into a font atlas for
+    // use by nuklear.
+    // FIXME: For now only does ASCII (Basic Latin Unicode block)
+    // Step 2a: Determine the global font metrics.
 
-    const long maxglyphwidth  = labs(p_ftface->bbox.xMin>>6) + labs(p_ftface->bbox.xMax>>6) + 1; // +1 is for a one-pixel dividing space
-    //const long maxglyphheight = labs(p_ftface->bbox.yMin>>6) + labs(p_ftface->bbox.yMax>>6) + 1; // +1 is for a one-pixel dividing space
+    /* Retrieve the maximum bounding box for this font which can hold any glyph from it.
+     * p_ftface->bbox is in *font units* as per Freetype documentation, which means that
+     * is a constant value relative to a font size of 12 pt. The current font scale
+     * (as requested above) is available via p_ftface->size->metrics and in theory
+     * simply needs to be multiplied with the base values for 12 pt. The font scale
+     * however is in super-precise Freetype 16.16 fractional format which cannot directly
+     * be multiplied. Freetype provides a special function FT_MulFix(), which allows
+     * to multiply font units with 16.16 format values. The result is in 1/64th of
+     * pixels (Freetype 26.6 fractional format), which can be converted to the actual
+     * pixel values by rshifting with 6, see <https://freetype.org/freetype2/docs/tutorial/step1.html>.
+     * As the Freetype docs warn that the result may be slightly too small due to hinting,
+     * add another pixel for extra security to have enough space. */
+    const long maxglyphwidth  = (FT_MulFix(labs(p_ftface->bbox.xMin) + labs(p_ftface->bbox.xMax), p_ftface->size->metrics.y_scale)>>6) + 1;
+    const long maxglyphheight = (FT_MulFix(labs(p_ftface->bbox.yMin) + labs(p_ftface->bbox.yMax), p_ftface->size->metrics.y_scale)>>6) + 1;
+
+    /* Determine where the font's baseline is. The baseline sits the amount of
+     * the font's `descender' above each cell's lower edge, that is, it is
+     * at the same position for each glyph. Descenders go below it, but in
+     * their utmost extend they exactly only touch the lower edge.
+     * `descender' is in Freetype font units, i.e. 1/64th of a pixel. As
+     * per Freetype docs, rshifting it by 6 gives the amount in pixels.
+     * Also note that `descender' is *negative* so it needs to be added
+     * instead of subtracted to the cell's height. */
+    const size_t baseline = maxglyphheight + (p_ftface->descender >> 6);
+
     const long num_glyphs = 0x80; // 0x7f is the last ASCII glyph, 0x0 is NUL
 
-    const long maxglyphheight = 64;
-
-    cout << "maxglyphwidth=" << maxglyphwidth << endl << "maxglyhheight=" << maxglyphheight << endl;
+    // Step 2b: Create a 2-dimensional font atlas image in memory.
 
     // Calculate total expanse of the font atlas in pixels. Graphics card drivers generally
     // require textures to be a power of 2, so cater for that as well.
-    const size_t atlaswidth  = Ogre::Bitwise::firstPO2From(maxglyphwidth * 32); // arbitrary choice: the font atlas will encompass 32 glyphs in width, the rest needs to be done with the height
-    const size_t atlasheight = Ogre::Bitwise::firstPO2From((num_glyphs / 32 + 1) * maxglyphheight); // How many rows we need to fit all glyphs; +1 to cater for divisions with remainder
+    const size_t atlaswidth  = Ogre::Bitwise::firstPO2From(maxglyphwidth * CELLS_PER_ROW); // The font atlas will encompass CELLS_PER_ROW glyphs in width, the rest needs to be done with the height
+    const size_t atlasheight = Ogre::Bitwise::firstPO2From((num_glyphs / CELLS_PER_ROW + 1) * maxglyphheight); // How many rows we need to fit all glyphs; +1 to cater for divisions with remainder
 
     cout << "atlaswidth=" << atlaswidth << endl << "atlasheight=" << atlasheight << endl;
 
@@ -178,26 +197,19 @@ void UISystem::testFreetype()
         memset(fontatlas[i], 0, atlasheight);
     }
 
-    /* Determine where the font's baseline is. The baseline sits the amount of
-     * the font's `descender' above each cell's lower edge, that is, it is
-     * at the same position for each glyph. Descenders go below it, but in
-     * their utmost extend they exactly only touch the lower edge.
-     * `descender' is in Freetype font units, i.e. 1/64th of a pixel. As
-     * per Freetype docs, rshifting it by 6 gives the amount in pixels.
-     * Also note that `descender' is *negative* so it needs to be added
-     * instead of subtracted to the cell's height. */
-    const size_t baseline = maxglyphheight + (p_ftface->descender >> 6);
-
+    // For each glyph of the chosen glyph set, make an entry in the font atlas.
     size_t targetcell = 0;
     for (unsigned char c=0x0; c < num_glyphs; c++, targetcell++) {
         // Get, glyph index, load glyph image into the font slot, convert to bitmap
         if (FT_Load_Char(p_ftface, c, FT_LOAD_RENDER)) {
             cout << "Warning: Failed to render char: " << c << endl;
-            return;//continue;
+            continue;
         }
 
-        // If this triggers, the font file is errorneous, because it
-        // sets the max bounding box incorrectly.
+        /* If this triggers, the font file is errorneous, because it
+         * sets the max bounding box incorrectly. Or the bbox calculation
+         * further above is incorrect, but I really hope it is not, because
+         * I spent quite a lot of time reading Freetype docs to get it right. */
         assert(p_ftface->glyph->bitmap.rows <= maxglyphheight);
 
         // Remember this glyph's metrics (required for calculating a string's width
@@ -211,8 +223,8 @@ void UISystem::testFreetype()
         // where the exact value stored gives the grayness of the pixel
         // as a value between 0 and 255. Other colours do not exist in
         // FT_PIXEL_MODE_GRAY mode.
-        size_t cell_start_x = (targetcell % 32) * maxglyphwidth;
-        size_t cell_start_y = (targetcell / 32) * maxglyphheight;
+        size_t cell_start_x = (targetcell % CELLS_PER_ROW) * maxglyphwidth;
+        size_t cell_start_y = (targetcell / CELLS_PER_ROW) * maxglyphheight;
         assert(p_ftface->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY);
 
         size_t penx = cell_start_x;
@@ -234,7 +246,7 @@ void UISystem::testFreetype()
 
             // DEBUG
             if (p_ftface->glyph->bitmap_left != 0) {
-                printf("!!!!!!!Glyph %d has a nonzero bitmap-left: %d\n", c, p_ftface->glyph->bitmap_left);
+                //printf("!!!!!!!Glyph %d has a nonzero bitmap-left: %d\n", c, p_ftface->glyph->bitmap_left);
             }
 
             for(unsigned int x=0; x < p_ftface->glyph->bitmap.width; x++) {
