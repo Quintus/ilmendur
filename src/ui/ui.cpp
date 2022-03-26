@@ -121,7 +121,7 @@ void GUIEngine::draw()
 
 void UISystem::testFreetype()
 {
-    std::string fontfilename = "1455_gutenberg_b42.otf";
+    std::string fontfilename = "LinLibertine_R.otf";
     // Step 1: Initialise Freetype, load the font file into memory, and
     // request a sensible font size.
     fs::path fontpath = OS::game_resource_dir() / fs::u8path("fonts") / fs::u8path(fontfilename);
@@ -176,7 +176,17 @@ void UISystem::testFreetype()
      * instead of subtracted to the cell's height. */
     const size_t baseline = maxglyphheight + (p_ftface->descender >> 6);
 
-    const long num_glyphs = 0x80; // 0x7f is the last ASCII glyph, 0x0 is NUL
+    const long num_glyphs = 0x0250; // 0x024f is the last char in latin-b extended, should suffice for most western languages
+    /* Characters outside the range 0x0-0x024f will not render. That's
+     * basically a restriction of the nuklear UI library, because it
+     * only works with font atlases. Freetype can render anything, but
+     * using it properly would mean to call Freetype's functions each
+     * time a glyph is requested, which nuklear UI simply can't. It's
+     * possible to render a larger font atlas by incrementing the
+     * above value for `num_glyphs', though, but beware that already
+     * rendering the Basic Multilingual Plane results in a huge
+     * texture (>3 GiB with the Linux Libertine font), and that's just
+     * a fraction of Unicode. */
 
     // Step 2b: Create a 2-dimensional font atlas image in memory.
 
@@ -184,8 +194,6 @@ void UISystem::testFreetype()
     // require textures to be a power of 2, so cater for that as well.
     const size_t atlaswidth  = Ogre::Bitwise::firstPO2From(maxglyphwidth * CELLS_PER_ROW); // The font atlas will encompass CELLS_PER_ROW glyphs in width, the rest needs to be done with the height
     const size_t atlasheight = Ogre::Bitwise::firstPO2From((num_glyphs / CELLS_PER_ROW + 1) * maxglyphheight); // How many rows we need to fit all glyphs; +1 to cater for divisions with remainder
-
-    cout << "atlaswidth=" << atlaswidth << endl << "atlasheight=" << atlasheight << endl;
 
     /* Create 2d pixel array for the font atlas, zero out the memory. In this atlas,
      * a value of 0 means to make a pixel transparent, and 255 means to make it all black.
@@ -199,7 +207,7 @@ void UISystem::testFreetype()
 
     // For each glyph of the chosen glyph set, make an entry in the font atlas.
     size_t targetcell = 0;
-    for (unsigned char c=0x0; c < num_glyphs; c++, targetcell++) {
+    for (unsigned long c=0x0; c < num_glyphs; c++, targetcell++) {
         // Get, glyph index, load glyph image into the font slot, convert to bitmap
         if (FT_Load_Char(p_ftface, c, FT_LOAD_RENDER)) {
             cout << "Warning: Failed to render char: " << c << endl;
@@ -264,7 +272,7 @@ void UISystem::testFreetype()
     //unsigned char* atlas_pixels = new unsigned char[atlaswidth * atlasheight * 4]; // Each pixel is described by 4 values: RGBA
     //memset(atlas_pixels, 0xFF, atlaswidth * atlasheight * 4);
 
-    ofstream bmpfile("/tmp/f/test.pnm", ios::out | ios::binary);
+    ofstream bmpfile("/tmp/test.pnm", ios::out | ios::binary);
     bmpfile << "P2" << " " << to_string(atlaswidth) << " " << atlasheight << " " << "255" << "\n";
 
     for(size_t y=0; y < atlasheight; y++) {
