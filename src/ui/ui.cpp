@@ -26,10 +26,65 @@ namespace fs = std::filesystem;
 static const int FONTSIZE = 30; // Desired font size in pixels
 static const int CELLS_PER_ROW = 32; // How many cells should the font atlas have per row?
 
+// Vertex shader for the Nuklear UI library
+static const char* s_nkvertexshader = R"glsl(
+#version 150
+in vec2 position;
+in vec2 texcoords;
+in vec4 color;
+out vec2 TexCoords;
+out vec4 Color;
+
+void main()
+{
+    TexCoords = texcoords;
+    Color = color;
+    gl_Position = vec4(position.x, position.y, 0, 1);
+})glsl";
+
+// Fragment shader for the Nuklear UI library
+static const char* s_nkfragmentshader = R"glsl(
+#version 150
+uniform sampler2D Texture;
+in vec2 TexCoords;
+in vec4 Color;
+out vec4 outColor;
+
+void main()
+{
+    outColor = Color * texture(Texture, TexCoords.st);
+}
+)glsl";
+
 struct GUIEngine::FontData {
     nk_user_font nkfont;
     GLuint atlas_texid;
+    GLuint null_texid;
     map<unsigned long,FT_Glyph_Metrics> glyph_metrics;
+};
+
+struct GUIEngine::Vertex {
+    float x;
+    float y;
+    float s;
+    float t;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+};
+
+struct GUIEngine::OpenGLData {
+    GLuint shaderprog_id; ///< Holds the OpenGL ID for the compiled shader programme
+    GLuint vao_id;        ///< Holds the OpenGL ID for the Vertex Array Object used for the UI
+    GLuint vbo_id;        ///< OpenGL ID for the vertex array on the graphics card; the actual vertices are refilled each frame from what Nuklear UI provides!
+    GLuint ebo_id;        ///< OpenGL ID for the element array buffer corresponding to `vbo_id'.
+
+    GLuint position_loc;  ///< GPU memory location of the `position' input of the compiled shader programme `shaderprog_id'
+    GLuint texcoords_loc; ///< GPU memory location of the `texcoords' input of the compiled shader programme `shaderprog_id'
+    GLuint color_loc;     ///< GPU memory location of the `color' input of the compiled shader programme `shaderprog_id'
+
+    GLuint texid_loc;      ///< GPU memory location of the `Texture' uniform of the compiled shader programme `shaderprog_id'
 };
 
 static float textwidthcb(nk_handle handle, float height, const char* text, int len)
@@ -44,6 +99,7 @@ static float textwidthcb(nk_handle handle, float height, const char* text, int l
     float result = 0.0f;
     icu::StringCharacterIterator iter(utf16text);
     for(UChar32 cp=iter.first32(); cp != icu::StringCharacterIterator::DONE; cp=iter.next32()) {
+        assert(p_ftdata->glyph_metrics.count(static_cast<unsigned long>(cp)) != 0);
         const FT_Glyph_Metrics& metrics = p_ftdata->glyph_metrics[static_cast<unsigned long>(cp)]; // cp can only ever be positive, but ICU uses a signed type for whatever reason
         result += metrics.horiAdvance >> 6;
     }
@@ -55,8 +111,9 @@ static void fontglyphcb(nk_handle handle, float font_height, struct nk_user_font
 {
     GUIEngine::FontData* p_ftdata = static_cast<GUIEngine::FontData*>(handle.ptr);
 
+    assert(p_ftdata->glyph_metrics.count(static_cast<unsigned long>(codepoint)) != 0);
     const FT_Glyph_Metrics& metrics = p_ftdata->glyph_metrics[static_cast<unsigned long>(codepoint)];
-    glyph->width = metrics.width >> 6;
+    glyph->width = metrics.width >> 6; // ">> 6" for converting from Freetype's 26.6 fractional pixel format
     glyph->height = metrics.height >> 6;
     glyph->xadvance = metrics.horiAdvance >> 6;
     // TODO: Measure properly
@@ -69,9 +126,12 @@ static void fontglyphcb(nk_handle handle, float font_height, struct nk_user_font
 }
 
 GUIEngine::GUIEngine()
-    : mp_ft(new FontData())
+    : mp_ft(new FontData()),
+      mp_ogl(new OpenGLData())
 {
     buildFontAtlas();
+    makeNullTexture();
+    compileShaders();
 
     m_nkfont.userdata.ptr = mp_ft;
     m_nkfont.height = FONTSIZE;
@@ -86,6 +146,7 @@ GUIEngine::~GUIEngine()
 {
     nk_free(&m_nkcontext);
     delete mp_ft;
+    delete mp_ogl;
 }
 
 void GUIEngine::buildFontAtlas()
@@ -263,6 +324,7 @@ void GUIEngine::buildFontAtlas()
     }
 
     // Step 3: Convert the entire font atlas into an RGB array for OpenGL.
+    // Note: Freetype gives black as 255, whereas OpenGL wants it as 0.
     unsigned char* rawpixels = new unsigned char[atlaswidth * atlasheight * 3]; // 3 = 1 value for each of R, G, B
     unsigned char* ptr = rawpixels;
     for(size_t y=0; y < atlasheight; y++) {
@@ -294,6 +356,99 @@ void GUIEngine::buildFontAtlas()
     //delete[] atlas_pixels;
 }
 
+void GUIEngine::makeNullTexture()
+{
+    glGenTextures(1, &mp_ft->null_texid);
+    glBindTexture(GL_TEXTURE_2D, mp_ft->atlas_texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    const float whitepixel[] = {1.0f, 1.0f, 1.0f};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, whitepixel);
+}
+
+void GUIEngine::compileShaders()
+{
+    // Step 1: Compile vertex and fragment shader
+    GLint status = GL_FALSE;
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader, 1, &s_nkvertexshader, NULL);
+    glCompileShader(vertex_shader);
+    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &status);
+    if (status != GL_TRUE) {
+        char log[1024];
+        glGetShaderInfoLog(vertex_shader, 1024, NULL, log);
+        throw(runtime_error(string("Vertex shader compilation failed: ") + log));
+    }
+
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, &s_nkfragmentshader, NULL);
+    glCompileShader(fragment_shader);
+    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &status);
+    if (status != GL_TRUE) {
+        char log[1024];
+        glGetShaderInfoLog(fragment_shader, 1024, NULL, log);
+        throw(runtime_error(string("Fragment shader compilation failed: ") + log));
+    }
+
+    // Step 2: Link them into a graphics card programme
+    mp_ogl->shaderprog_id = glCreateProgram();
+    glAttachShader(mp_ogl->shaderprog_id, vertex_shader);
+    glAttachShader(mp_ogl->shaderprog_id, fragment_shader);
+    glLinkProgram(mp_ogl->shaderprog_id);
+    glGetProgramiv(mp_ogl->shaderprog_id, GL_LINK_STATUS, &status);
+    if (status != GL_TRUE) {
+        char log[1024];
+        glGetProgramInfoLog(mp_ogl->shaderprog_id, 1024, NULL, log);
+        throw(runtime_error(string("Shader programme failed to link: ") + log));
+    }
+
+    // TODO: Can one just delete those here? Keeping the programme around
+    // should suffice.
+    //glDeleteShader(vertex_shader);
+    //glDeleteShader(fragment_shader);
+
+    /* Step 3: Create an informational object (VAO) that describes how
+     * to transform the raw vertices into input for the vertex shader.
+     * The format of the vertex array is static, thus we canjust add
+     * this description here even though we don't have actual vertex
+     * arrays yet; they will later be provided for each frame by
+     * Nuklear UI (see uploadVertices()). However, as we don't have
+     * the actual vertex arrays yet, the VBO and EBO remain empty at
+     * this point. This is however sufficient for glVertexAttribPointer().
+     * See GUIEngine::Vertex for the layout of the vertices. */
+    glGenBuffers(1, &mp_ogl->vbo_id);
+    glGenBuffers(1, &mp_ogl->ebo_id);
+    glGenVertexArrays(1, &mp_ogl->vao_id);
+
+    // Retrieve locations of all inputs for the vertex shader. Note how
+    // this corresponds to all `in' entries of the vertex shader.
+    // Storing them in `mp_ogl' optimises out the call to glGetAttribLocation()
+    // for each frame which would be necessary otherwise in draw().
+    mp_ogl->position_loc  = glGetAttribLocation(mp_ogl->shaderprog_id, "position");
+    mp_ogl->texcoords_loc = glGetAttribLocation(mp_ogl->shaderprog_id, "texcoords");
+    mp_ogl->color_loc     = glGetAttribLocation(mp_ogl->shaderprog_id, "color");
+
+    // Now do the same for the shaders' uniforms.
+    mp_ogl->texid_loc      = glGetUniformLocation(mp_ogl->shaderprog_id, "Texture");
+
+    // Create the VAO
+    glBindVertexArray(mp_ogl->vao_id);
+    glBindBuffer(GL_ARRAY_BUFFER, mp_ogl->vbo_id);
+    glVertexAttribPointer(mp_ogl->position_loc, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float)+4*sizeof(unsigned char), nullptr);
+    glVertexAttribPointer(mp_ogl->texcoords_loc, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float)+4*sizeof(unsigned char), reinterpret_cast<void*>(2*sizeof(float)));
+    glVertexAttribPointer(mp_ogl->color_loc, 2, GL_UNSIGNED_BYTE, GL_TRUE, 4*sizeof(float)+4*sizeof(unsigned char), reinterpret_cast<void*>(4*sizeof(float)));
+    glEnableVertexAttribArray(mp_ogl->position_loc);
+    glEnableVertexAttribArray(mp_ogl->texcoords_loc);
+    glEnableVertexAttribArray(mp_ogl->color_loc);
+
+    // Leave clean state
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
 void GUIEngine::draw()
 {
     nk_convert_config cfg;
@@ -315,5 +470,86 @@ void GUIEngine::draw()
     cfg.curve_segment_count = 22;
     cfg.arc_segment_count = 22;
     cfg.global_alpha = 1.0f;
-    //cfg.null = dev->null;
+    cfg.null.texture.id = mp_ft->null_texid;
+    cfg.null.uv.x = 0;
+    cfg.null.uv.y = 0;
+
+    // TODO: Move into constructor and re-use the buffers
+    nk_buffer_init_default(&m_nkcmds);
+    nk_buffer_init_default(&m_nkvertices);
+    nk_buffer_init_default(&m_nkelements);
+
+    // Nuklear UI requires some undocumented global OpenGL state changes.
+    // These can be found by looking at the demos provided with it.
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_SCISSOR_TEST);
+
+    // Switch to our nuklear UI shader programme.
+    glUseProgram(mp_ogl->shaderprog_id);
+    glUniform1i(mp_ogl->texid_loc, 0); // Set to NULL texture at the beginning
+
+    // TODO: Move cfg creation into constructor
+    uploadVertices(&cfg);
+
+    const nk_draw_command* p_cmd = nullptr;
+    unsigned int elementno = 0;
+    nk_draw_foreach(p_cmd, &m_nkcontext, &m_nkcmds) {
+        if (!p_cmd->elem_count) {
+            continue;
+        }
+
+        // Copy the configuration from nuklear UI to OpenGL
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(p_cmd->texture.id));
+        //glScissor(static_cast<GLint>(cmd->clip_rect.x),
+        //          static_cast<GLint>(cmd->clip_rect.y),
+        //          static_cast<GLint>(cmd->clip_rect.w),
+        //          static_cast<GLint>(cmd_clip_rect.h));
+
+        // Draw it!
+        glDrawElements(GL_TRIANGLES, p_cmd->elem_count, GL_UNSIGNED_INT, reinterpret_cast<void*>(elementno));
+        elementno += p_cmd->elem_count;
+    };
+
+    // Leave clean state (corresponding binds happened in uploadVertices()),
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    glDisable(GL_BLEND);
+    glDisable(GL_SCISSOR_TEST);
+
+    nk_clear(&m_nkcontext);
+    nk_buffer_clear(&m_nkcmds);
+    nk_buffer_clear(&m_nkvertices);
+    nk_buffer_clear(&m_nkelements);
+    // TODO: Move into destructor and re-use the buffers
+    nk_buffer_free(&m_nkelements);
+    nk_buffer_free(&m_nkvertices);
+    nk_buffer_free(&m_nkcmds);
+}
+
+void GUIEngine::uploadVertices(nk_convert_config* p_cfg)
+{
+    /* Instruct Nuklear UI to output draw commands for this frame
+     * into `m_nkcmds'. All required vertices will be output to
+     * `m_nkvertices' and corresponding vertex indices to `m_nkelements'.
+     * Each command in `m_nkcmds' then contains both some configuration
+     * for the draw command (e.g., active texture) and the number of
+     * indices to consume from `m_nkelements'. The vertex format
+     * in m_nkvertices' is dictated by `p_cfg->vertex_layout'. */
+    nk_convert(&m_nkcontext, &m_nkcmds, &m_nkvertices, &m_nkelements, p_cfg);
+
+    // We will now upload the vertex array contained in `mk_vertices' to
+    // the graphics card, along with the element array contained in
+    // `m_nkelements'. Because we draw this once and then throw it away,
+    // request GL_STREAM_DRAW memory.
+    glBindVertexArray(mp_ogl->vao_id);
+    glBindBuffer(GL_ARRAY_BUFFER,         mp_ogl->vbo_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mp_ogl->ebo_id);
+    glBufferData(GL_ARRAY_BUFFER,         m_nkvertices.memory.size, m_nkvertices.memory.ptr, GL_STREAM_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nkelements.memory.size, m_nkelements.memory.ptr, GL_STREAM_DRAW);
 }

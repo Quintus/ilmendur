@@ -15,12 +15,21 @@ namespace UISystem {
         void draw();
 
         struct FontData;
+        struct OpenGLData;
+        struct Vertex;
     private:
         void buildFontAtlas();
+        void makeNullTexture();
+        void compileShaders();
+        void uploadVertices(nk_convert_config* p_cfg);
 
         nk_context m_nkcontext;
         nk_user_font m_nkfont;
+        nk_buffer m_nkcmds;
+        nk_buffer m_nkvertices;
+        nk_buffer m_nkelements;
         FontData* mp_ft;
+        OpenGLData* mp_ogl;
     };
 
     void testFreetype();

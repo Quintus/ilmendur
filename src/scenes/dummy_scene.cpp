@@ -113,6 +113,11 @@ void DummyScene::update()
     handleJoyInput();
 }
 
+void DummyScene::draw()
+{
+    mp_ui_system->draw();
+}
+
 void DummyScene::handleJoyInput()
 {
     handleCamJoyInput();

@@ -17,6 +17,7 @@ namespace SceneSystem {
 
         virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void update();
+        virtual void draw();
     private:
         void calculateJoyZones();
         void handleJoyInput();

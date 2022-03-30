@@ -260,6 +260,7 @@ void Application::run()
         Ogre::Root::getSingleton().renderOneFrame();
         glfwSwapBuffers(mp_window->getGLFWWindow());
         glfwPollEvents();
+        m_scene_stack.top()->draw();
 
         if (m_scene_stack.top()->isFinishing()) {
             m_scene_stack.pop();
