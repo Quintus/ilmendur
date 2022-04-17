@@ -86,7 +86,7 @@ include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Overlay)
 add_subdirectory(deps)
-add_dependencies(ilmendur ogre3d bullet glfw freetype icu) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
+add_dependencies(ilmendur ogre3d bullet glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
 target_link_libraries(ilmendur ${ILMENDUR_DEPENDENCIES} stdc++fs)
 
 # System-specific libraries are linked dynamically from the host.
