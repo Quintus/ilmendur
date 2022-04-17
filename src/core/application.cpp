@@ -177,6 +177,7 @@ void Application::loadOgreResources()
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/dummy_scene")).u8string(), "FileSystem", "scenes/dummy_scene"); // Ogre convention wants the "General" group to be capitalised
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/test_scene")).u8string(), "FileSystem", "scenes/test_scene");
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("meshes")).u8string(), "FileSystem", "miscmeshes");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("fonts")).u8string(), "FileSystem", "fonts");
 
     // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
@@ -256,7 +257,6 @@ void Application::run()
         //printf("FPS: %.2f\n", m_fps);
 
         m_scene_stack.top()->update();
-        m_scene_stack.top()->draw();
         Ogre::Root::getSingleton().renderOneFrame();
 
         glfwSwapBuffers(mp_window->getGLFWWindow());

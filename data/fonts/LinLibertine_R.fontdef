@@ -1,0 +1,7 @@
+font LinLibertine_R
+{
+    type truetype
+    source "LinLibertine_R.otf"
+    size 20
+    code_points 1-592
+}

@@ -3,7 +3,6 @@
 #include "scene.hpp"
 #include "../physics/physics.hpp"
 #include "../ui/ui.hpp"
-#include <OGRE/Overlay/OgreImGuiOverlay.h>
 
 class StaticGeometry;
 class Freya;
@@ -28,7 +27,6 @@ namespace SceneSystem {
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_camera_target;
         Ogre::SceneNode* mp_cam_node;
-        Ogre::ImGuiOverlay* mp_imgui_overlay;
         StaticGeometry* mp_ground;
         Freya* mp_player;
 
