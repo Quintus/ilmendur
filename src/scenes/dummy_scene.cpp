@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
+#include <OGRE/Overlay/OgreOverlayManager.h>
 #include <OGRE/OgreMath.h>
 #include <btBulletDynamicsCommon.h>
 #include <iostream>
@@ -29,6 +30,7 @@ DummyScene::DummyScene()
       mp_area_node(nullptr),
       mp_camera_target(nullptr),
       mp_cam_node(nullptr),
+      mp_imgui_overlay(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr),
       m_run_threshold(0.0f),
@@ -45,6 +47,10 @@ DummyScene::DummyScene()
 
     // Enable the overlay system for this scene
     mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
+    mp_imgui_overlay = new Ogre::ImGuiOverlay();
+    mp_imgui_overlay->setZOrder(300);
+    mp_imgui_overlay->show();
+    Ogre::OverlayManager::getSingleton().addOverlay(mp_imgui_overlay);
 
     // Sky box
     mp_scene_manager->setSkyBox(true, "testskybox");
@@ -101,6 +107,7 @@ DummyScene::~DummyScene()
     delete mp_physics;
     delete mp_ui_system;
 
+    Ogre::OverlayManager::getSingleton().destroy(mp_imgui_overlay);
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
 }
@@ -115,13 +122,14 @@ void DummyScene::update()
 
 void DummyScene::draw()
 {
-    mp_ui_system->draw();
+    Ogre::ImGuiOverlay::NewFrame();
+    ImGui::ShowDemoWindow();
 }
 
 void DummyScene::handleJoyInput()
 {
-    handleCamJoyInput();
-    handleMoveJoyInput();
+    //handleCamJoyInput();
+    //handleMoveJoyInput();
 }
 
 void DummyScene::handleCamJoyInput()

@@ -217,7 +217,7 @@ list(APPEND ILMENDUR_DEPENDENCIES
 # Considerations:
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
 # - RENDERSYSTEM_GL3PLUS is the modern OpenGL renderer and used instead.
-# - IMGUI is not used, so disable it.
+# - We will use Ogre's built-in IMGUI overlay for keeping things simple.
 # - Bites is Ogre's window and input setup library, hardwired
 #   to use SDL for window and event management. This project does the
 #   system interaction in another way, most notably to circumvent SDL's
@@ -260,7 +260,7 @@ ExternalProject_Add(ogre3d
              -DOGRE_BUILD_RENDERSYSTEM_GL=OFF
              -DOGRE_BUILD_RENDERSYSTEM_GLES2=OFF
              -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=ON
-             -DOGRE_BUILD_COMPONENT_OVERLAY_IMGUI=OFF
+             -DOGRE_BUILD_COMPONENT_OVERLAY_IMGUI=ON
              -DOGRE_BUILD_COMPONENT_BITES=OFF
              -DOGRE_BUILD_PLUGIN_DOT_SCENE=ON
              -DOGRE_BUILD_PLUGIN_STBI=ON

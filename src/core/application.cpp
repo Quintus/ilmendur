@@ -256,9 +256,9 @@ void Application::run()
         //printf("FPS: %.2f\n", m_fps);
 
         m_scene_stack.top()->update();
-
-        Ogre::Root::getSingleton().renderOneFrame();
         m_scene_stack.top()->draw();
+        Ogre::Root::getSingleton().renderOneFrame();
+
         glfwSwapBuffers(mp_window->getGLFWWindow());
         glfwPollEvents();
 
