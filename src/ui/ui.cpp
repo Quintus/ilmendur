@@ -218,6 +218,14 @@ void GUIEngine::buildFontAtlas()
      * texture (>3 GiB with the Linux Libertine font), and that's just
      * a fraction of Unicode. */
 
+    /* TODO: Better approach: At compile time, for each supported language extract
+     * all displayed texts with Gettext. Deconstruct each displayed text with ICU
+     * and thereby collect all characters used by the language; order them by codepoint
+     * index and then render them into a font atlas with freetype, then save that one
+     * as PNG or similar format. At runtime, simply load the PNG font atlas for the
+     * language. Still, bother ICU and Freetype are also needed at runtime, because
+     * they are used to extract the font hinting information (escapement, kerning, ...). */
+
     // Step 2b: Create a 2-dimensional font atlas image in memory.
 
     // Calculate total expanse of the font atlas in pixels. Graphics card drivers generally
@@ -502,6 +510,8 @@ void GUIEngine::draw()
             continue;
         }
 
+        cout << "Drawing " << p_cmd->elem_count << " vertex indices" << endl;
+
         // Copy the configuration from nuklear UI to OpenGL
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(p_cmd->texture.id));
         //glScissor(static_cast<GLint>(cmd->clip_rect.x),
@@ -513,6 +523,8 @@ void GUIEngine::draw()
         glDrawElements(GL_TRIANGLES, p_cmd->elem_count, GL_UNSIGNED_INT, reinterpret_cast<void*>(elementno));
         elementno += p_cmd->elem_count;
     };
+
+    cout << "----------------" << endl;
 
     // Leave clean state (corresponding binds happened in uploadVertices()),
     glBindBuffer(GL_ARRAY_BUFFER, 0);
