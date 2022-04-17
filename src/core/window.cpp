@@ -23,6 +23,8 @@ Window::Window(int width, int height, std::string title)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
     // TODO: Set X11 floating hint on Linux for tiling window managers
     // GLFW has functions to retrieve the native window and display.
     // Screen on today's system is always 0 (nobody uses X anymore to
