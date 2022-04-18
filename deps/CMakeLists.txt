@@ -218,6 +218,11 @@ list(APPEND ILMENDUR_DEPENDENCIES
 # - RENDERSYSTEM_GL is the OpenGL2 renderer. This is not needed.
 # - RENDERSYSTEM_GL3PLUS is the modern OpenGL renderer and used instead.
 # - We will use Ogre's built-in IMGUI overlay for keeping things simple.
+#   Imgui does not have its own build system and how it is built is
+#   hardcoded into Ogre's build system. Thus we cannot download
+#   and configure Imgui ourselves above and will just let Ogre's
+#   build system do it's job. When reading Imgui docs, ensure you
+#   pick those for the version Ogre utilises.
 # - Bites is Ogre's window and input setup library, hardwired
 #   to use SDL for window and event management. This project does the
 #   system interaction in another way, most notably to circumvent SDL's
