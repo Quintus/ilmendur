@@ -276,6 +276,10 @@ void DummyScene::handleMoveJoyInput()
 
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
 {
+    // If Imgui processes the key input, do not process it again.
+    if (mp_ui_system->processKeyInput(key, scancode, action, mods)) {
+        return;
+    }
 
     Ogre::Vector3 dir = mp_cam_node->getOrientation().zAxis() * -1;
     dir.normalise();
@@ -313,6 +317,21 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
         //default:
         // Ignore
     }
+}
+
+void DummyScene::processCharInput(unsigned int codepoint)
+{
+    mp_ui_system->processCharInput(codepoint);
+}
+
+void DummyScene::processMouseButton(int button, int action, int mods)
+{
+    mp_ui_system->processMouseButton(button, action, mods);
+}
+
+void DummyScene::processCursorMove(double xpos, double ypos)
+{
+    mp_ui_system->processCursorMove(xpos, ypos);
 }
 
 /**

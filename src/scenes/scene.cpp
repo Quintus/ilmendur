@@ -93,8 +93,16 @@ void Scene::processKeyInput(int key, int scancode, int action, int mods)
 }
 
 /**
+ * Called from the main loop when Unicode chars are input.
+ * Does nothing by default.
+ */
+void Scene::processCharInput(unsigned int codepoint)
+{
+}
+
+/**
  * Called from the main loop when the mouse cursor is moved.
- * Receives the new position.
+ * Receives the new position. Does nothing by default.
  */
 void Scene::processCursorMove(double xpos, double ypos)
 {
@@ -103,7 +111,7 @@ void Scene::processCursorMove(double xpos, double ypos)
 /**
  * Called from the main loop when the mouse is clicked.
  * Arguments are the same as with GLFW's mouse button input
- * callback.
+ * callback. Does nothing by default.
  */
 void Scene::processMouseButton(int button, int action, int mods)
 {

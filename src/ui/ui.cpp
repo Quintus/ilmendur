@@ -96,11 +96,6 @@ void GUIEngine::update()
     // - sends the current window size to Imgui
     // - Calls ImGui::NewFrame()
     Ogre::ImGuiOverlay::NewFrame();
-
-    double x;
-    double y;
-    glfwGetCursorPos(Core::Application::getSingleton().getWindow().getGLFWWindow(), &x, &y);
-    ImGui::GetIO().MousePos = ImVec2(x, y);
 }
 
 /**
@@ -138,6 +133,13 @@ bool GUIEngine::processKeyInput(int key, int scancode, int action, int mods)
     io.KeyAlt   = (mods & GLFW_MOD_ALT)     == GLFW_MOD_ALT;
     io.KeySuper = (mods & GLFW_MOD_SUPER)   == GLFW_MOD_SUPER;
 
+    return io.WantCaptureKeyboard;
+}
+
+bool GUIEngine::processCharInput(unsigned int codepoint)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddInputCharacter(codepoint);
     return io.WantCaptureKeyboard;
 }
 

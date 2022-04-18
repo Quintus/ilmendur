@@ -24,6 +24,7 @@ namespace SceneSystem {
         Ogre::SceneManager& getSceneManager() const { return *mp_scene_manager; }
 
         virtual void processKeyInput(int key, int scancode, int action, int mods);
+        virtual void processCharInput(unsigned int codepoint);
         virtual void processCursorMove(double xpos, double ypos);
         virtual void processMouseButton(int button, int action, int mods);
         virtual void update() {};

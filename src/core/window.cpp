@@ -40,6 +40,9 @@ Window::Window(int width, int height, std::string title)
 
     glfwSetWindowSizeCallback(mp_glfw_window, Window::onWindowResize);
 
+    // Hide system cursor, Imgui will draw a custom one instead.
+    glfwSetInputMode(mp_glfw_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
     ////////////////////////////////////////
     // Create Ogre window
 

@@ -56,6 +56,14 @@ static void processGLFWKeys(GLFWwindow* p_glfw_window,
         .processKeyInput(key, scancode, action, mods);
 }
 
+static void processGLFWChars(GLFWwindow* p_glfw_window,
+                             unsigned int codepoint)
+{
+    Application::getSingleton()
+        .currentScene()
+        .processCharInput(codepoint);
+}
+
 static void processGLFWCursorMove(GLFWwindow* p_glfw_window,
                                   double xpos, double ypos)
 {
@@ -262,6 +270,7 @@ void Application::run()
 
     // Register GLFW callbacks
     glfwSetKeyCallback(mp_window->getGLFWWindow(), processGLFWKeys);
+    glfwSetCharCallback(mp_window->getGLFWWindow(), processGLFWChars);
     glfwSetCursorPosCallback(mp_window->getGLFWWindow(), processGLFWCursorMove);
     glfwSetMouseButtonCallback(mp_window->getGLFWWindow(), processGLFWMouseButton);
 
