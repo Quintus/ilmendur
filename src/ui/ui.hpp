@@ -9,8 +9,11 @@ namespace UISystem {
         GUIEngine();
         ~GUIEngine();
 
+        bool processKeyInput(int key, int scancode, int action, int mods);
         void update();
     private:
+        static void setClipboardText(void* ptr, const char* text);
+        static const char* getClipboardText(void* ptr);
         Ogre::ImGuiOverlay* mp_imgui_overlay;
     };
 }
