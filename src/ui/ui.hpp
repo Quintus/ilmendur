@@ -10,6 +10,8 @@ namespace UISystem {
         ~GUIEngine();
 
         bool processKeyInput(int key, int scancode, int action, int mods);
+        bool processCursorMove(double xpos, double ypos);
+        bool processMouseButton(int button, int action, int mods);
         void update();
     private:
         static void setClipboardText(void* ptr, const char* text);

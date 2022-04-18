@@ -34,9 +34,11 @@ GUIEngine::GUIEngine()
     io.GetClipboardTextFn = GUIEngine::getClipboardText;
     io.SetClipboardTextFn = GUIEngine::setClipboardText;
 
-    // Keyboard callbacks are registered in Application::run() as they are
+    io.MouseDrawCursor = true;
+
+    // Input callbacks are registered in Application::run() as they are
     // relevant for more than just the UI. The scene is required to call
-    // GUIEngine::processKeyInput() to forward key presses to Imgui.
+    // GUIEngine::process*() to forward inputs to Imgui.
 
 #if defined(_WIN32)
     io.ImeWindowHandle = reinterpret_cast<void*>(glfwGetWin32Window(Core::Application::getSingleton().getWindow().getGLFWWindow()));
@@ -65,7 +67,6 @@ GUIEngine::GUIEngine()
     io.KeyMap[ImGuiKey_X]           = GLFW_KEY_X;
     io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
     io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
-
 }
 
 GUIEngine::~GUIEngine()
@@ -95,6 +96,11 @@ void GUIEngine::update()
     // - sends the current window size to Imgui
     // - Calls ImGui::NewFrame()
     Ogre::ImGuiOverlay::NewFrame();
+
+    double x;
+    double y;
+    glfwGetCursorPos(Core::Application::getSingleton().getWindow().getGLFWWindow(), &x, &y);
+    ImGui::GetIO().MousePos = ImVec2(x, y);
 }
 
 /**
@@ -133,4 +139,29 @@ bool GUIEngine::processKeyInput(int key, int scancode, int action, int mods)
     io.KeySuper = (mods & GLFW_MOD_SUPER)   == GLFW_MOD_SUPER;
 
     return io.WantCaptureKeyboard;
+}
+
+bool GUIEngine::processCursorMove(double xpos, double ypos)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.MousePos.x = xpos;
+    io.MousePos.y = ypos;
+    return io.WantCaptureMouse;
+}
+
+bool GUIEngine::processMouseButton(int button, int action, int mods)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        io.MouseDown[0] = action == GLFW_PRESS;
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        io.MouseDown[1] = action == GLFW_PRESS;
+        break;
+    default:
+        return false;
+    }
+
+    return io.WantCaptureMouse;
 }

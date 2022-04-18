@@ -56,6 +56,22 @@ static void processGLFWKeys(GLFWwindow* p_glfw_window,
         .processKeyInput(key, scancode, action, mods);
 }
 
+static void processGLFWCursorMove(GLFWwindow* p_glfw_window,
+                                  double xpos, double ypos)
+{
+    Application::getSingleton()
+        .currentScene()
+        .processCursorMove(xpos, ypos);
+}
+
+static void processGLFWMouseButton(GLFWwindow* p_glfw_window,
+                                   int button, int action, int mods)
+{
+    Application::getSingleton()
+        .currentScene()
+        .processMouseButton(button, action, mods);
+}
+
 Application::Application()
     : m_fps(0.0f),
       mp_window(nullptr),
@@ -246,6 +262,8 @@ void Application::run()
 
     // Register GLFW callbacks
     glfwSetKeyCallback(mp_window->getGLFWWindow(), processGLFWKeys);
+    glfwSetCursorPosCallback(mp_window->getGLFWWindow(), processGLFWCursorMove);
+    glfwSetMouseButtonCallback(mp_window->getGLFWWindow(), processGLFWMouseButton);
 
     // Main loop
     chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();

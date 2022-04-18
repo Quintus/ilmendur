@@ -91,3 +91,20 @@ void Scene::replaceBlenderEntity(Ogre::SceneNode* p_scene_node, entity_type etyp
 void Scene::processKeyInput(int key, int scancode, int action, int mods)
 {
 }
+
+/**
+ * Called from the main loop when the mouse cursor is moved.
+ * Receives the new position.
+ */
+void Scene::processCursorMove(double xpos, double ypos)
+{
+}
+
+/**
+ * Called from the main loop when the mouse is clicked.
+ * Arguments are the same as with GLFW's mouse button input
+ * callback.
+ */
+void Scene::processMouseButton(int button, int action, int mods)
+{
+}
