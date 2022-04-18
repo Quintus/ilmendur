@@ -113,8 +113,12 @@ void DummyScene::update()
     mp_camera_target->setPosition(mp_player->getSceneNode()->getPosition());
     handleJoyInput();
 
+    // Draw UI
     mp_ui_system->update();
-    ImGui::ShowDemoWindow();
+    ImGui::SetNextWindowPos(ImVec2(1180.0f, 10.0f));
+    ImGui::Begin("(FPS)", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
 }
 
 void DummyScene::draw()
