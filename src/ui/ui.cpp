@@ -6,10 +6,6 @@
 using namespace std;
 using namespace UISystem;
 
-static const int glyphs = 0x00250;
-
-static ImFont* s_font = nullptr;
-
 /**
  * Construct a new GUI engine instance. Ensure the Ogre overlay system
  * is enabled before you call this.
