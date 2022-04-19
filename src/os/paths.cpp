@@ -167,3 +167,19 @@ fs::path OS::ogre_resource_dir()
     }
 #endif
 }
+
+fs::path OS::translations_dir()
+{
+#ifdef ILMENDUR_DEBUG_BUILD
+    // Support running from the build directory in debug mode.
+    // The gettext-catalogues directoy is filled during the built process
+    // by the `podev' target.
+    if (fs::exists(OS::exe_path().parent_path() / fs::u8path("CMakeCache.txt"))) {
+        return OS::exe_path().parent_path() / fs::u8path("gettext-catalogues");
+    } else {
+#endif
+        return OS::game_resource_dir() / fs::u8path("translations");
+#ifdef ILMENDUR_DEBUG_BUILD
+    }
+#endif
+}

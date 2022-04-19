@@ -21,6 +21,7 @@ namespace OS {
 
     std::filesystem::path game_resource_dir(); //< Path to game data resource directory
     std::filesystem::path ogre_resource_dir(); //< Path to directory with ogre-internal resources
+    std::filesystem::path translations_dir();  //< Path to the compiled Gettext catalogues directory
 }
 
 #endif /* ILMENDUR_OS_PATHS_HPP */

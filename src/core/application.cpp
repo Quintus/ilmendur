@@ -85,9 +85,20 @@ Application::Application()
       mp_window(nullptr),
       mp_sglistener(nullptr)
 {
-    if (sp_application) {
-        throw(runtime_error("There can only be one Application instance!"));
-    }
+    assert(!sp_application); // There can only be one application instance
+    //locale::global(locale(""));
+    const char* locname = setlocale(LC_ALL, "");
+    assert(locname);
+
+    // Setup Internationalisation (i18n) support
+    const char* tbasedir = bindtextdomain(ILMENDUR_GETTEXT_DOMAIN, OS::translations_dir().u8string().c_str());
+    assert(tbasedir);
+
+    const char* tcharset = bind_textdomain_codeset(ILMENDUR_GETTEXT_DOMAIN, "UTF-8");
+    assert(tcharset);
+
+    const char* tdomain = textdomain(ILMENDUR_GETTEXT_DOMAIN);
+    assert(tdomain);
 
     cout << "  ( )   ___    __     __ _____ _   ___ _____   ___  ___ ____" << endl
          << " <   >  | |    | \\   / | | __| |\\  | | |    \\  | |  | | |   \\" << endl
@@ -105,6 +116,12 @@ Application::Application()
     }
 
     cout << "Welcome, adventurer." << endl;
+
+    cout << "Gettext information: " << endl
+         << "    Active locale: " << locname << endl
+         << "    Bound translations directory: " << tbasedir << endl
+         << "    Text domain: " << tdomain << endl
+         << "    Domain charset: " << tcharset << endl;
 
     setupGlfw();
     setupOgre();

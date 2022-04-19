@@ -31,6 +31,11 @@ project(ILMENDUR
   LANGUAGES C CXX)
 
 ########################################
+# Flags and options
+
+option(ENABLE_NLS "Enable native language support (most notably translations)" ON)
+
+########################################
 # Configuring the compiler
 
 # Use standards-compliant C++
@@ -57,6 +62,20 @@ endif()
 
 file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.c" "src/*.hpp" "src/*.h")
 add_executable(ilmendur ${ilmendur_sources})
+
+if (ENABLE_NLS)
+  find_package(Gettext REQUIRED)
+  find_package(Intl REQUIRED)
+  target_link_libraries(ilmendur ${INTL_LIBRARIES})
+  set(ILMENDUR_GETTEXT_DOMAIN "Ilmendur")
+
+  file(GLOB po_files "data/translations/*.po")
+  gettext_process_po_files(languages PO_FILES ${po_files})
+  # Note: gettext_process_po_files() places the .gmo files directly in ${CMAKE_BINARY_DIR}
+  add_custom_target(podev ${CMAKE_COMMAND} -DILMENDUR_GETTEXT_DOMAIN=${ILMENDUR_GETTEXT_DOMAIN} -DPO_FILES=${po_files} -P ${CMAKE_SOURCE_DIR}/cmake/copy_pofiles.cmake
+    DEPENDS pofiles)
+  add_dependencies(ilmendur podev)
+endif()
 
 ########################################
 # Dependencies
@@ -86,7 +105,7 @@ include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Plugins/DotScene
                     ${ILMENDUR_DEPS_INSTALL_DIR}/include/OGRE/Overlay)
 add_subdirectory(deps)
-add_dependencies(ilmendur ogre3d bullet glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries()
+add_dependencies(ilmendur ogre3d bullet glfw) # Doing it explicitely because ExternalProject targets don't work in target_link_libraries(), just like the result of gettext_process_po_files
 target_link_libraries(ilmendur ${ILMENDUR_DEPENDENCIES} stdc++fs)
 
 # System-specific libraries are linked dynamically from the host.

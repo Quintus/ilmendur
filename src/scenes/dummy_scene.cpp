@@ -4,6 +4,7 @@
 #include "../core/window.hpp"
 #include "../core/game_state.hpp"
 #include "../core/timer.hpp"
+#include "../core/i18n.hpp"
 #include "../audio/music.hpp"
 #include "../actors/static_geometry.hpp"
 #include "../actors/freya.hpp"
@@ -117,7 +118,8 @@ void DummyScene::update()
     mp_ui_system->update();
     ImGui::SetNextWindowPos(ImVec2(1180.0f, 10.0f));
     ImGui::Begin("(FPS)", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    // TRANS: FPS = "Frames Per Second"
+    ImGui::Text(_("FPS: %.1f"), ImGui::GetIO().Framerate);
     ImGui::End();
 }
 
