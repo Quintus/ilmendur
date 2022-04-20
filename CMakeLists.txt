@@ -63,20 +63,6 @@ endif()
 file(GLOB_RECURSE ilmendur_sources "src/*.cpp" "src/*.c" "src/*.hpp" "src/*.h")
 add_executable(ilmendur ${ilmendur_sources})
 
-if (ENABLE_NLS)
-  find_package(Gettext REQUIRED)
-  find_package(Intl REQUIRED)
-  target_link_libraries(ilmendur ${INTL_LIBRARIES})
-  set(ILMENDUR_GETTEXT_DOMAIN "Ilmendur")
-
-  file(GLOB po_files "data/translations/*.po")
-  gettext_process_po_files(languages PO_FILES ${po_files})
-  # Note: gettext_process_po_files() places the .gmo files directly in ${CMAKE_BINARY_DIR}
-  add_custom_target(podev ${CMAKE_COMMAND} -DILMENDUR_GETTEXT_DOMAIN=${ILMENDUR_GETTEXT_DOMAIN} -DPO_FILES=${po_files} -P ${CMAKE_SOURCE_DIR}/cmake/copy_pofiles.cmake
-    DEPENDS pofiles)
-  add_dependencies(ilmendur podev)
-endif()
-
 ########################################
 # Dependencies
 
@@ -153,6 +139,31 @@ install(TARGETS ilmendur DESTINATION ${CMAKE_INSTALL_BINDIR})
 # OS::game_resource_dir() and OS::ogre_resource_dir().
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur)
 install(DIRECTORY "${ILMENDUR_DEPS_SRC_DIR}/ogre/Media/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur/ogre)
+
+########################################
+# Native language support
+
+if (ENABLE_NLS)
+  find_package(Gettext REQUIRED)
+  find_package(Intl REQUIRED)
+  target_link_libraries(ilmendur ${INTL_LIBRARIES})
+
+  set(ILMENDUR_GETTEXT_DOMAIN "Ilmendur")
+  file(GLOB po_files "data/translations/*.po")
+  gettext_process_po_files(languages PO_FILES ${po_files})
+
+  # gettext_process_po_files() places the .gmo files directly in ${CMAKE_BINARY_DIR}.
+  # This is not how bindtextdomain() requires it. The `podev' custom target caters
+  # for this, and as a bonus the `gettext-catalogues' directory created during the
+  # build process allows the catalogues to be used when Ilmendur is run from the
+  # build directory.
+  add_custom_target(podev ${CMAKE_COMMAND} -DILMENDUR_GETTEXT_DOMAIN=${ILMENDUR_GETTEXT_DOMAIN} -DPO_FILES=${po_files} -P ${CMAKE_SOURCE_DIR}/cmake/copy_pofiles.cmake
+    DEPENDS pofiles)
+  add_dependencies(ilmendur podev)
+
+  install(DIRECTORY "${CMAKE_BINARY_DIR}/gettext-catalogues/"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur/translations)
+endif()
 
 ########################################
 # Build configuration header

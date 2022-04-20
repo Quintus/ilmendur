@@ -8,9 +8,9 @@
 # Pass these parameters:
 #   - ILMENDUR_GETTEXT_DOMAIN
 #   - PO_FILES
-message(STATUS "Copying .gmo files to .mo in bindtextdomain() directory structure for ${ILMENDUR_GETTEXT_DOMAIN} domain")
 foreach(pofile ${PO_FILES})
   get_filename_component(lang ${pofile} NAME_WE)
+  message(STATUS "Copying ${lang}.gmo to gettext-catalogue directory structure for ${ILMENDUR_GETTEXT_DOMAIN} domain")
 
   file(COPY ${CMAKE_BINARY_DIR}/${lang}.gmo
     DESTINATION "${CMAKE_BINARY_DIR}/gettext-catalogues/${lang}/LC_MESSAGES")
