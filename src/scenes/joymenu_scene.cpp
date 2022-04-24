@@ -20,10 +20,13 @@ static void centreCursorForTextX(const char* text)
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x) / 2.0);
 }
 
-/// Calculate the ImGui cursor Y start position so that an ImGui::Text
-/// will come out exactly at the centre of the vertical table space,
-/// provided that the table cell is CTRL_WIDGET_HEIGHT pixels high.
-static void centreCursorForTextY(const char* text)
+/** Calculate the ImGui cursor Y start position so that an ImGui::Text
+ * will come out exactly at the centre of the vertical table space,
+ * provided that the table cell is CTRL_WIDGET_HEIGHT pixels high.
+ * The centering is calculated based on the font size of the active
+ * Imgui font. This might be a little off the actual vertical centre,
+ * but it should be sufficient. */
+static void centreCursorForTextY()
 {
     ImFont* p_font = ImGui::GetFont();
     assert(p_font);
@@ -114,20 +117,20 @@ void JoymenuScene::update()
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-    centreCursorForTextY("X-");
+    centreCursorForTextY();
     ImGui::Text("X-");
     ImGui::TableSetColumnIndex(1);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
-    centreCursorForTextY("X+");
+    centreCursorForTextY();
     ImGui::Text("X+");
     ImGui::TableSetColumnIndex(3);
-    centreCursorForTextY("X-");
+    centreCursorForTextY();
     ImGui::Text("X-");
     ImGui::TableSetColumnIndex(4);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(5);
-    centreCursorForTextY("X+");
+    centreCursorForTextY();
     ImGui::Text("X+");
 
     ImGui::TableNextRow();
@@ -156,20 +159,20 @@ void JoymenuScene::update()
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-    centreCursorForTextY("7");
+    centreCursorForTextY();
     ImGui::Text("7");
     ImGui::TableSetColumnIndex(1);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
-    centreCursorForTextY("5");
+    centreCursorForTextY();
     ImGui::Text("5");
     ImGui::TableSetColumnIndex(3);
-    centreCursorForTextY("2");
+    centreCursorForTextY();
     ImGui::Text("2");
     ImGui::TableSetColumnIndex(4);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(5);
-    centreCursorForTextY("3");
+    centreCursorForTextY();
     ImGui::Text("3");
 
     ImGui::TableNextRow();
@@ -190,12 +193,12 @@ void JoymenuScene::update()
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-    centreCursorForTextY("5");
+    centreCursorForTextY();
     ImGui::Text("5");
     ImGui::TableSetColumnIndex(1);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
-    centreCursorForTextY("6");
+    centreCursorForTextY();
     ImGui::Text("6");
     ImGui::TableSetColumnIndex(4);
     ImGui::Text("[MENU]");
