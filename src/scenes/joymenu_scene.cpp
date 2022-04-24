@@ -101,11 +101,11 @@ void JoymenuScene::update()
     ImGui::BeginTable("table", 6, ImGuiTableFlags_SizingFixedFit);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
-    centreCursorForTextX("Steering");
-    ImGui::Text("Steering");
+    centreCursorForTextX(_("Steering"));
+    ImGui::Text(_("Steering"));
     ImGui::TableSetColumnIndex(4);
-    centreCursorForTextX("Camera");
-    ImGui::Text("Camera");
+    centreCursorForTextX(_("Camera"));
+    ImGui::Text(_("Camera"));
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
@@ -143,11 +143,11 @@ void JoymenuScene::update()
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
-    centreCursorForTextX("Items/Action");
-    ImGui::Text("Items/Action");
+    centreCursorForTextX(_("Items/Action"));
+    ImGui::Text(_("Items/Action"));
     ImGui::TableSetColumnIndex(4);
-    centreCursorForTextX("Spells");
-    ImGui::Text("Spells");
+    centreCursorForTextX(_("Spells"));
+    ImGui::Text(_("Spells"));
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
@@ -185,11 +185,12 @@ void JoymenuScene::update()
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
-    centreCursorForTextX("Attack/Defence");
-    ImGui::Text("Attack/Defence");
+    centreCursorForTextX(_("Attack/Defence"));
+    ImGui::Text(_("Attack/Defence"));
     ImGui::TableSetColumnIndex(4);
-    centreCursorForTextX("Other");
-    ImGui::Text("Other");
+    // TRANS: Heading for miscellaneous controls in the joystick config menu
+    centreCursorForTextX(_("Other"));
+    ImGui::Text(_("Other"));
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -201,18 +202,19 @@ void JoymenuScene::update()
     centreCursorForTextY();
     ImGui::Text("6");
     ImGui::TableSetColumnIndex(4);
-    ImGui::Text("[MENU]");
-    ImGui::Text("[HUD]");
+    // TRANS: Label for the Menu button, keep the brackets
+    ImGui::Text(_("[MENU]"));
+    // TRANS: Label for the HUD (= Head Up Display) button, keep the brackets
+    ImGui::Text(_("[HUD]"));
     ImGui::TableSetColumnIndex(5);
     ImGui::Text("9");
     ImGui::Text("8");
     ImGui::EndTable();
 
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Save Configuration").x - ImGui::GetStyle().FramePadding.x - 5);
-    ImGui::Button("Save Configuration");
+    ImGui::Button(_("Save Configuration"));
 
     ImGui::End();
-    //ImGui::ShowDemoWindow();
 }
 
 void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)
