@@ -4,6 +4,7 @@
 #include "game_state.hpp"
 #include "../os/paths.hpp"
 #include "../scenes/dummy_scene.hpp"
+#include "../scenes/joymenu_scene.hpp"
 #include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
@@ -219,6 +220,7 @@ void Application::loadOgreResources()
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("scenes/test_scene")).u8string(), "FileSystem", "scenes/test_scene");
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("meshes")).u8string(), "FileSystem", "miscmeshes");
     Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("fonts")).u8string(), "FileSystem", "fonts");
+    Ogre::ResourceGroupManager::getSingleton().addResourceLocation((ilmendur_resource_dir / fs::u8path("ui")).u8string(), "FileSystem", "ui");
 
     // Initialise all the groups that have been added above
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
@@ -283,7 +285,12 @@ void Application::run()
     loadOgreResources();
 
     // For now, only display the dummy scene
-    m_scene_stack.push(move(make_unique<SceneSystem::DummyScene>()));
+    //m_scene_stack.push(move(make_unique<SceneSystem::DummyScene>()));
+    m_scene_stack.push(move(make_unique<SceneSystem::JoymenuScene>()));
+
+    // TODO: If there is a savegame file, load it and read the joystick
+    // configuration from it. Otherwise, additionally push the joystick
+    // configuration scene onto the stack.
 
     // Register GLFW callbacks
     glfwSetKeyCallback(mp_window->getGLFWWindow(), processGLFWKeys);
