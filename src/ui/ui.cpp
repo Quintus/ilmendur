@@ -15,11 +15,14 @@ using namespace UISystem;
  */
 GUIEngine::GUIEngine()
 {
+    // General setup
     mp_imgui_overlay = new Ogre::ImGuiOverlay();
     mp_imgui_overlay->setZOrder(300);
     mp_imgui_overlay->addFont("LinLibertine_R", "fonts");
     mp_imgui_overlay->show();
     Ogre::OverlayManager::getSingleton().addOverlay(mp_imgui_overlay);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowTitleAlign, ImVec2(0.5f, 0.5f));
 
     /* Since Ilmendur does not use OgreBrites, Ogre's SDL bridge,
      * Imgui needs some manual care here. Refer to the Imgui docs
