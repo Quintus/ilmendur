@@ -7,8 +7,29 @@
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
 
+// Height of the images displayed for the control buttons, etc.
+#define CTRL_WIDGET_HEIGHT 128.0f
+
 using namespace std;
 using namespace SceneSystem;
+
+/// Calculate the ImGui cursor X start position so that an ImGui::Text
+/// will come out exactly at the centre of the available horizontal space.
+static void centreCursorForTextX(const char* text)
+{
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(text).x) / 2.0);
+}
+
+/// Calculate the ImGui cursor Y start position so that an ImGui::Text
+/// will come out exactly at the centre of the vertical table space,
+/// provided that the table cell is CTRL_WIDGET_HEIGHT pixels high.
+static void centreCursorForTextY(const char* text)
+{
+    ImFont* p_font = ImGui::GetFont();
+    assert(p_font);
+
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (CTRL_WIDGET_HEIGHT - p_font->FontSize) / 2.0);
+}
 
 JoymenuScene::JoymenuScene()
     : Scene("Joystick configuration menu scene"),
@@ -74,83 +95,107 @@ void JoymenuScene::update()
         ImGui::EndCombo();
     }
 
-    ImGui::BeginTable("table", 6, ImGuiTableFlags_Borders|ImGuiTableFlags_SizingFixedFit);
+    ImGui::BeginTable("table", 6, ImGuiTableFlags_SizingFixedFit);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("Steering");
     ImGui::Text("Steering");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("Camera");
     ImGui::Text("Camera");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("Y-");
     ImGui::Text("Y-");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("Y-");
     ImGui::Text("Y-");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
+    centreCursorForTextY("X-");
     ImGui::Text("X-");
     ImGui::TableSetColumnIndex(1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(128.0f, 128.0f));
+    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
+    centreCursorForTextY("X+");
     ImGui::Text("X+");
     ImGui::TableSetColumnIndex(3);
+    centreCursorForTextY("X-");
     ImGui::Text("X-");
     ImGui::TableSetColumnIndex(4);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(128.0f, 128.0f));
+    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(5);
+    centreCursorForTextY("X+");
     ImGui::Text("X+");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("Y+");
     ImGui::Text("Y+");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("Y+");
     ImGui::Text("Y+");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("Items/Action");
     ImGui::Text("Items/Action");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("Spells");
     ImGui::Text("Spells");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("6");
     ImGui::Text("6");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("1");
     ImGui::Text("1");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
+    centreCursorForTextY("7");
     ImGui::Text("7");
     ImGui::TableSetColumnIndex(1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(128.0f, 128.0f));
+    ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
+    centreCursorForTextY("5");
     ImGui::Text("5");
     ImGui::TableSetColumnIndex(3);
+    centreCursorForTextY("2");
     ImGui::Text("2");
     ImGui::TableSetColumnIndex(4);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(128.0f, 128.0f));
+    ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(5);
+    centreCursorForTextY("3");
     ImGui::Text("3");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("1");
     ImGui::Text("1");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("4");
     ImGui::Text("4");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
+    centreCursorForTextX("Attack/Defence");
     ImGui::Text("Attack/Defence");
     ImGui::TableSetColumnIndex(4);
+    centreCursorForTextX("Other");
     ImGui::Text("Other");
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
+    centreCursorForTextY("5");
     ImGui::Text("5");
     ImGui::TableSetColumnIndex(1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(128.0f, 128.0f));
+    ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     ImGui::TableSetColumnIndex(2);
+    centreCursorForTextY("6");
     ImGui::Text("6");
     ImGui::TableSetColumnIndex(4);
     ImGui::Text("[MENU]");
@@ -160,6 +205,7 @@ void JoymenuScene::update()
     ImGui::Text("8");
     ImGui::EndTable();
 
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Save Configuration").x - ImGui::GetStyle().FramePadding.x - 5);
     ImGui::Button("Save Configuration");
 
     ImGui::End();
