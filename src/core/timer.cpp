@@ -31,7 +31,7 @@ Timer::Timer(float duration, bool repeat, std::function<void()> cb)
  * Update the timer’s internal state. Call this once per frame.
  * When the configured time has passed, it will execute the
  * stored callback. Subsequent calls to update() are a no-nop,
- * unless the timer has been configured a repeating timer.
+ * unless the timer has been configured as a repeating timer.
  */
 void Timer::update()
 {
@@ -47,4 +47,18 @@ void Timer::update()
         m_frames = 0;
         m_cb();
     }
+}
+
+/**
+ * Returns the amount of time passed since the timer was started.
+ * The returned value is in seconds and only an approximation based
+ * on the FPS at call time.
+ */
+float Timer::passedTime()
+{
+    if (m_fired) {
+        return 0.0f;
+    }
+
+    return static_cast<float>(m_frames) / Application::getSingleton().getFPS();
 }

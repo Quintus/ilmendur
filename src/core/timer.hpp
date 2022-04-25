@@ -27,6 +27,7 @@ namespace Core {
     public:
         Timer(float duration, bool repeat, std::function<void()> cb);
         void update();
+        float passedTime();
     private:
         float m_frequency;
         int m_frames;
