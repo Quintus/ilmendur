@@ -2,10 +2,12 @@
 #include "../core/application.hpp"
 #include "../core/window.hpp"
 #include "../core/i18n.hpp"
+#include "../core/timer.hpp"
 #include <OGRE/OgreTextureManager.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 // Height of the images displayed for the control buttons, etc.
 #define CTRL_WIDGET_HEIGHT 128.0f
@@ -38,9 +40,12 @@ JoymenuScene::JoymenuScene()
     : Scene("Joystick configuration menu scene"),
       mp_ui_system(nullptr),
       m_crossedcircle_tex(0),
+      m_crossedcircle_yellow_tex(0),
       m_steercross_tex(0),
       m_buttons_tex(0),
-      m_shoulderbuttons_tex(0)
+      m_shoulderbuttons_tex(0),
+      mp_config_timer(nullptr),
+      m_joyconfig_stage(joyconfig_stage::none)
 {
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -61,6 +66,10 @@ JoymenuScene::JoymenuScene()
     assert(ptr);
     m_crossedcircle_tex = ptr->getHandle();
 
+    ptr = Ogre::TextureManager::getSingleton().load("crossedcircle-yellow.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
+    assert(ptr);
+    m_crossedcircle_yellow_tex = ptr->getHandle();
+
     ptr = Ogre::TextureManager::getSingleton().load("steeringcross.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
     m_steercross_tex = ptr->getHandle();
@@ -76,6 +85,11 @@ JoymenuScene::JoymenuScene()
 
 JoymenuScene::~JoymenuScene()
 {
+    if (mp_config_timer) {
+        delete mp_config_timer;
+        mp_config_timer = nullptr;
+    }
+
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
     delete mp_ui_system;
@@ -83,13 +97,16 @@ JoymenuScene::~JoymenuScene()
 
 void JoymenuScene::update()
 {
+    if (mp_config_timer) {
+        mp_config_timer->update();
+    }
+
     mp_ui_system->update();
     ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
     ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
     ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-    ImGui::Text("Gamepad to use:");
 
-    if (ImGui::BeginCombo("", "Select gamepad")) { // Returns true only if the element is opened
+    if (ImGui::BeginCombo("", _("Select gamepad to use"))) { // Returns true only if the element is opened
         for(int i=0; i < 16; i++) {
             if (glfwJoystickPresent(i)) {
                 ImGui::Selectable((to_string(i+1) + ": " + glfwGetJoystickName(i)).c_str(), false);
@@ -120,7 +137,18 @@ void JoymenuScene::update()
     centreCursorForTextY();
     ImGui::Text("X-");
     ImGui::TableSetColumnIndex(1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    ImVec2 currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_yellow_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_joyconfig_stage = joyconfig_stage::vertical;
+    }
     ImGui::TableSetColumnIndex(2);
     centreCursorForTextY();
     ImGui::Text("X+");
@@ -215,6 +243,65 @@ void JoymenuScene::update()
     ImGui::Button(_("Save Configuration"));
 
     ImGui::End();
+
+    switch (m_joyconfig_stage) {
+    case joyconfig_stage::none:
+        break;
+    case joyconfig_stage::vertical:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining vertical MOVEMENT axis. Please press UP until the next prompt appears."));
+        ImGui::End();
+
+        if (mp_config_timer) {
+            // TODO: Tick timer down
+        } else {
+            mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                // TODO: query axis
+                delete mp_config_timer;
+                mp_config_timer = nullptr;
+                m_joyconfig_stage = joyconfig_stage::horizontal;
+            });
+        }
+
+        break;
+    case joyconfig_stage::horizontal:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining horizontal MOVEMENT axis. Please press RIGHT until the next prompt appears."));
+        ImGui::End();
+
+        if (mp_config_timer) {
+            // TODO: Tick timer down
+        } else {
+            mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                // TODO: query axis
+                delete mp_config_timer;
+                mp_config_timer = nullptr;
+                m_joyconfig_stage = joyconfig_stage::dead_zone;
+            });
+        }
+        break;
+    case joyconfig_stage::dead_zone:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining dead zone on MOVEMENT axes. Please press NOTHING until the next prompt appears."));
+        ImGui::End();
+
+        if (mp_config_timer) {
+            // TODO: Tick timer down
+        } else {
+            mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                // TODO: query axis
+                delete mp_config_timer;
+                mp_config_timer = nullptr;
+                m_joyconfig_stage = joyconfig_stage::none;
+            });
+        }
+    } // No default to have the compiler warn on missing items
 }
 
 void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)
