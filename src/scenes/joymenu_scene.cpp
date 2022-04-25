@@ -3,6 +3,7 @@
 #include "../core/window.hpp"
 #include "../core/i18n.hpp"
 #include "../core/timer.hpp"
+#include "../core/game_state.hpp"
 #include <OGRE/OgreTextureManager.h>
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
@@ -100,8 +101,96 @@ void JoymenuScene::update()
     if (mp_config_timer) {
         mp_config_timer->update();
     }
+    updateUI();
+}
 
+void JoymenuScene::updateUI()
+{
     mp_ui_system->update();
+    updateGamepadConfigUI(Core::FREYA);
+
+    switch (m_joyconfig_stage) {
+    case joyconfig_stage::none:
+        break;
+    case joyconfig_stage::neutral:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining neutral positions. Please do not touch your joystick until the next prompt appears."));
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                    // TODO: query axis
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::vertical;
+                });
+            }
+        }
+
+        ImGui::End();
+
+        break;
+    case joyconfig_stage::vertical:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining vertical MOVEMENT axis. Please press UP until the next prompt appears."));
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                    // TODO: query axis
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::horizontal;
+                });
+            }
+        }
+
+        ImGui::End();
+        break;
+    case joyconfig_stage::horizontal:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining horizontal MOVEMENT axis. Please press RIGHT until this prompt disappears."));
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Core::Timer(5000.0, false, [&](){
+                    // TODO: query axis
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::none;
+                });
+            }
+        }
+
+        ImGui::End();
+        break;
+    } // No default to have the compiler warn on missing items
+}
+
+void JoymenuScene::updateGamepadConfigUI(int player)
+{
+    // TODO: Honor "player"
     ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
     ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
     ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
@@ -147,7 +236,7 @@ void JoymenuScene::update()
         ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-        m_joyconfig_stage = joyconfig_stage::vertical;
+        m_joyconfig_stage = joyconfig_stage::neutral;
     }
     ImGui::TableSetColumnIndex(2);
     centreCursorForTextY();
@@ -243,65 +332,6 @@ void JoymenuScene::update()
     ImGui::Button(_("Save Configuration"));
 
     ImGui::End();
-
-    switch (m_joyconfig_stage) {
-    case joyconfig_stage::none:
-        break;
-    case joyconfig_stage::vertical:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining vertical MOVEMENT axis. Please press UP until the next prompt appears."));
-        ImGui::End();
-
-        if (mp_config_timer) {
-            // TODO: Tick timer down
-        } else {
-            mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                // TODO: query axis
-                delete mp_config_timer;
-                mp_config_timer = nullptr;
-                m_joyconfig_stage = joyconfig_stage::horizontal;
-            });
-        }
-
-        break;
-    case joyconfig_stage::horizontal:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining horizontal MOVEMENT axis. Please press RIGHT until the next prompt appears."));
-        ImGui::End();
-
-        if (mp_config_timer) {
-            // TODO: Tick timer down
-        } else {
-            mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                // TODO: query axis
-                delete mp_config_timer;
-                mp_config_timer = nullptr;
-                m_joyconfig_stage = joyconfig_stage::dead_zone;
-            });
-        }
-        break;
-    case joyconfig_stage::dead_zone:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 100.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining dead zone on MOVEMENT axes. Please press NOTHING until the next prompt appears."));
-        ImGui::End();
-
-        if (mp_config_timer) {
-            // TODO: Tick timer down
-        } else {
-            mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                // TODO: query axis
-                delete mp_config_timer;
-                mp_config_timer = nullptr;
-                m_joyconfig_stage = joyconfig_stage::none;
-            });
-        }
-    } // No default to have the compiler warn on missing items
 }
 
 void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)

@@ -30,11 +30,14 @@ namespace SceneSystem {
 
         enum class joyconfig_stage {
             none = 0,
+            neutral,
             vertical,
-            horizontal,
-            dead_zone
+            horizontal
         };
         joyconfig_stage m_joyconfig_stage;
+
+        void updateUI();
+        void updateGamepadConfigUI(int player);
     };
 
 }
