@@ -9,12 +9,14 @@
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <cstdio>
 
 // Height of the images displayed for the control buttons, etc.
 #define CTRL_WIDGET_HEIGHT 128.0f
 
 using namespace std;
 using namespace SceneSystem;
+using namespace Core;
 
 /// Calculate the ImGui cursor X start position so that an ImGui::Text
 /// will come out exactly at the centre of the available horizontal space.
@@ -37,6 +39,22 @@ static void centreCursorForTextY()
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (CTRL_WIDGET_HEIGHT - p_font->FontSize) / 2.0);
 }
 
+static void findChangedAxis(const int& len, const float neutral_joyaxes[], const float joyaxes[], int& axisno, float& limit)
+{
+    static float tolerance = 0.25f; // Reading from the joystick will not yield always the exact same values even if the sticks are left alone. Allow some tolerance.
+    assert(len > 0);
+
+    for(int i=0; i < len; i++) {
+        printf("Axis %d has %.2f at neutral and %.2f now\n", i, neutral_joyaxes[i], joyaxes[i]);
+        if (fabs(neutral_joyaxes[i] - joyaxes[i]) > tolerance) {
+            printf(">>> Axis %d differs from neutral position\n", i);
+            axisno = i;
+            limit = joyaxes[i];
+            return;
+        }
+    }
+}
+
 JoymenuScene::JoymenuScene()
     : Scene("Joystick configuration menu scene"),
       mp_ui_system(nullptr),
@@ -46,7 +64,8 @@ JoymenuScene::JoymenuScene()
       m_buttons_tex(0),
       m_shoulderbuttons_tex(0),
       mp_config_timer(nullptr),
-      m_joyconfig_stage(joyconfig_stage::none)
+      m_joyconfig_stage(joyconfig_stage::none),
+      mp_neutral_joyaxes(nullptr)
 {
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -61,7 +80,7 @@ JoymenuScene::JoymenuScene()
     Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
     p_camera->setNearClipDistance(0.1);
     p_camera->setAutoAspectRatio(true);
-    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
+    Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
 
     Ogre::TexturePtr ptr = Ogre::TextureManager::getSingleton().load("crossedcircle.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
@@ -90,8 +109,11 @@ JoymenuScene::~JoymenuScene()
         delete mp_config_timer;
         mp_config_timer = nullptr;
     }
+    if (mp_neutral_joyaxes) {
+        delete[] mp_neutral_joyaxes;
+    }
 
-    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
+    Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
     delete mp_ui_system;
 }
@@ -107,7 +129,7 @@ void JoymenuScene::update()
 void JoymenuScene::updateUI()
 {
     mp_ui_system->update();
-    updateGamepadConfigUI(Core::FREYA);
+    updateGamepadConfigUI(FREYA);
 
     switch (m_joyconfig_stage) {
     case joyconfig_stage::none:
@@ -125,8 +147,19 @@ void JoymenuScene::updateUI()
         } else {
             centreCursorForTextX(_("Start"));
             if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                    // TODO: query axis
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // Clear memory from previous run, if any
+                    if (mp_neutral_joyaxes) {
+                        delete[] mp_neutral_joyaxes;
+                    }
+
+                    // Read neutral axes positions and remember them for later
+                    int axescount = 0;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    mp_neutral_joyaxes = new float[axescount];
+                    memcpy(mp_neutral_joyaxes, joyaxes, sizeof(float) * axescount);
+
+                    // Advance to next config stage
                     delete mp_config_timer;
                     mp_config_timer = nullptr;
                     m_joyconfig_stage = joyconfig_stage::vertical;
@@ -150,8 +183,17 @@ void JoymenuScene::updateUI()
         } else {
             centreCursorForTextX(_("Start"));
             if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                    // TODO: query axis
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // The changed axis is the vertical axis
+                    int axis = 0;
+                    int axescount = 0;
+                    float axislimit = 0.0f;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+                    GameState::instance.config[FREYA].joy_vertical.axisno = axis;
+                    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
+
+                    // Advance to next config stage
                     delete mp_config_timer;
                     mp_config_timer = nullptr;
                     m_joyconfig_stage = joyconfig_stage::horizontal;
@@ -174,8 +216,17 @@ void JoymenuScene::updateUI()
         } else {
             centreCursorForTextX(_("Start"));
             if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Core::Timer(5000.0, false, [&](){
-                    // TODO: query axis
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // The changed axis is the horizontal axis
+                    int axis = 0;
+                    int axescount = 0;
+                    float axislimit = 0.0f;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+                    GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
+                    GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
+
+                    // End config stages
                     delete mp_config_timer;
                     mp_config_timer = nullptr;
                     m_joyconfig_stage = joyconfig_stage::none;
@@ -190,7 +241,7 @@ void JoymenuScene::updateUI()
 
 void JoymenuScene::updateGamepadConfigUI(int player)
 {
-    // TODO: Honor "player"
+    // TODO: Honour "player"
     ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
     ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
     ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
@@ -204,6 +255,8 @@ void JoymenuScene::updateGamepadConfigUI(int player)
         ImGui::EndCombo();
     }
 
+    const auto& plyconf = GameState::instance.config[FREYA];
+
     ImGui::BeginTable("table", 6, ImGuiTableFlags_SizingFixedFit);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
@@ -215,8 +268,9 @@ void JoymenuScene::updateGamepadConfigUI(int player)
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
-    centreCursorForTextX("Y-");
-    ImGui::Text("Y-");
+    string str = to_string(plyconf.joy_vertical.axisno) + (plyconf.joy_vertical.inverted ? "+" : "-");
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(4);
     centreCursorForTextX("Y-");
     ImGui::Text("Y-");
@@ -224,7 +278,8 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     centreCursorForTextY();
-    ImGui::Text("X-");
+    str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "+" : "-");
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(1);
     ImVec2 currpos = ImGui::GetCursorPos();
     ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
@@ -240,7 +295,8 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     }
     ImGui::TableSetColumnIndex(2);
     centreCursorForTextY();
-    ImGui::Text("X+");
+    str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "-" : "+");
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(3);
     centreCursorForTextY();
     ImGui::Text("X-");
@@ -252,8 +308,9 @@ void JoymenuScene::updateGamepadConfigUI(int player)
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
-    centreCursorForTextX("Y+");
-    ImGui::Text("Y+");
+    str = to_string(plyconf.joy_vertical.axisno) + (plyconf.joy_vertical.inverted ? "-" : "+");
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(4);
     centreCursorForTextX("Y+");
     ImGui::Text("Y+");

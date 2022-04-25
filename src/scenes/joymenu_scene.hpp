@@ -36,6 +36,8 @@ namespace SceneSystem {
         };
         joyconfig_stage m_joyconfig_stage;
 
+        float* mp_neutral_joyaxes;
+
         void updateUI();
         void updateGamepadConfigUI(int player);
     };
