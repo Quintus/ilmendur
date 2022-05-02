@@ -35,11 +35,21 @@ namespace SceneSystem {
             horizontal
         };
         joyconfig_stage m_joyconfig_stage;
-
         float* mp_neutral_joyaxes;
+
+        enum class configured_item {
+            none = 0,
+            control_stick,
+            camera_stick,
+            hatch,
+            action_buttons,
+            shoulder_buttons
+        };
+        configured_item m_config_item;
 
         void updateUI();
         void updateGamepadConfigUI(int player);
+        void updateJoystickConfig(int player);
     };
 
 }

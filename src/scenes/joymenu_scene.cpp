@@ -66,7 +66,8 @@ JoymenuScene::JoymenuScene()
       m_shoulderbuttons_tex(0),
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
-      mp_neutral_joyaxes(nullptr)
+      mp_neutral_joyaxes(nullptr),
+      m_config_item(configured_item::none)
 {
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -132,128 +133,14 @@ void JoymenuScene::updateUI()
     mp_ui_system->update();
     updateGamepadConfigUI(FREYA);
 
-    auto& plyconf = GameState::instance.config[FREYA];
-
-    switch (m_joyconfig_stage) {
-    case joyconfig_stage::none:
+    switch (m_config_item) {
+    case configured_item::none:
         break;
-    case joyconfig_stage::neutral:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining neutral positions. Please do not touch your joystick until the next prompt appears."));
-        ImGui::NewLine();
-
-        if (mp_config_timer) {
-            centreCursorForTextX("0");
-            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
-        } else {
-            centreCursorForTextX(_("Start"));
-            if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
-                    // Clear memory from previous run, if any
-                    if (mp_neutral_joyaxes) {
-                        delete[] mp_neutral_joyaxes;
-                    }
-
-                    // Read neutral axes positions and remember them for later
-                    int axescount = 0;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    mp_neutral_joyaxes = new float[axescount];
-                    memcpy(mp_neutral_joyaxes, joyaxes, sizeof(float) * axescount);
-
-                    // Advance to next config stage
-                    delete mp_config_timer;
-                    mp_config_timer = nullptr;
-                    m_joyconfig_stage = joyconfig_stage::vertical;
-                });
-            }
-        }
-
-        ImGui::End();
-
+    case configured_item::control_stick:
+    case configured_item::camera_stick: // fall-through
+        updateJoystickConfig(FREYA);
         break;
-    case joyconfig_stage::vertical:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining vertical MOVEMENT axis. Please press UP until the next prompt appears."));
-        ImGui::NewLine();
-
-        if (mp_config_timer) {
-            centreCursorForTextX("0");
-            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
-        } else {
-            centreCursorForTextX(_("Start"));
-            if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
-                    // The changed axis is the vertical axis
-                    int axis = 0;
-                    int axescount = 0;
-                    float axislimit = 0.0f;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
-                    plyconf.joy_vertical.axisno = axis;
-                    plyconf.joy_vertical.inverted = axislimit > 0.0f;
-
-                    // Advance to next config stage
-                    delete mp_config_timer;
-                    mp_config_timer = nullptr;
-                    m_joyconfig_stage = joyconfig_stage::horizontal;
-                });
-            }
-        }
-
-        ImGui::End();
-        break;
-    case joyconfig_stage::horizontal:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining horizontal MOVEMENT axis. Please press RIGHT until this prompt disappears."));
-        ImGui::NewLine();
-
-        if (mp_config_timer) {
-            centreCursorForTextX("0");
-            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
-        } else {
-            centreCursorForTextX(_("Start"));
-            if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
-                    // The changed axis is the horizontal axis
-                    int axis = 0;
-                    int axescount = 0;
-                    float axislimit = 0.0f;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
-                    plyconf.joy_horizontal.axisno = axis;
-                    plyconf.joy_horizontal.inverted = axislimit < 0.0f;
-
-                    /* Calculate the dead zone. In order to have both control sticks
-                     * behave equally, the dead zone is calculated for the more noisy
-                     * one and applied to the other one, i.e. both are set up with
-                     * the same dead zone. Don't just get the maximum value of all
-                     * of mp_neutral_joyaxes, because some joysticks have more axes
-                     * than the control sticks, e.g. in the shoulder buttons. Also,
-                     * 0.1 is added to cater for possible larger noise. */
-                    plyconf.joy_dead_zone = max({mp_neutral_joyaxes[plyconf.joy_horizontal.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_vertical.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_cam_horizontal.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_cam_vertical.axisno]})
-                                            + 0.1f;
-                    printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
-
-                    // End config stages
-                    delete mp_config_timer;
-                    mp_config_timer = nullptr;
-                    m_joyconfig_stage = joyconfig_stage::none;
-                });
-            }
-        }
-
-        ImGui::End();
-        break;
-    } // No default to have the compiler warn on missing items
+    } // No default so the compiler warns about missed values
 }
 
 void JoymenuScene::updateGamepadConfigUI(int player)
@@ -289,8 +176,9 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(4);
-    centreCursorForTextX("Y-");
-    ImGui::Text("Y-");
+    str = to_string(plyconf.joy_cam_vertical.axisno) + (plyconf.joy_cam_vertical.inverted ? "+" : "-");
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -308,6 +196,7 @@ void JoymenuScene::updateGamepadConfigUI(int player)
         ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_item     = configured_item::control_stick;
         m_joyconfig_stage = joyconfig_stage::neutral;
     }
     ImGui::TableSetColumnIndex(2);
@@ -316,12 +205,26 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(3);
     centreCursorForTextY();
-    ImGui::Text("X-");
+    str = to_string(plyconf.joy_cam_horizontal.axisno) + (plyconf.joy_cam_horizontal.inverted ? "+" : "-");
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(4);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_yellow_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_item     = configured_item::camera_stick;
+        m_joyconfig_stage = joyconfig_stage::neutral;
+    }
     ImGui::TableSetColumnIndex(5);
     centreCursorForTextY();
-    ImGui::Text("X+");
+    str = to_string(plyconf.joy_cam_horizontal.axisno) + (plyconf.joy_cam_horizontal.inverted ? "-" : "+");
+    ImGui::Text(str.c_str());
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
@@ -329,8 +232,9 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(4);
-    centreCursorForTextX("Y+");
-    ImGui::Text("Y+");
+    str = to_string(plyconf.joy_cam_vertical.axisno) +  (plyconf.joy_cam_vertical.inverted ? "-" : "+");
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
@@ -406,6 +310,168 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     ImGui::Button(_("Save Configuration"));
 
     ImGui::End();
+}
+
+void JoymenuScene::updateJoystickConfig(int player)
+{
+    assert(m_config_item == configured_item::control_stick ||
+           m_config_item == configured_item::camera_stick);
+
+    // TODO: Honour "player"
+    auto& plyconf = GameState::instance.config[FREYA];
+
+    switch (m_joyconfig_stage) {
+    case joyconfig_stage::none:
+        break;
+    case joyconfig_stage::neutral:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::TextWrapped(_("Determining neutral positions. Please do not touch your joystick until the next prompt appears."));
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // Clear memory from previous run, if any
+                    if (mp_neutral_joyaxes) {
+                        delete[] mp_neutral_joyaxes;
+                    }
+
+                    // Read neutral axes positions and remember them for later
+                    int axescount = 0;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    mp_neutral_joyaxes = new float[axescount];
+                    memcpy(mp_neutral_joyaxes, joyaxes, sizeof(float) * axescount);
+
+                    // Advance to next config stage
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::vertical;
+                });
+            }
+        }
+
+        ImGui::End();
+
+        break;
+    case joyconfig_stage::vertical:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        switch (m_config_item) {
+        case configured_item::control_stick:
+            ImGui::TextWrapped(_("Determining vertical MOVEMENT axis. Please press UP until the next prompt appears."));
+            break;
+        case configured_item::camera_stick:
+            ImGui::TextWrapped(_("Determining vertical CAMERA STEERING axis. Please press UP until the next prompt appears."));
+            break;
+        default:
+            assert(false);
+            break;
+        }
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // The changed axis is the vertical axis
+                    int axis = 0;
+                    int axescount = 0;
+                    float axislimit = 0.0f;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+
+                    if (m_config_item == configured_item::control_stick) {
+                        plyconf.joy_vertical.axisno = axis;
+                        plyconf.joy_vertical.inverted = axislimit > 0.0f;
+                    } else {
+                        plyconf.joy_cam_vertical.axisno = axis;
+                        plyconf.joy_cam_vertical.inverted = axislimit > 0.0f;
+                    }
+
+                    // Advance to next config stage
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::horizontal;
+                });
+            }
+        }
+
+        ImGui::End();
+        break;
+    case joyconfig_stage::horizontal:
+        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        switch(m_config_item) {
+        case configured_item::control_stick:
+            ImGui::TextWrapped(_("Determining horizontal MOVEMENT axis. Please press RIGHT until this prompt disappears."));
+            break;
+        case configured_item::camera_stick:
+            ImGui::TextWrapped(_("Determining horizontal CAMERA STEERING axis. Please press RIGHT until this prompt disappears."));
+            break;
+        default:
+            assert(false);
+        }
+        ImGui::NewLine();
+
+        if (mp_config_timer) {
+            centreCursorForTextX("0");
+            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+        } else {
+            centreCursorForTextX(_("Start"));
+            if (ImGui::Button(_("Start"))) {
+                mp_config_timer = new Timer(5000.0, false, [&](){
+                    // The changed axis is the horizontal axis
+                    int axis = 0;
+                    int axescount = 0;
+                    float axislimit = 0.0f;
+                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
+                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+
+                    if (m_config_item == configured_item::control_stick) {
+                        plyconf.joy_horizontal.axisno = axis;
+                        plyconf.joy_horizontal.inverted = axislimit < 0.0f;
+                    } else {
+                        plyconf.joy_cam_horizontal.axisno = axis;
+                        plyconf.joy_cam_horizontal.inverted = axislimit < 0.0f;
+                    }
+
+                    /* Calculate the dead zone. In order to have both control sticks
+                     * behave equally, the dead zone is calculated for the more noisy
+                     * one and applied to the other one, i.e. both are set up with
+                     * the same dead zone. Don't just get the maximum value of all
+                     * of mp_neutral_joyaxes, because some joysticks have more axes
+                     * than the control sticks, e.g. in the shoulder buttons. Also,
+                     * 0.1 is added to cater for possible larger noise. */
+                    plyconf.joy_dead_zone = max({mp_neutral_joyaxes[plyconf.joy_horizontal.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_vertical.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_cam_horizontal.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_cam_vertical.axisno]})
+                                            + 0.1f;
+                    printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
+
+                    // End config stages
+                    delete mp_config_timer;
+                    mp_config_timer = nullptr;
+                    m_joyconfig_stage = joyconfig_stage::none;
+                    m_config_item = configured_item::none;
+                });
+            }
+        }
+
+        ImGui::End();
+        break;
+    } // No default to have the compiler warn on missing items
 }
 
 void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)
