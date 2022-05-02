@@ -54,7 +54,7 @@ namespace Core {
             axisconf joy_horizontal;
             axisconf joy_cam_vertical;
             axisconf joy_cam_horizontal;
-            float joy_dead_zone = 0.0f;
+            float joy_dead_zone = 0.0f; ///< Dead zone, as a value between 0 (no dead zone) and 1 (everything). Dead zone is the zone in which axis input is ignored.
         } config[2];
 
         static GameState instance;

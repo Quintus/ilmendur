@@ -8,6 +8,7 @@
 #include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
+#include <algorithm>
 #include <iostream>
 #include <cstdio>
 
@@ -131,6 +132,8 @@ void JoymenuScene::updateUI()
     mp_ui_system->update();
     updateGamepadConfigUI(FREYA);
 
+    auto& plyconf = GameState::instance.config[FREYA];
+
     switch (m_joyconfig_stage) {
     case joyconfig_stage::none:
         break;
@@ -190,8 +193,8 @@ void JoymenuScene::updateUI()
                     float axislimit = 0.0f;
                     const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
                     findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
-                    GameState::instance.config[FREYA].joy_vertical.axisno = axis;
-                    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
+                    plyconf.joy_vertical.axisno = axis;
+                    plyconf.joy_vertical.inverted = axislimit > 0.0f;
 
                     // Advance to next config stage
                     delete mp_config_timer;
@@ -223,8 +226,22 @@ void JoymenuScene::updateUI()
                     float axislimit = 0.0f;
                     const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
                     findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
-                    GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
-                    GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
+                    plyconf.joy_horizontal.axisno = axis;
+                    plyconf.joy_horizontal.inverted = axislimit < 0.0f;
+
+                    /* Calculate the dead zone. In order to have both control sticks
+                     * behave equally, the dead zone is calculated for the more noisy
+                     * one and applied to the other one, i.e. both are set up with
+                     * the same dead zone. Don't just get the maximum value of all
+                     * of mp_neutral_joyaxes, because some joysticks have more axes
+                     * than the control sticks, e.g. in the shoulder buttons. Also,
+                     * 0.1 is added to cater for possible larger noise. */
+                    plyconf.joy_dead_zone = max({mp_neutral_joyaxes[plyconf.joy_horizontal.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_vertical.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_cam_horizontal.axisno],
+                                                 mp_neutral_joyaxes[plyconf.joy_cam_vertical.axisno]})
+                                            + 0.1f;
+                    printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
 
                     // End config stages
                     delete mp_config_timer;
