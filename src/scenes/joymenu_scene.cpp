@@ -139,6 +139,7 @@ void JoymenuScene::updateUI()
 {
     mp_ui_system->update();
     updateGamepadConfigUI(FREYA);
+    updateGamepadConfigUI(BENJAMIN);
 
     switch (m_config_item) {
     case configured_item::none:
@@ -152,12 +153,22 @@ void JoymenuScene::updateUI()
 
 void JoymenuScene::updateGamepadConfigUI(int player)
 {
-    // TODO: Honour "player"
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
-    ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
-    ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    switch (player) {
+    case FREYA:
+        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
+        ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
+        ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        break;
+    case BENJAMIN:
+        ImGui::SetNextWindowPos(ImVec2(650.0f, 10.0f));
+        ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
+        ImGui::Begin(_("Gamepad Configuration Player 2 (Benjamin)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        break;
+    default:
+        assert(false);
+    }
 
-    auto& plyconf = GameState::instance.config[FREYA];
+    auto& plyconf = GameState::instance.config[player];
 
     // Gamepad selection combobox
     int    active_gamepad = -1;
