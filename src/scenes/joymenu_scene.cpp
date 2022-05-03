@@ -56,6 +56,13 @@ static void findChangedAxis(const int& len, const float neutral_joyaxes[], const
     }
 }
 
+/// Formats a human-readable entry for the gamepad combo box UI for the GLFW joystick
+/// with index `joyindex'.
+static inline std::string joyStickComboItemName(int joyindex)
+{
+    return to_string(joyindex+1) + ": " + glfwGetJoystickName(joyindex);
+}
+
 JoymenuScene::JoymenuScene()
     : Scene("Joystick configuration menu scene"),
       mp_ui_system(nullptr),
@@ -150,17 +157,38 @@ void JoymenuScene::updateGamepadConfigUI(int player)
     ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
     ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 
-    if (ImGui::BeginCombo("", _("Select gamepad to use"))) { // Returns true only if the element is opened
-        for(int i=0; i < 16; i++) {
+    auto& plyconf = GameState::instance.config[FREYA];
+
+    // Gamepad selection combobox
+    int    active_gamepad = -1;
+    string preview        = _("Select gamepad to use");
+    if (glfwJoystickPresent(plyconf.joy_index)) {
+        active_gamepad = plyconf.joy_index;
+        preview        = joyStickComboItemName(active_gamepad);
+    }
+    if (ImGui::BeginCombo(_("Gamepad"), preview.c_str())) { // Returns true only if the element is opened
+        for(int i=GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             if (glfwJoystickPresent(i)) {
-                ImGui::Selectable((to_string(i+1) + ": " + glfwGetJoystickName(i)).c_str(), false);
+                if (ImGui::Selectable(joyStickComboItemName(i).c_str(), active_gamepad == i)) { // Returns true if clicked
+                    active_gamepad = i;
+                }
+                if (active_gamepad == i) {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
         }
         ImGui::EndCombo();
     }
 
-    const auto& plyconf = GameState::instance.config[FREYA];
+    // Do not render rest of UI until a gamepad is selected.
+    if (active_gamepad == -1) {
+        return;
+    } else {
+        assert(glfwJoystickPresent(active_gamepad)); // If this triggers, the player quickly removed the joystick after selecting it!
+        plyconf.joy_index = active_gamepad;
+    }
 
+    // The large configuration table
     ImGui::BeginTable("table", 6, ImGuiTableFlags_SizingFixedFit);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(1);
