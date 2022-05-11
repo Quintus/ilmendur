@@ -160,7 +160,7 @@ void JoymenuScene::updateGamepadConfigUI()
 {
     ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
     ImGui::SetNextWindowSize(ImVec2(1260.0f, 700.0f));
-    ImGui::Begin(_("Gamepad Configuration"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin(_("Gamepad Configuration"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
     // Gamepad combo box
     ImGui::SetCursorPosX(m_tabstops[0]);
