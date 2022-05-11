@@ -16,9 +16,22 @@ namespace Core {
      * which would require casting their values all the time.
      * Effectively, these are simply array indices.
      */
-    enum players {
+    enum character {
         BENJAMIN = 0,
         FREYA = 1
+    };
+
+    /**
+     * Constants for all memory structures that relate to data
+     * about the human players. This includes most notably the
+     * gamepad configuration. This cannot be an
+     * "enum class", because these values are used for array
+     * numbering, which would require casting their values
+     * all the time.
+     */
+    enum player {
+        PLAYER1 = 0,
+        PLAYER2 = 1
     };
 
     /**
@@ -47,7 +60,7 @@ namespace Core {
         } achievments;
         struct {
             int bombs = 0;
-        } equipment[2]; // one equipment struct per player; use "players" enum indices for access
+        } equipment[2]; // one equipment struct per character; use "character" enum indices for access.
         struct {
             int joy_index = 0;
             axisconf joy_vertical;
@@ -55,7 +68,7 @@ namespace Core {
             axisconf joy_cam_vertical;
             axisconf joy_cam_horizontal;
             float joy_dead_zone = 0.0f; ///< Dead zone, as a value between 0 (no dead zone) and 1 (everything). Dead zone is the zone in which axis input is ignored.
-        } config[2];
+        } config[2]; // One configuration struct per player; use "player" enum indices for access.
 
         static GameState instance;
     };

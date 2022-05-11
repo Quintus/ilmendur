@@ -138,15 +138,15 @@ void JoymenuScene::update()
 void JoymenuScene::updateUI()
 {
     mp_ui_system->update();
-    updateGamepadConfigUI(FREYA);
-    updateGamepadConfigUI(BENJAMIN);
+    updateGamepadConfigUI(PLAYER1);
+    updateGamepadConfigUI(PLAYER2);
 
     switch (m_config_item) {
     case configured_item::none:
         break;
     case configured_item::control_stick:
     case configured_item::camera_stick: // fall-through
-        updateJoystickConfig(FREYA);
+        updateJoystickConfig(PLAYER1);
         break;
     } // No default so the compiler warns about missed values
 }
@@ -154,15 +154,15 @@ void JoymenuScene::updateUI()
 void JoymenuScene::updateGamepadConfigUI(int player)
 {
     switch (player) {
-    case FREYA:
+    case PLAYER1:
         ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
         ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
-        ImGui::Begin(_("Gamepad Configuration Player 1 (Freya)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin(_("Gamepad Configuration Player 1"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
         break;
-    case BENJAMIN:
+    case PLAYER2:
         ImGui::SetNextWindowPos(ImVec2(650.0f, 10.0f));
         ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
-        ImGui::Begin(_("Gamepad Configuration Player 2 (Benjamin)"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin(_("Gamepad Configuration Player 2"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
         break;
     default:
         assert(false);
@@ -357,7 +357,7 @@ void JoymenuScene::updateJoystickConfig(int player)
            m_config_item == configured_item::camera_stick);
 
     // TODO: Honour "player"
-    auto& plyconf = GameState::instance.config[FREYA];
+    auto& plyconf = GameState::instance.config[PLAYER1];
 
     switch (m_joyconfig_stage) {
     case joyconfig_stage::none:
