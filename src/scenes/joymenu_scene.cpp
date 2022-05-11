@@ -75,9 +75,13 @@ JoymenuScene::JoymenuScene()
       m_joyconfig_stage(joyconfig_stage::none),
       mp_neutral_joyaxes(nullptr),
       m_config_item(configured_item::none),
-      m_config_player(-1),
-      m_max_x(CTRL_WIDGET_HEIGHT)
+      m_config_player(-1)
 {
+    m_tabstops[0] = 0.0f;
+    m_tabstops[1] = 0.0f;
+    m_tabstops[2] = 0.0f;
+    m_tabstops[3] = 0.0f;
+
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
     // Enable the overlay system for this scene
@@ -159,19 +163,36 @@ void JoymenuScene::updateGamepadConfigUI()
     ImGui::Begin(_("Gamepad Configuration"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 
     // Gamepad combo box
-    ImGui::SetNextItemWidth(0.5f * m_max_x - 0.5 * CTRL_WIDGET_HEIGHT);
+    ImGui::SetCursorPosX(m_tabstops[0]);
+    ImGui::SetNextItemWidth(m_tabstops[1] - m_tabstops[0]);
     bool has_gamepad1 = updateGamepadConfig_Gamepad(PLAYER1);
-    ImGui::SameLine(0.5f * m_max_x + 0.5f * CTRL_WIDGET_HEIGHT);
-    ImGui::SetNextItemWidth(0.5f * m_max_x - 0.5 * CTRL_WIDGET_HEIGHT);
+    ImGui::SameLine(m_tabstops[2]);
+    ImGui::SetNextItemWidth(m_tabstops[3] - m_tabstops[2]);
     bool has_gamepad2 = updateGamepadConfig_Gamepad(PLAYER2);
 
     // The large configuration table
-    ImGui::BeginTable("table", 13, ImGuiTableFlags_SizingFixedFit);
+    ImGui::BeginTable("table", 15, ImGuiTableFlags_SizingFixedFit);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch); // Spacer column
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch); // Divider column
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch); // Spacer column
+
+    // Joystick axes configurator
     ImGui::TableNextRow();
     if (has_gamepad1) { updateGamepadConfigTable_JoysticksTitles(PLAYER1); }
     if (has_gamepad2) { updateGamepadConfigTable_JoysticksTitles(PLAYER2); }
 
-    // Joystick axes configurator
     ImGui::TableNextRow();
     if (has_gamepad1) { updateGamepadConfigTable_JoysticksTopLabels(PLAYER1); }
     if (has_gamepad2) { updateGamepadConfigTable_JoysticksTopLabels(PLAYER2); }
@@ -205,11 +226,10 @@ void JoymenuScene::updateGamepadConfigUI()
     ImGui::TableNextRow();
     if (has_gamepad1) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER1); }
     if (has_gamepad2) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER2); }
-    m_max_x = ImGui::GetCursorPosX();
     ImGui::EndTable();
 
     // Confirmation button
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Save Configuration").x - ImGui::GetStyle().FramePadding.x - 5);
+    ImGui::SetCursorPosX(m_tabstops[3] - ImGui::CalcTextSize("Save Configuration").x);
     ImGui::Button(_("Save Configuration"));
 
     ImGui::End();
@@ -249,7 +269,7 @@ bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksTitles(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
 
     ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Steering"));
@@ -267,7 +287,7 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksTitles(int player)
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksTopLabels(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
@@ -282,10 +302,15 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksTopLabels(int player)
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksMainRow(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+0);
+    if (player == PLAYER1) {
+        m_tabstops[0] = ImGui::GetCursorPosX();
+    } else {
+        m_tabstops[2] = ImGui::GetCursorPosX();
+    }
     centreCursorForTextY();
     string str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "+" : "-");
     ImGui::Text(str.c_str());
@@ -331,11 +356,17 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksMainRow(int player)
     centreCursorForTextY();
     str = to_string(plyconf.joy_cam_horizontal.axisno) + (plyconf.joy_cam_horizontal.inverted ? "-" : "+");
     ImGui::Text(str.c_str());
+
+    if (player == PLAYER1) {
+        m_tabstops[1] = ImGui::GetCursorPosX();
+    } else {
+        m_tabstops[3] = ImGui::GetCursorPosX();
+    }
 }
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksBottomLabels(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
@@ -350,7 +381,7 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksBottomLabels(int player)
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsTitles(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
 
     ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Items/Action"));
@@ -362,7 +393,7 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsTitles(int player)
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsTopLabels(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
@@ -375,7 +406,7 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsTopLabels(int player)
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+0);
@@ -398,7 +429,7 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
@@ -411,7 +442,7 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
 
 void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherTitles(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
 
     ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Attack/Defence"));
@@ -424,7 +455,7 @@ void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherTitles(int player)
 
 void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherMainRow(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
+    int offset    = player == PLAYER1 ? 1 : 8;
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+0);

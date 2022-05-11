@@ -47,7 +47,7 @@ namespace SceneSystem {
         };
         configured_item m_config_item;
         int m_config_player;
-        float m_max_x;
+        float m_tabstops[4];
 
         void updateUI();
         void updateGamepadConfigUI();
