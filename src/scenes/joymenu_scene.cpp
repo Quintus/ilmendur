@@ -246,7 +246,13 @@ bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
         active_gamepad = plyconf.joy_index;
         preview        = joyStickComboItemName(active_gamepad);
     }
-    if (ImGui::BeginCombo("", preview.c_str())) { // Returns true only if the element is opened
+
+    // Ensure the combo boxes have different labels, otherwise Imgui
+    // will mess them up.
+    char label[256];
+    snprintf(label, 256, _("Player %d"), player + 1);
+
+    if (ImGui::BeginCombo(label, preview.c_str())) { // Returns true only if the element is opened
         for(int i=GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             if (glfwJoystickPresent(i)) {
                 if (ImGui::Selectable(joyStickComboItemName(i).c_str(), active_gamepad == i)) { // Returns true if clicked
