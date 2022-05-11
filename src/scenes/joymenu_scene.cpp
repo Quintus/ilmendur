@@ -75,7 +75,8 @@ JoymenuScene::JoymenuScene()
       m_joyconfig_stage(joyconfig_stage::none),
       mp_neutral_joyaxes(nullptr),
       m_config_item(configured_item::none),
-      m_config_player(-1)
+      m_config_player(-1),
+      m_max_x(CTRL_WIDGET_HEIGHT)
 {
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -157,14 +158,15 @@ void JoymenuScene::updateGamepadConfigUI()
     ImGui::SetNextWindowSize(ImVec2(1260.0f, 700.0f));
     ImGui::Begin(_("Gamepad Configuration"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 
+    // Gamepad combo box
+    ImGui::SetNextItemWidth(0.5f * m_max_x - 0.5 * CTRL_WIDGET_HEIGHT);
+    bool has_gamepad1 = updateGamepadConfig_Gamepad(PLAYER1);
+    ImGui::SameLine(0.5f * m_max_x + 0.5f * CTRL_WIDGET_HEIGHT);
+    ImGui::SetNextItemWidth(0.5f * m_max_x - 0.5 * CTRL_WIDGET_HEIGHT);
+    bool has_gamepad2 = updateGamepadConfig_Gamepad(PLAYER2);
+
     // The large configuration table
     ImGui::BeginTable("table", 13, ImGuiTableFlags_SizingFixedFit);
-
-    // Gamepad combo box
-    ImGui::TableNextRow();
-    bool has_gamepad1 = updateGamepadConfigTable_Gamepad(PLAYER1);
-    bool has_gamepad2 = updateGamepadConfigTable_Gamepad(PLAYER2);
-
     ImGui::TableNextRow();
     if (has_gamepad1) { updateGamepadConfigTable_JoysticksTitles(PLAYER1); }
     if (has_gamepad2) { updateGamepadConfigTable_JoysticksTitles(PLAYER2); }
@@ -203,6 +205,7 @@ void JoymenuScene::updateGamepadConfigUI()
     ImGui::TableNextRow();
     if (has_gamepad1) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER1); }
     if (has_gamepad2) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER2); }
+    m_max_x = ImGui::GetCursorPosX();
     ImGui::EndTable();
 
     // Confirmation button
@@ -212,12 +215,9 @@ void JoymenuScene::updateGamepadConfigUI()
     ImGui::End();
 }
 
-bool JoymenuScene::updateGamepadConfigTable_Gamepad(int player)
+bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
 {
-    int offset    = player == PLAYER1 ? 0 : 7;
     auto& plyconf = GameState::instance.config[player];
-
-    ImGui::TableSetColumnIndex(offset + 1);
 
     // Gamepad selection combobox
     int    active_gamepad = -1;
@@ -226,7 +226,7 @@ bool JoymenuScene::updateGamepadConfigTable_Gamepad(int player)
         active_gamepad = plyconf.joy_index;
         preview        = joyStickComboItemName(active_gamepad);
     }
-    if (ImGui::BeginCombo(_("Gamepad"), preview.c_str())) { // Returns true only if the element is opened
+    if (ImGui::BeginCombo("", preview.c_str())) { // Returns true only if the element is opened
         for(int i=GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             if (glfwJoystickPresent(i)) {
                 if (ImGui::Selectable(joyStickComboItemName(i).c_str(), active_gamepad == i)) { // Returns true if clicked
@@ -244,12 +244,6 @@ bool JoymenuScene::updateGamepadConfigTable_Gamepad(int player)
        plyconf.joy_index = active_gamepad;
     }
 
-    // Add dummy for spacing the two table sections
-    if (player == PLAYER1) {
-        ImGui::TableSetColumnIndex(6);
-        ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, 1));
-    }
-
     return active_gamepad != -1;
 }
 
@@ -263,6 +257,12 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksTitles(int player)
     ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX(_("Camera"));
     ImGui::Text(_("Camera"));
+
+    // Add dummy for spacing the two table sections
+    if (player == PLAYER1) {
+        ImGui::TableSetColumnIndex(6);
+        ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, 1));
+    }
 }
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksTopLabels(int player)
