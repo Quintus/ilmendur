@@ -74,7 +74,8 @@ JoymenuScene::JoymenuScene()
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
       mp_neutral_joyaxes(nullptr),
-      m_config_item(configured_item::none)
+      m_config_item(configured_item::none),
+      m_config_player(-1)
 {
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
@@ -138,37 +139,85 @@ void JoymenuScene::update()
 void JoymenuScene::updateUI()
 {
     mp_ui_system->update();
-    updateGamepadConfigUI(PLAYER1);
-    updateGamepadConfigUI(PLAYER2);
+    updateGamepadConfigUI();
 
     switch (m_config_item) {
     case configured_item::none:
         break;
     case configured_item::control_stick:
     case configured_item::camera_stick: // fall-through
-        updateJoystickConfig(PLAYER1);
+        updateJoystickConfig(m_config_player);
         break;
     } // No default so the compiler warns about missed values
 }
 
-void JoymenuScene::updateGamepadConfigUI(int player)
+void JoymenuScene::updateGamepadConfigUI()
 {
-    switch (player) {
-    case PLAYER1:
-        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
-        ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
-        ImGui::Begin(_("Gamepad Configuration Player 1"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        break;
-    case PLAYER2:
-        ImGui::SetNextWindowPos(ImVec2(650.0f, 10.0f));
-        ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f));
-        ImGui::Begin(_("Gamepad Configuration Player 2"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        break;
-    default:
-        assert(false);
-    }
+    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
+    ImGui::SetNextWindowSize(ImVec2(1260.0f, 700.0f));
+    ImGui::Begin(_("Gamepad Configuration"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 
+    // The large configuration table
+    ImGui::BeginTable("table", 13, ImGuiTableFlags_SizingFixedFit);
+
+    // Gamepad combo box
+    ImGui::TableNextRow();
+    bool has_gamepad1 = updateGamepadConfigTable_Gamepad(PLAYER1);
+    bool has_gamepad2 = updateGamepadConfigTable_Gamepad(PLAYER2);
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_JoysticksTitles(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_JoysticksTitles(PLAYER2); }
+
+    // Joystick axes configurator
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_JoysticksTopLabels(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_JoysticksTopLabels(PLAYER2); }
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_JoysticksMainRow(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_JoysticksMainRow(PLAYER2); }
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_JoysticksBottomLabels(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_JoysticksBottomLabels(PLAYER2); }
+
+    // Items/Actions configurator
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_ItemsActionsTopLabels(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_ItemsActionsTopLabels(PLAYER2); }
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_ItemsActionsMainRow(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_ItemsActionsMainRow(PLAYER2); }
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_ItemsActionsBottomLabels(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_ItemsActionsBottomLabels(PLAYER2); }
+
+    // Attack/Defence/Other configurator
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_AttackDefenceOtherTitles(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_AttackDefenceOtherTitles(PLAYER2); }
+
+    ImGui::TableNextRow();
+    if (has_gamepad1) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER1); }
+    if (has_gamepad2) { updateGamepadConfigTable_AttackDefenceOtherMainRow(PLAYER2); }
+    ImGui::EndTable();
+
+    // Confirmation button
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Save Configuration").x - ImGui::GetStyle().FramePadding.x - 5);
+    ImGui::Button(_("Save Configuration"));
+
+    ImGui::End();
+}
+
+bool JoymenuScene::updateGamepadConfigTable_Gamepad(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
     auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset + 1);
 
     // Gamepad selection combobox
     int    active_gamepad = -1;
@@ -191,40 +240,56 @@ void JoymenuScene::updateGamepadConfigUI(int player)
         ImGui::EndCombo();
     }
 
-    // Do not render rest of UI until a gamepad is selected.
-    if (active_gamepad == -1) {
-        return;
-    } else {
-        assert(glfwJoystickPresent(active_gamepad)); // If this triggers, the player quickly removed the joystick after selecting it!
-        plyconf.joy_index = active_gamepad;
+    if (active_gamepad != -1) {
+       plyconf.joy_index = active_gamepad;
     }
 
-    // The large configuration table
-    ImGui::BeginTable("table", 6, ImGuiTableFlags_SizingFixedFit);
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+    // Add dummy for spacing the two table sections
+    if (player == PLAYER1) {
+        ImGui::TableSetColumnIndex(6);
+        ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, 1));
+    }
+
+    return active_gamepad != -1;
+}
+
+void JoymenuScene::updateGamepadConfigTable_JoysticksTitles(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+
+    ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Steering"));
     ImGui::Text(_("Steering"));
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX(_("Camera"));
     ImGui::Text(_("Camera"));
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+void JoymenuScene::updateGamepadConfigTable_JoysticksTopLabels(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+1);
     string str = to_string(plyconf.joy_vertical.axisno) + (plyconf.joy_vertical.inverted ? "+" : "-");
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     str = to_string(plyconf.joy_cam_vertical.axisno) + (plyconf.joy_cam_vertical.inverted ? "+" : "-");
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
+void JoymenuScene::updateGamepadConfigTable_JoysticksMainRow(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+0);
     centreCursorForTextY();
-    str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "+" : "-");
+    string str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "+" : "-");
     ImGui::Text(str.c_str());
-    ImGui::TableSetColumnIndex(1);
+    ImGui::TableSetColumnIndex(offset+1);
     ImVec2 currpos = ImGui::GetCursorPos();
     ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     if (ImGui::IsItemHovered()) {
@@ -235,18 +300,19 @@ void JoymenuScene::updateGamepadConfigUI(int player)
         ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player   = player;
         m_config_item     = configured_item::control_stick;
         m_joyconfig_stage = joyconfig_stage::neutral;
     }
-    ImGui::TableSetColumnIndex(2);
+    ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
     str = to_string(plyconf.joy_horizontal.axisno) + (plyconf.joy_horizontal.inverted ? "-" : "+");
     ImGui::Text(str.c_str());
-    ImGui::TableSetColumnIndex(3);
+    ImGui::TableSetColumnIndex(offset+3);
     centreCursorForTextY();
     str = to_string(plyconf.joy_cam_horizontal.axisno) + (plyconf.joy_cam_horizontal.inverted ? "+" : "-");
     ImGui::Text(str.c_str());
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     currpos = ImGui::GetCursorPos();
     ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     if (ImGui::IsItemHovered()) {
@@ -257,98 +323,126 @@ void JoymenuScene::updateGamepadConfigUI(int player)
         ImGui::Image(reinterpret_cast<ImTextureID>(m_crossedcircle_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player   = player;
         m_config_item     = configured_item::camera_stick;
         m_joyconfig_stage = joyconfig_stage::neutral;
     }
-    ImGui::TableSetColumnIndex(5);
+    ImGui::TableSetColumnIndex(offset+5);
     centreCursorForTextY();
     str = to_string(plyconf.joy_cam_horizontal.axisno) + (plyconf.joy_cam_horizontal.inverted ? "-" : "+");
     ImGui::Text(str.c_str());
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
-    str = to_string(plyconf.joy_vertical.axisno) + (plyconf.joy_vertical.inverted ? "-" : "+");
+void JoymenuScene::updateGamepadConfigTable_JoysticksBottomLabels(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+1);
+    string str = to_string(plyconf.joy_vertical.axisno) + (plyconf.joy_vertical.inverted ? "-" : "+");
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     str = to_string(plyconf.joy_cam_vertical.axisno) +  (plyconf.joy_cam_vertical.inverted ? "-" : "+");
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+void JoymenuScene::updateGamepadConfigTable_ItemsActionsTitles(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+
+    ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Items/Action"));
     ImGui::Text(_("Items/Action"));
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX(_("Spells"));
     ImGui::Text(_("Spells"));
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+void JoymenuScene::updateGamepadConfigTable_ItemsActionsTopLabels(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX("6");
     ImGui::Text("6");
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX("1");
     ImGui::Text("1");
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
+void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+0);
     centreCursorForTextY();
     ImGui::Text("7");
-    ImGui::TableSetColumnIndex(1);
+    ImGui::TableSetColumnIndex(offset+1);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
-    ImGui::TableSetColumnIndex(2);
+    ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
     ImGui::Text("5");
-    ImGui::TableSetColumnIndex(3);
+    ImGui::TableSetColumnIndex(offset+3);
     centreCursorForTextY();
     ImGui::Text("2");
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
-    ImGui::TableSetColumnIndex(5);
+    ImGui::TableSetColumnIndex(offset+5);
     centreCursorForTextY();
     ImGui::Text("3");
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX("1");
     ImGui::Text("1");
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX("4");
     ImGui::Text("4");
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(1);
+void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherTitles(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+
+    ImGui::TableSetColumnIndex(offset+1);
     centreCursorForTextX(_("Attack/Defence"));
     ImGui::Text(_("Attack/Defence"));
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     // TRANS: Heading for miscellaneous controls in the joystick config menu
     centreCursorForTextX(_("Other"));
     ImGui::Text(_("Other"));
+}
 
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
+void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherMainRow(int player)
+{
+    int offset    = player == PLAYER1 ? 0 : 7;
+    auto& plyconf = GameState::instance.config[player];
+
+    ImGui::TableSetColumnIndex(offset+0);
     centreCursorForTextY();
     ImGui::Text("5");
-    ImGui::TableSetColumnIndex(1);
+    ImGui::TableSetColumnIndex(offset+1);
     ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
-    ImGui::TableSetColumnIndex(2);
+    ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
     ImGui::Text("6");
-    ImGui::TableSetColumnIndex(4);
+    ImGui::TableSetColumnIndex(offset+4);
     // TRANS: Label for the Menu button, keep the brackets
     ImGui::Text(_("[MENU]"));
     // TRANS: Label for the HUD (= Head Up Display) button, keep the brackets
     ImGui::Text(_("[HUD]"));
-    ImGui::TableSetColumnIndex(5);
+    ImGui::TableSetColumnIndex(offset+5);
     ImGui::Text("9");
     ImGui::Text("8");
-    ImGui::EndTable();
-
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Save Configuration").x - ImGui::GetStyle().FramePadding.x - 5);
-    ImGui::Button(_("Save Configuration"));
-
-    ImGui::End();
 }
 
 void JoymenuScene::updateJoystickConfig(int player)
@@ -357,7 +451,7 @@ void JoymenuScene::updateJoystickConfig(int player)
            m_config_item == configured_item::camera_stick);
 
     // TODO: Honour "player"
-    auto& plyconf = GameState::instance.config[PLAYER1];
+    auto& plyconf = GameState::instance.config[player];
 
     switch (m_joyconfig_stage) {
     case joyconfig_stage::none:
@@ -504,6 +598,7 @@ void JoymenuScene::updateJoystickConfig(int player)
                     mp_config_timer = nullptr;
                     m_joyconfig_stage = joyconfig_stage::none;
                     m_config_item = configured_item::none;
+                    m_config_player = -1;
                 });
             }
         }

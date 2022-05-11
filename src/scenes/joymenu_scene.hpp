@@ -46,9 +46,21 @@ namespace SceneSystem {
             shoulder_buttons
         };
         configured_item m_config_item;
+        int m_config_player;
 
         void updateUI();
-        void updateGamepadConfigUI(int player);
+        void updateGamepadConfigUI();
+        bool updateGamepadConfigTable_Gamepad(int player);
+        void updateGamepadConfigTable_JoysticksTitles(int player);
+        void updateGamepadConfigTable_JoysticksTopLabels(int player);
+        void updateGamepadConfigTable_JoysticksMainRow(int player);
+        void updateGamepadConfigTable_JoysticksBottomLabels(int player);
+        void updateGamepadConfigTable_ItemsActionsTitles(int player);
+        void updateGamepadConfigTable_ItemsActionsTopLabels(int player);
+        void updateGamepadConfigTable_ItemsActionsMainRow(int player);
+        void updateGamepadConfigTable_ItemsActionsBottomLabels(int player);
+        void updateGamepadConfigTable_AttackDefenceOtherTitles(int player);
+        void updateGamepadConfigTable_AttackDefenceOtherMainRow(int player);
         void updateJoystickConfig(int player);
     };
 
