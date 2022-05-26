@@ -23,19 +23,29 @@ namespace SceneSystem {
         Ogre::ResourceHandle m_crossedcircle_tex;
         Ogre::ResourceHandle m_crossedcircle_yellow_tex;
         Ogre::ResourceHandle m_steercross_tex;
+        Ogre::ResourceHandle m_steercross_yellow_tex;
         Ogre::ResourceHandle m_buttons_tex;
         Ogre::ResourceHandle m_shoulderbuttons_tex;
 
         Core::Timer* mp_config_timer;
+        std::vector<float> m_neutral_joyaxes[2];
+        std::vector<unsigned char>  m_neutral_buttons[2];
 
         enum class joyconfig_stage {
             none = 0,
-            neutral,
             vertical,
             horizontal
         };
         joyconfig_stage m_joyconfig_stage;
-        float* mp_neutral_joyaxes;
+
+        enum class hatchconfig_stage {
+            none = 0,
+            up,
+            right,
+            down,
+            left
+        };
+        hatchconfig_stage m_hatchconfig_stage;
 
         enum class configured_item {
             none = 0,
@@ -62,7 +72,9 @@ namespace SceneSystem {
         void updateGamepadConfigTable_ItemsActionsBottomLabels(int player);
         void updateGamepadConfigTable_AttackDefenceOtherTitles(int player);
         void updateGamepadConfigTable_AttackDefenceOtherMainRow(int player);
+        void readNeutralPositions(int player);
         void updateJoystickConfig(int player);
+        void updateHatchConfig(int player);
     };
 
 }

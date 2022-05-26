@@ -46,14 +46,28 @@ static void findChangedAxis(const int& len, const float neutral_joyaxes[], const
     assert(len > 0);
 
     for(int i=0; i < len; i++) {
-        printf("Axis %d has %.2f at neutral and %.2f now\n", i, neutral_joyaxes[i], joyaxes[i]);
         if (fabs(neutral_joyaxes[i] - joyaxes[i]) > tolerance) {
-            printf(">>> Axis %d differs from neutral position\n", i);
             axisno = i;
             limit = joyaxes[i];
             return;
         }
     }
+
+    // FIXME: If the user presses nothing, this is reached
+    assert(false);
+}
+
+static char findChangedButton(const int& len, const unsigned char neutral_buttons[], const unsigned char current_buttons[])
+{
+    for(int i=0; i < len; i++) {
+        if (neutral_buttons[i] != current_buttons[i]) {
+            return i;
+        }
+    }
+
+    // FIXME: If the user presses nothing, this is reached
+    assert(false);
+    return 0;
 }
 
 /// Formats a human-readable entry for the gamepad combo box UI for the GLFW joystick
@@ -69,11 +83,12 @@ JoymenuScene::JoymenuScene()
       m_crossedcircle_tex(0),
       m_crossedcircle_yellow_tex(0),
       m_steercross_tex(0),
+      m_steercross_yellow_tex(0),
       m_buttons_tex(0),
       m_shoulderbuttons_tex(0),
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
-      mp_neutral_joyaxes(nullptr),
+      m_hatchconfig_stage(hatchconfig_stage::none),
       m_config_item(configured_item::none),
       m_config_player(-1)
 {
@@ -109,6 +124,10 @@ JoymenuScene::JoymenuScene()
     assert(ptr);
     m_steercross_tex = ptr->getHandle();
 
+    ptr = Ogre::TextureManager::getSingleton().load("steeringcross-yellow.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
+    assert(ptr);
+    m_steercross_yellow_tex = ptr->getHandle();
+
     ptr = Ogre::TextureManager::getSingleton().load("buttons.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
     m_buttons_tex = ptr->getHandle();
@@ -116,6 +135,9 @@ JoymenuScene::JoymenuScene()
     ptr = Ogre::TextureManager::getSingleton().load("shoulderbuttons.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
     m_shoulderbuttons_tex = ptr->getHandle();
+
+    readNeutralPositions(PLAYER1);
+    readNeutralPositions(PLAYER2);
 }
 
 JoymenuScene::~JoymenuScene()
@@ -123,9 +145,6 @@ JoymenuScene::~JoymenuScene()
     if (mp_config_timer) {
         delete mp_config_timer;
         mp_config_timer = nullptr;
-    }
-    if (mp_neutral_joyaxes) {
-        delete[] mp_neutral_joyaxes;
     }
 
     Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
@@ -152,6 +171,9 @@ void JoymenuScene::updateUI()
     case configured_item::control_stick:
     case configured_item::camera_stick: // fall-through
         updateJoystickConfig(m_config_player);
+        break;
+    case configured_item::hatch:
+        updateHatchConfig(m_config_player);
         break;
     } // No default so the compiler warns about missed values
 }
@@ -240,11 +262,9 @@ bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
     auto& plyconf = GameState::instance.config[player];
 
     // Gamepad selection combobox
-    int    active_gamepad = -1;
-    string preview        = _("Select gamepad to use");
+    string preview = _("Select gamepad to use");
     if (glfwJoystickPresent(plyconf.joy_index)) {
-        active_gamepad = plyconf.joy_index;
-        preview        = joyStickComboItemName(active_gamepad);
+        preview = joyStickComboItemName(plyconf.joy_index);
     }
 
     // Ensure the combo boxes have different labels, otherwise Imgui
@@ -255,10 +275,11 @@ bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
     if (ImGui::BeginCombo(label, preview.c_str())) { // Returns true only if the element is opened
         for(int i=GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
             if (glfwJoystickPresent(i)) {
-                if (ImGui::Selectable(joyStickComboItemName(i).c_str(), active_gamepad == i)) { // Returns true if clicked
-                    active_gamepad = i;
+                if (ImGui::Selectable(joyStickComboItemName(i).c_str(), plyconf.joy_index == i)) { // Returns true if clicked
+                    plyconf.joy_index = i;
+                    readNeutralPositions(player);
                 }
-                if (active_gamepad == i) {
+                if (plyconf.joy_index == i) {
                     ImGui::SetItemDefaultFocus();
                 }
             }
@@ -266,11 +287,7 @@ bool JoymenuScene::updateGamepadConfig_Gamepad(int player)
         ImGui::EndCombo();
     }
 
-    if (active_gamepad != -1) {
-       plyconf.joy_index = active_gamepad;
-    }
-
-    return active_gamepad != -1;
+    return glfwJoystickPresent(plyconf.joy_index);
 }
 
 void JoymenuScene::updateGamepadConfigTable_JoysticksTitles(int player)
@@ -333,7 +350,7 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksMainRow(int player)
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         m_config_player   = player;
         m_config_item     = configured_item::control_stick;
-        m_joyconfig_stage = joyconfig_stage::neutral;
+        m_joyconfig_stage = joyconfig_stage::vertical;
     }
     ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
@@ -356,7 +373,7 @@ void JoymenuScene::updateGamepadConfigTable_JoysticksMainRow(int player)
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         m_config_player   = player;
         m_config_item     = configured_item::camera_stick;
-        m_joyconfig_stage = joyconfig_stage::neutral;
+        m_joyconfig_stage = joyconfig_stage::vertical;
     }
     ImGui::TableSetColumnIndex(offset+5);
     centreCursorForTextY();
@@ -403,8 +420,9 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsTopLabels(int player)
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
-    centreCursorForTextX("6");
-    ImGui::Text("6");
+    string str = to_string(plyconf.hatch_up);
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX("1");
     ImGui::Text("1");
@@ -417,12 +435,25 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
 
     ImGui::TableSetColumnIndex(offset+0);
     centreCursorForTextY();
-    ImGui::Text("7");
+    ImGui::Text(to_string(plyconf.hatch_left).c_str());
     ImGui::TableSetColumnIndex(offset+1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    ImVec2 currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_yellow_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_steercross_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player = player;
+        m_config_item = configured_item::hatch;
+        m_hatchconfig_stage = hatchconfig_stage::up;
+    }
     ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
-    ImGui::Text("5");
+    ImGui::Text(to_string(plyconf.hatch_right).c_str());
     ImGui::TableSetColumnIndex(offset+3);
     centreCursorForTextY();
     ImGui::Text("2");
@@ -439,8 +470,9 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
     auto& plyconf = GameState::instance.config[player];
 
     ImGui::TableSetColumnIndex(offset+1);
-    centreCursorForTextX("1");
-    ImGui::Text("1");
+    string str = to_string(plyconf.hatch_down);
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(offset+4);
     centreCursorForTextX("4");
     ImGui::Text("4");
@@ -487,47 +519,8 @@ void JoymenuScene::updateJoystickConfig(int player)
     assert(m_config_item == configured_item::control_stick ||
            m_config_item == configured_item::camera_stick);
 
-    // TODO: Honour "player"
-    auto& plyconf = GameState::instance.config[player];
-
     switch (m_joyconfig_stage) {
     case joyconfig_stage::none:
-        break;
-    case joyconfig_stage::neutral:
-        ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
-        ImGui::Begin(_("Configuring joystick"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        ImGui::TextWrapped(_("Determining neutral positions. Please do not touch your joystick until the next prompt appears."));
-        ImGui::NewLine();
-
-        if (mp_config_timer) {
-            centreCursorForTextX("0");
-            ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
-        } else {
-            centreCursorForTextX(_("Start"));
-            if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
-                    // Clear memory from previous run, if any
-                    if (mp_neutral_joyaxes) {
-                        delete[] mp_neutral_joyaxes;
-                    }
-
-                    // Read neutral axes positions and remember them for later
-                    int axescount = 0;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    mp_neutral_joyaxes = new float[axescount];
-                    memcpy(mp_neutral_joyaxes, joyaxes, sizeof(float) * axescount);
-
-                    // Advance to next config stage
-                    delete mp_config_timer;
-                    mp_config_timer = nullptr;
-                    m_joyconfig_stage = joyconfig_stage::vertical;
-                });
-            }
-        }
-
-        ImGui::End();
-
         break;
     case joyconfig_stage::vertical:
         ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
@@ -552,13 +545,14 @@ void JoymenuScene::updateJoystickConfig(int player)
         } else {
             centreCursorForTextX(_("Start"));
             if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
+                mp_config_timer = new Timer(5000.0, false, [player,this](){
                     // The changed axis is the vertical axis
+                    auto& plyconf = GameState::instance.config[player];
                     int axis = 0;
                     int axescount = 0;
                     float axislimit = 0.0f;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+                    const float* joyaxes = glfwGetJoystickAxes(plyconf.joy_index, &axescount);
+                    findChangedAxis(axescount, m_neutral_joyaxes[player].data(), joyaxes, axis, axislimit);
 
                     if (m_config_item == configured_item::control_stick) {
                         plyconf.joy_vertical.axisno = axis;
@@ -600,13 +594,14 @@ void JoymenuScene::updateJoystickConfig(int player)
         } else {
             centreCursorForTextX(_("Start"));
             if (ImGui::Button(_("Start"))) {
-                mp_config_timer = new Timer(5000.0, false, [&](){
+                mp_config_timer = new Timer(5000.0, false, [player,this](){
                     // The changed axis is the horizontal axis
+                    auto& plyconf = GameState::instance.config[player];
                     int axis = 0;
                     int axescount = 0;
                     float axislimit = 0.0f;
-                    const float* joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-                    findChangedAxis(axescount, mp_neutral_joyaxes, joyaxes, axis, axislimit);
+                    const float* joyaxes = glfwGetJoystickAxes(plyconf.joy_index, &axescount);
+                    findChangedAxis(axescount, m_neutral_joyaxes[player].data(), joyaxes, axis, axislimit);
 
                     if (m_config_item == configured_item::control_stick) {
                         plyconf.joy_horizontal.axisno = axis;
@@ -623,19 +618,19 @@ void JoymenuScene::updateJoystickConfig(int player)
                      * of mp_neutral_joyaxes, because some joysticks have more axes
                      * than the control sticks, e.g. in the shoulder buttons. Also,
                      * 0.1 is added to cater for possible larger noise. */
-                    plyconf.joy_dead_zone = max({mp_neutral_joyaxes[plyconf.joy_horizontal.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_vertical.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_cam_horizontal.axisno],
-                                                 mp_neutral_joyaxes[plyconf.joy_cam_vertical.axisno]})
+                    plyconf.joy_dead_zone = max({m_neutral_joyaxes[player][plyconf.joy_horizontal.axisno],
+                                                 m_neutral_joyaxes[player][plyconf.joy_vertical.axisno],
+                                                 m_neutral_joyaxes[player][plyconf.joy_cam_horizontal.axisno],
+                                                 m_neutral_joyaxes[player][plyconf.joy_cam_vertical.axisno]})
                                             + 0.1f;
                     printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
 
                     // End config stages
                     delete mp_config_timer;
-                    mp_config_timer = nullptr;
+                    mp_config_timer   = nullptr;
                     m_joyconfig_stage = joyconfig_stage::none;
-                    m_config_item = configured_item::none;
-                    m_config_player = -1;
+                    m_config_item     = configured_item::none;
+                    m_config_player   = -1;
                 });
             }
         }
@@ -643,6 +638,94 @@ void JoymenuScene::updateJoystickConfig(int player)
         ImGui::End();
         break;
     } // No default to have the compiler warn on missing items
+}
+
+void JoymenuScene::updateHatchConfig(int player)
+{
+    assert(m_config_item == configured_item::hatch);
+
+    string prompt;
+    switch (m_hatchconfig_stage) {
+    case hatchconfig_stage::up:
+        prompt = _("Please press UP on the hatch until the next prompt appears.");
+        break;
+    case hatchconfig_stage::right:
+        prompt = _("Please press RIGHT on the hatch until the next prompt appears.");
+        break;
+    case hatchconfig_stage::down:
+        prompt = _("Please press DOWN on the hatch until the next prompt appears.");
+        break;
+    case hatchconfig_stage::left:
+        prompt = _("Please press LEFT on the hatch until this prompt disappears.");
+        break;
+    case hatchconfig_stage::none:
+        assert(false);
+        break;
+    } // No default to have compiler warn about missing items
+
+    ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+    ImGui::Begin(_("Configuring hatch"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextWrapped(prompt.c_str());
+    ImGui::NewLine();
+
+    if (mp_config_timer) {
+        centreCursorForTextX("0");
+        ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
+    } else {
+        centreCursorForTextX(_("Start"));
+        if (ImGui::Button(_("Start"))) {
+            mp_config_timer = new Timer(5000.0, false, [player,this](){
+                auto& plyconf    = GameState::instance.config[player];
+                int button_count = 0;
+                const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
+
+                switch (m_hatchconfig_stage) {
+                case hatchconfig_stage::up:
+                    plyconf.hatch_up    = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+                    m_hatchconfig_stage = hatchconfig_stage::right;
+                    break;
+                case hatchconfig_stage::right:
+                    plyconf.hatch_right = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+                    m_hatchconfig_stage = hatchconfig_stage::down;
+                    break;
+                case hatchconfig_stage::down:
+                    plyconf.hatch_down  = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+                    m_hatchconfig_stage = hatchconfig_stage::left;
+                    break;
+                case hatchconfig_stage::left:
+                    plyconf.hatch_left  = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+                    m_hatchconfig_stage = hatchconfig_stage::none;
+                    m_config_item       = configured_item::none;
+                    m_config_player     = -1;
+                    break;
+                case hatchconfig_stage::none:
+                    assert(false);
+                    break;
+                } // No default to warn about missing items
+
+                delete mp_config_timer;
+                mp_config_timer = nullptr;
+            });
+        }
+    }
+
+    ImGui::End();
+}
+
+void JoymenuScene::readNeutralPositions(int player)
+{
+    assert(player == PLAYER1 || player == PLAYER2);
+
+    auto& plyconf = GameState::instance.config[player];
+    int count     = 0;
+
+    const float* joyaxes      = glfwGetJoystickAxes(plyconf.joy_index, &count);
+    m_neutral_joyaxes[player] = vector(joyaxes, joyaxes + count);
+
+    const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &count);
+    m_neutral_buttons[player]    = vector(buttons, buttons + count);
+
 }
 
 void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)

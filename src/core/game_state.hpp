@@ -68,6 +68,10 @@ namespace Core {
             axisconf joy_cam_vertical;
             axisconf joy_cam_horizontal;
             float joy_dead_zone = 0.0f; ///< Dead zone, as a value between 0 (no dead zone) and 1 (everything). Dead zone is the zone in which axis input is ignored.
+            unsigned char hatch_up = 0;
+            unsigned char hatch_right = 0;
+            unsigned char hatch_down = 0;
+            unsigned char hatch_left = 0;
         } config[2]; // One configuration struct per player; use "player" enum indices for access.
 
         static GameState instance;
