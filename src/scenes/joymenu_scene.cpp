@@ -661,7 +661,7 @@ void JoymenuScene::updateHatchConfig(int player)
     static string prompt;
 
     if (prompt.empty()) {
-        prompt = _("Please press UP on the hatch until the next prompt appears.");
+        prompt = _("Please press UP on the hatch.");
     }
 
     ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
@@ -681,17 +681,17 @@ void JoymenuScene::updateHatchConfig(int player)
         case hatchconfig_stage::up:
             plyconf.hatch_up    = button;
             m_hatchconfig_stage = hatchconfig_stage::right;
-            prompt              = _("Please press RIGHT on the hatch until the next prompt appears.");
+            prompt              = _("Please press RIGHT on the hatch.");
             break;
         case hatchconfig_stage::right:
             plyconf.hatch_right = button;
             m_hatchconfig_stage = hatchconfig_stage::down;
-            prompt              = _("Please press DOWN on the hatch until the next prompt appears.");
+            prompt              = _("Please press DOWN on the hatch.");
             break;
         case hatchconfig_stage::down:
             plyconf.hatch_down  = button;
             m_hatchconfig_stage = hatchconfig_stage::left;
-            prompt              = _("Please press LEFT on the hatch until this prompt disappears.");
+            prompt              = _("Please press LEFT on the hatch.");
             break;
         case hatchconfig_stage::left:
             plyconf.hatch_left  = button;
