@@ -57,7 +57,7 @@ static void findChangedAxis(const int& len, const float neutral_joyaxes[], const
     assert(false);
 }
 
-static char findChangedButton(const int& len, const unsigned char neutral_buttons[], const unsigned char current_buttons[])
+static int findChangedButton(const int& len, const unsigned char neutral_buttons[], const unsigned char current_buttons[])
 {
     for(int i=0; i < len; i++) {
         if (neutral_buttons[i] != current_buttons[i]) {
@@ -65,9 +65,7 @@ static char findChangedButton(const int& len, const unsigned char neutral_button
         }
     }
 
-    // FIXME: If the user presses nothing, this is reached
-    assert(false);
-    return 0;
+    return -1;
 }
 
 /// Formats a human-readable entry for the gamepad combo box UI for the GLFW joystick
@@ -668,49 +666,43 @@ void JoymenuScene::updateHatchConfig(int player)
     ImGui::Begin(_("Configuring hatch"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
     ImGui::TextWrapped(prompt.c_str());
     ImGui::NewLine();
-
-    if (mp_config_timer) {
-        centreCursorForTextX("0");
-        ImGui::Text("%.0f", 5.0f - mp_config_timer->passedTime());
-    } else {
-        centreCursorForTextX(_("Start"));
-        if (ImGui::Button(_("Start"))) {
-            mp_config_timer = new Timer(5000.0, false, [player,this](){
-                auto& plyconf    = GameState::instance.config[player];
-                int button_count = 0;
-                const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
-
-                switch (m_hatchconfig_stage) {
-                case hatchconfig_stage::up:
-                    plyconf.hatch_up    = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
-                    m_hatchconfig_stage = hatchconfig_stage::right;
-                    break;
-                case hatchconfig_stage::right:
-                    plyconf.hatch_right = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
-                    m_hatchconfig_stage = hatchconfig_stage::down;
-                    break;
-                case hatchconfig_stage::down:
-                    plyconf.hatch_down  = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
-                    m_hatchconfig_stage = hatchconfig_stage::left;
-                    break;
-                case hatchconfig_stage::left:
-                    plyconf.hatch_left  = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
-                    m_hatchconfig_stage = hatchconfig_stage::none;
-                    m_config_item       = configured_item::none;
-                    m_config_player     = -1;
-                    break;
-                case hatchconfig_stage::none:
-                    assert(false);
-                    break;
-                } // No default to warn about missing items
-
-                delete mp_config_timer;
-                mp_config_timer = nullptr;
-            });
-        }
-    }
-
     ImGui::End();
+
+    auto& plyconf                = GameState::instance.config[player];
+    int button_count             = 0;
+    const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
+    int button                   = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+
+    if (button != -1) {
+        // Wait until the button is realeased
+        while (buttons[button] == GLFW_PRESS) {
+            buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
+        }
+
+        switch (m_hatchconfig_stage) {
+        case hatchconfig_stage::up:
+            plyconf.hatch_up    = button;
+            m_hatchconfig_stage = hatchconfig_stage::right;
+            break;
+        case hatchconfig_stage::right:
+            plyconf.hatch_right = button;
+            m_hatchconfig_stage = hatchconfig_stage::down;
+            break;
+        case hatchconfig_stage::down:
+            plyconf.hatch_down  = button;
+            m_hatchconfig_stage = hatchconfig_stage::left;
+            break;
+        case hatchconfig_stage::left:
+            plyconf.hatch_left  = button;
+            m_hatchconfig_stage = hatchconfig_stage::none;
+            m_config_item       = configured_item::none;
+            m_config_player     = -1;
+            break;
+        case hatchconfig_stage::none:
+            assert(false);
+            break;
+        } // No default to warn about missing items
+    }
 }
 
 void JoymenuScene::readNeutralPositions(int player)
