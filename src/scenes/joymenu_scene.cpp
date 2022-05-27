@@ -57,10 +57,10 @@ static void findChangedAxis(const int& len, const float neutral_joyaxes[], const
     assert(false);
 }
 
-static int findChangedButton(const int& len, const unsigned char neutral_buttons[], const unsigned char current_buttons[])
+static int findPressedButton(const int& len, const unsigned char buttons[])
 {
     for(int i=0; i < len; i++) {
-        if (neutral_buttons[i] != current_buttons[i]) {
+        if (buttons[i] == GLFW_PRESS) {
             return i;
         }
     }
@@ -641,25 +641,11 @@ void JoymenuScene::updateJoystickConfig(int player)
 void JoymenuScene::updateHatchConfig(int player)
 {
     assert(m_config_item == configured_item::hatch);
+    static string prompt;
 
-    string prompt;
-    switch (m_hatchconfig_stage) {
-    case hatchconfig_stage::up:
+    if (prompt.empty()) {
         prompt = _("Please press UP on the hatch until the next prompt appears.");
-        break;
-    case hatchconfig_stage::right:
-        prompt = _("Please press RIGHT on the hatch until the next prompt appears.");
-        break;
-    case hatchconfig_stage::down:
-        prompt = _("Please press DOWN on the hatch until the next prompt appears.");
-        break;
-    case hatchconfig_stage::left:
-        prompt = _("Please press LEFT on the hatch until this prompt disappears.");
-        break;
-    case hatchconfig_stage::none:
-        assert(false);
-        break;
-    } // No default to have compiler warn about missing items
+    }
 
     ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
     ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
@@ -671,7 +657,7 @@ void JoymenuScene::updateHatchConfig(int player)
     auto& plyconf                = GameState::instance.config[player];
     int button_count             = 0;
     const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
-    int button                   = findChangedButton(button_count, m_neutral_buttons[player].data(), buttons);
+    int button                   = findPressedButton(button_count, buttons);
 
     if (button != -1) {
         // Wait until the button is realeased
@@ -683,20 +669,24 @@ void JoymenuScene::updateHatchConfig(int player)
         case hatchconfig_stage::up:
             plyconf.hatch_up    = button;
             m_hatchconfig_stage = hatchconfig_stage::right;
+            prompt              = _("Please press RIGHT on the hatch until the next prompt appears.");
             break;
         case hatchconfig_stage::right:
             plyconf.hatch_right = button;
             m_hatchconfig_stage = hatchconfig_stage::down;
+            prompt              = _("Please press DOWN on the hatch until the next prompt appears.");
             break;
         case hatchconfig_stage::down:
             plyconf.hatch_down  = button;
             m_hatchconfig_stage = hatchconfig_stage::left;
+            prompt = _("Please press LEFT on the hatch until this prompt disappears.");
             break;
         case hatchconfig_stage::left:
             plyconf.hatch_left  = button;
             m_hatchconfig_stage = hatchconfig_stage::none;
             m_config_item       = configured_item::none;
             m_config_player     = -1;
+            prompt.clear();
             break;
         case hatchconfig_stage::none:
             assert(false);
@@ -714,9 +704,6 @@ void JoymenuScene::readNeutralPositions(int player)
 
     const float* joyaxes      = glfwGetJoystickAxes(plyconf.joy_index, &count);
     m_neutral_joyaxes[player] = vector(joyaxes, joyaxes + count);
-
-    const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &count);
-    m_neutral_buttons[player]    = vector(buttons, buttons + count);
 
 }
 

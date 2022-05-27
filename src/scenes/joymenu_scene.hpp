@@ -29,7 +29,6 @@ namespace SceneSystem {
 
         Core::Timer* mp_config_timer;
         std::vector<float> m_neutral_joyaxes[2];
-        std::vector<unsigned char>  m_neutral_buttons[2];
 
         enum class joyconfig_stage {
             none = 0,
