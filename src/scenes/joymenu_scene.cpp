@@ -57,15 +57,32 @@ static void findChangedAxis(const int& len, const float neutral_joyaxes[], const
     assert(false);
 }
 
-static int findPressedButton(const int& len, const unsigned char buttons[])
+/// Queries all buttons on the joystick `joy_index' and returns the
+/// first one that is pressed; returns -1 if no button is pressed.
+static int findPressedButton(int joy_index)
 {
-    for(int i=0; i < len; i++) {
+    int button_count             = 0;
+    const unsigned char* buttons = glfwGetJoystickButtons(joy_index, &button_count);
+
+    for(int i=0; i < button_count; i++) {
         if (buttons[i] == GLFW_PRESS) {
             return i;
         }
     }
 
     return -1;
+}
+
+/// Blocks until the button `button' on the joystick `joy_index' is released.
+static void waitUntilButtonReleased(int joy_index, int button)
+{
+    int button_count             = 0;
+    const unsigned char* buttons = glfwGetJoystickButtons(joy_index, &button_count);
+
+    assert(button < button_count);
+    while (buttons[button] == GLFW_PRESS) {
+        buttons = glfwGetJoystickButtons(joy_index, &button_count);
+    }
 }
 
 /// Formats a human-readable entry for the gamepad combo box UI for the GLFW joystick
@@ -654,16 +671,11 @@ void JoymenuScene::updateHatchConfig(int player)
     ImGui::NewLine();
     ImGui::End();
 
-    auto& plyconf                = GameState::instance.config[player];
-    int button_count             = 0;
-    const unsigned char* buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
-    int button                   = findPressedButton(button_count, buttons);
+    auto& plyconf = GameState::instance.config[player];
+    int button    = findPressedButton(plyconf.joy_index);
 
     if (button != -1) {
-        // Wait until the button is realeased
-        while (buttons[button] == GLFW_PRESS) {
-            buttons = glfwGetJoystickButtons(plyconf.joy_index, &button_count);
-        }
+        waitUntilButtonReleased(plyconf.joy_index, button);
 
         switch (m_hatchconfig_stage) {
         case hatchconfig_stage::up:
@@ -679,7 +691,7 @@ void JoymenuScene::updateHatchConfig(int player)
         case hatchconfig_stage::down:
             plyconf.hatch_down  = button;
             m_hatchconfig_stage = hatchconfig_stage::left;
-            prompt = _("Please press LEFT on the hatch until this prompt disappears.");
+            prompt              = _("Please press LEFT on the hatch until this prompt disappears.");
             break;
         case hatchconfig_stage::left:
             plyconf.hatch_left  = button;
