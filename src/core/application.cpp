@@ -33,22 +33,6 @@ using namespace Core;
 
 static Application* sp_application = nullptr;
 
-static void findChangedAxis(const int& len, const float neutral_joyaxes[], const float joyaxes[], int& axisno, float& limit)
-{
-    static float tolerance = 0.25f; // Reading from the joystick will not yield always the exact same values even if the sticks are left alone. Allow some tolerance.
-    assert(len > 0);
-
-    for(int i=0; i < len; i++) {
-        printf("Axis %d has %.2f at neutral and %.2f now\n", i, neutral_joyaxes[i], joyaxes[i]);
-        if (fabs(neutral_joyaxes[i] - joyaxes[i]) > tolerance) {
-            printf(">>> Axis %d differs from neutral position\n", i);
-            axisno = i;
-            limit = joyaxes[i];
-            return;
-        }
-    }
-}
-
 static void processGLFWKeys(GLFWwindow* p_glfw_window,
                             int key, int scancode, int action, int mods)
 {
@@ -151,9 +135,6 @@ void Application::setupGlfw()
     if (!glfwJoystickPresent(GLFW_JOYSTICK_1)) {
         throw(runtime_error("No joystick found! It is required to play the game."));
     }
-
-    // FIXME: This should be proper in the UI rather than on the console here...
-    configureJoystick();
 }
 
 void Application::shutdownGlfw()
@@ -272,6 +253,48 @@ SceneSystem::Scene& Application::currentScene()
 }
 
 /**
+ * Pushes `p_scene' onto the scene stack. The Application instance
+ * takes control of the memory of `p_scene' -- do not free it
+ * yourself and do not use the pointer anymore after passing it
+ * to this method.
+ *
+ * After this method returns, the passed Scene instance will be at
+ * the top of the scene stack, thus it will be played on the next
+ * iteration of the main loop. If it is popped, the currently
+ * running scene will show up again on the mainloop’s next
+ * iteration. If this is not desired, use popScene() to remove
+ * the current scene from the scene stack before pushing your
+ * new scene.
+ *
+ * \remark If you want to transition to a new scene and never return
+ * to the scene currently at the top of the scene stack, use
+ * SceneSystem::Scene::finish() with an appropriately set `p_next`
+ * parameter instead, because this is easier to understand.
+ */
+void Application::pushScene(unique_ptr<SceneSystem::Scene> p_scene)
+{
+    m_scene_stack.push(move(p_scene));
+}
+
+/**
+ * Pop the current scene from the stack. On the main loop’s
+ * next iteration, whatever was below will be played. If there
+ * is nothing below, the game terminates.
+ *
+ * If you want to store the scene before popping it, use
+ * currentScene() to retrieve it before calling popScene().
+ *
+ * \remark This method ensures that the scene’s memory is
+ * deleted. If you call this from the very same scene which
+ * is popped, your `this' pointer gets deleted. Be careful
+ * what you do in such cases.
+ */
+void Application::popScene()
+{
+    m_scene_stack.pop();
+}
+
+/**
  * Creates the window and enters the main loop.
  */
 void Application::run()
@@ -314,7 +337,12 @@ void Application::run()
         glfwPollEvents();
 
         if (m_scene_stack.top()->isFinishing()) {
+            SceneSystem::Scene* p_next_scene = m_scene_stack.top()->nextScene();
             m_scene_stack.pop();
+
+            if (p_next_scene) {
+                m_scene_stack.push(move(unique_ptr<SceneSystem::Scene>(p_next_scene)));
+            }
         }
     }
 
@@ -326,83 +354,4 @@ void Application::run()
     shutdownOgreRTSS();
     delete mp_window;
     mp_window = nullptr;
-}
-
-void Application::configureJoystick()
-{
-    int axescount = 0;
-    const float* joyaxes = nullptr;
-    float* neutral_joyaxes = nullptr;
-
-    /*
-     * Querying the joystick axes. The player presses UP and RIGHT,
-     * from which the below code induces which axis is the vertical
-     * and which axis is the horizontal axis. The Ilmendur code
-     * assumes that the joystick vertical axis is positive towards
-     * DOWN, and the horizontal axis is positive towards RIGHT. If
-     * that conflicts with what is read from the player's input here,
-     * the axis attribute `inverted' is set for the respective axis.
-     * It is up to the code reading the axes values to use this
-     * information to normalise the input before processing it.
-     */
-
-    cout << "Configuring your joystick." << endl;
-    cout << "Determining neutral positions. Please do not touch your joystick until the next prompt appears. Press Enter to start.";
-    cin.get();
-    sleep(2);
-    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    neutral_joyaxes = new float[axescount];
-    memcpy(neutral_joyaxes, joyaxes, sizeof(float) * axescount);
-    cout << "Your joystick has " << axescount << " axes." << endl;
-
-    int axis = 0;
-    float axislimit = 0.0f;
-    cout << "Determining vertical MOVEMENT axis. Please press UP until the next prompt appears. Press Enter to start.";
-    cin.get();
-    sleep(2);
-    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
-    GameState::instance.config[FREYA].joy_vertical.axisno = axis;
-    GameState::instance.config[FREYA].joy_vertical.inverted = axislimit > 0.0f;
-    cout << "Vertical movement axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
-
-    cout << "Determining horizontal MOVEMENT axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
-    cin.get();
-    sleep(2);
-    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
-    GameState::instance.config[FREYA].joy_horizontal.axisno = axis;
-    GameState::instance.config[FREYA].joy_horizontal.inverted = axislimit < 0.0f;
-    cout << "Horizontal movement axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
-
-    cout << "Determining vertical CAMERA STEERING axis. Please press UP until the next prompt appears. Press Enter to start.";
-    cin.get();
-    sleep(2);
-    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
-    GameState::instance.config[FREYA].joy_cam_vertical.axisno = axis;
-    GameState::instance.config[FREYA].joy_cam_vertical.inverted = axislimit > 0.0f;
-    cout << "Vertical camera steering axis is " << axis << ". Inversion: " << (axislimit > 0.0f ? "yes" : "no") << "." << endl;
-
-    cout << "Determining horizontal CAMERA STEERING axis. Please press RIGHT until the next prompt appears. Press Enter to start.";
-    cin.get();
-    sleep(2);
-    joyaxes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axescount);
-    findChangedAxis(axescount, neutral_joyaxes, joyaxes, axis, axislimit);
-    GameState::instance.config[FREYA].joy_cam_horizontal.axisno = axis;
-    GameState::instance.config[FREYA].joy_cam_horizontal.inverted = axislimit < 0.0f;
-    cout << "Horizontal camera steering axis is " << axis << ". Inversion: " << (axislimit < 0.0f ? "yes" : "no") << "." << endl;
-
-    delete[] neutral_joyaxes;
-
-    float deadpercent = 0.0f;
-    cout << "How large is the dead zone (zone in which to ignore input from the axes), in percent?" << endl;
-    cin >> deadpercent;
-    GameState::instance.config[FREYA].joy_dead_zone = deadpercent / 100.0f;
-
-    GameState::instance.config[FREYA].joy_index = GLFW_JOYSTICK_1;
-    cout << "Configuring joystick done." << endl;
-
-    cout << "Press Enter to continue.";
-    cin.get();
 }

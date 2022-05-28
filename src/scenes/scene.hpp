@@ -30,8 +30,10 @@ namespace SceneSystem {
         virtual void update() {};
         virtual void draw() {};
 
-        void finish();
+        void finish(Scene* p_next = nullptr);
         bool isFinishing();
+
+        Scene* nextScene(); // Private API for use in Application::run(). Do not use.
     protected:
         PhysicsSystem::PhysicsEngine* mp_physics;
         Ogre::SceneManager* mp_scene_manager;
@@ -40,6 +42,7 @@ namespace SceneSystem {
     private:
         std::string m_name;
         bool m_finish;
+        Scene* mp_next_scene;
     };
 
 }

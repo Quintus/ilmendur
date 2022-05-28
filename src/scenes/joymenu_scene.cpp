@@ -1,4 +1,5 @@
 #include "joymenu_scene.hpp"
+#include "dummy_scene.hpp"
 #include "../core/application.hpp"
 #include "../core/window.hpp"
 #include "../core/i18n.hpp"
@@ -9,7 +10,6 @@
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
 #include <algorithm>
-#include <iostream>
 #include <cstdio>
 
 // Height of the images displayed for the control buttons, etc.
@@ -289,7 +289,9 @@ void JoymenuScene::updateGamepadConfigUI()
 
     // Confirmation button
     ImGui::SetCursorPosX(m_tabstops[3] - ImGui::CalcTextSize("Save Configuration").x);
-    ImGui::Button(_("Save Configuration"));
+    if (ImGui::Button(_("Save Configuration"))) {
+        finish(new SceneSystem::DummyScene());
+    }
 
     ImGui::End();
 }
@@ -702,7 +704,7 @@ void JoymenuScene::updateJoystickConfig(int player)
                                                  m_neutral_joyaxes[player][plyconf.joy_cam_horizontal.axisno],
                                                  m_neutral_joyaxes[player][plyconf.joy_cam_vertical.axisno]})
                                             + 0.1f;
-                    printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
+                    //printf("Dead zone calculated as %.2f\n", plyconf.joy_dead_zone);
 
                     // End config stages
                     delete mp_config_timer;

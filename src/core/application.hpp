@@ -22,7 +22,10 @@ namespace Core {
         ~Application();
 
         Window& getWindow();
+
         SceneSystem::Scene& currentScene();
+        void pushScene(std::unique_ptr<SceneSystem::Scene> p_scene);
+        void popScene();
 
         inline float getFPS() { return m_fps; }
 
@@ -37,7 +40,6 @@ namespace Core {
         void loadOgreResources();
         void setupOgreRTSS();
         void shutdownOgreRTSS();
-        void configureJoystick();
         float m_fps;
 
         Window* mp_window;

@@ -11,7 +11,8 @@ Scene::Scene(const string& name)
     : mp_physics(nullptr),
       mp_scene_manager(Ogre::Root::getSingleton().createSceneManager()),
       m_name(name),
-      m_finish(false)
+      m_finish(false),
+      mp_next_scene(nullptr)
 {
 }
 
@@ -21,14 +22,49 @@ Scene::~Scene()
     mp_scene_manager = nullptr;
 }
 
-void Scene::finish()
+/**
+ * Set the Finishing flag on this scene. The scene stack controller
+ * code will pop the scene from the stack if after executing the
+ * current frame this mark is set. It can be queried with isFinishing().
+ *
+ * \param[in] p_next
+ * The scene to transition to. This is what the scene stack controller
+ * code will put onto the scene stack after it popped the finishing scene.
+ * Do not use the pointer anymore after it was passed here; the scene
+ * stack controller assumes control of it. If this is NULL, nothing
+ * will be pushed onto the scene stack.
+ *
+ * \remark Using `p_next' is preferred to using Application::pushScene()
+ * if it is your intention not to return to this scene.
+ * See there for the reasons.
+ */
+void Scene::finish(Scene* p_next)
 {
+    assert(!isFinishing());
+
     m_finish = true;
+    mp_next_scene = p_next;
 }
 
+/**
+ * Whether the scene is about to finish, see finish().
+ */
 bool Scene::isFinishing()
 {
     return m_finish;
+}
+
+/**
+ * \private Access and clear the next scene. Private API to be
+ * only used in Application::run().
+ */
+Scene* Scene::nextScene()
+{
+    assert(isFinishing());
+
+    Scene* p_scene = mp_next_scene;
+    mp_next_scene = nullptr;
+    return p_scene;
 }
 
 /**
