@@ -106,6 +106,8 @@ JoymenuScene::JoymenuScene()
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
       m_hatchconfig_stage(hatchconfig_stage::none),
+      m_actbuttonconfig_stage(actbuttonconfig_stage::none),
+      m_shoulderbuttonconfig_stage(shoulderbuttonconfig_stage::none),
       m_config_item(configured_item::none),
       m_config_player(-1)
 {
@@ -202,6 +204,9 @@ void JoymenuScene::updateUI()
         break;
     case configured_item::action_buttons:
         updateActionButtonConfig(m_config_player);
+        break;
+    case configured_item::shoulder_buttons:
+        updateShoulderButtonConfig(m_config_player);
         break;
     } // No default so the compiler warns about missed values
 }
@@ -541,12 +546,25 @@ void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherMainRow(int player
 
     ImGui::TableSetColumnIndex(offset+0);
     centreCursorForTextY();
-    ImGui::Text("5");
+    ImGui::Text(to_string(plyconf.shoulderbutton_left).c_str());
     ImGui::TableSetColumnIndex(offset+1);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    ImVec2 currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_yellow_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_shoulderbuttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player = player;
+        m_config_item = configured_item::shoulder_buttons;
+        m_shoulderbuttonconfig_stage = shoulderbuttonconfig_stage::left;
+    }
     ImGui::TableSetColumnIndex(offset+2);
     centreCursorForTextY();
-    ImGui::Text("6");
+    ImGui::Text(to_string(plyconf.shoulderbutton_right).c_str());
     ImGui::TableSetColumnIndex(offset+4);
     // TRANS: Label for the Menu button, keep the brackets
     ImGui::Text(_("[MENU]"));
@@ -781,6 +799,48 @@ void JoymenuScene::updateActionButtonConfig(int player)
             prompt.clear();
             break;
         case actbuttonconfig_stage::none:
+            assert(false);
+            break;
+        } // No default to warn about missing items
+    }
+}
+
+void JoymenuScene::updateShoulderButtonConfig(int player)
+{
+    assert(m_config_item == configured_item::shoulder_buttons);
+    static string prompt;
+
+    if (prompt.empty()) {
+        prompt = _("Please press the LEFT shoulder button.");
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+    ImGui::Begin(_("Configuring shoulder buttons"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextWrapped(prompt.c_str());
+    ImGui::NewLine();
+    ImGui::End();
+
+    auto& plyconf = GameState::instance.config[player];
+    int button    = findPressedButton(plyconf.joy_index);
+
+    if (button != -1) {
+        waitUntilButtonReleased(plyconf.joy_index, button);
+
+        switch (m_shoulderbuttonconfig_stage) {
+        case shoulderbuttonconfig_stage::left:
+            plyconf.shoulderbutton_left  = button;
+            m_shoulderbuttonconfig_stage = shoulderbuttonconfig_stage::right;
+            prompt = _("Please press the RIGHT shoulder button.");
+            break;
+        case shoulderbuttonconfig_stage::right:
+            plyconf.shoulderbutton_right = button;
+            m_shoulderbuttonconfig_stage = shoulderbuttonconfig_stage::none;
+            m_config_item                = configured_item::none;
+            m_config_player              = -1;
+            prompt.clear();
+            break;
+        case shoulderbuttonconfig_stage::none:
             assert(false);
             break;
         } // No default to warn about missing items

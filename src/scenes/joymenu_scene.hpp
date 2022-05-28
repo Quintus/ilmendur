@@ -57,6 +57,13 @@ namespace SceneSystem {
         };
         actbuttonconfig_stage m_actbuttonconfig_stage;
 
+        enum class shoulderbuttonconfig_stage {
+            none = 0,
+            left,
+            right
+        };
+        shoulderbuttonconfig_stage m_shoulderbuttonconfig_stage;
+
         enum class configured_item {
             none = 0,
             control_stick,
@@ -86,6 +93,7 @@ namespace SceneSystem {
         void updateJoystickConfig(int player);
         void updateHatchConfig(int player);
         void updateActionButtonConfig(int player);
+        void updateShoulderButtonConfig(int player);
     };
 
 }
