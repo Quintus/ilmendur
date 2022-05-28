@@ -25,7 +25,9 @@ namespace SceneSystem {
         Ogre::ResourceHandle m_steercross_tex;
         Ogre::ResourceHandle m_steercross_yellow_tex;
         Ogre::ResourceHandle m_buttons_tex;
+        Ogre::ResourceHandle m_buttons_yellow_tex;
         Ogre::ResourceHandle m_shoulderbuttons_tex;
+        Ogre::ResourceHandle m_shoulderbuttons_yellow_tex;
 
         Core::Timer* mp_config_timer;
         std::vector<float> m_neutral_joyaxes[2];
@@ -45,6 +47,15 @@ namespace SceneSystem {
             left
         };
         hatchconfig_stage m_hatchconfig_stage;
+
+        enum class actbuttonconfig_stage {
+            none = 0,
+            top,
+            right,
+            bottom,
+            left
+        };
+        actbuttonconfig_stage m_actbuttonconfig_stage;
 
         enum class configured_item {
             none = 0,
@@ -74,6 +85,7 @@ namespace SceneSystem {
         void readNeutralPositions(int player);
         void updateJoystickConfig(int player);
         void updateHatchConfig(int player);
+        void updateActionButtonConfig(int player);
     };
 
 }

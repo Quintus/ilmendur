@@ -100,7 +100,9 @@ JoymenuScene::JoymenuScene()
       m_steercross_tex(0),
       m_steercross_yellow_tex(0),
       m_buttons_tex(0),
+      m_buttons_yellow_tex(0),
       m_shoulderbuttons_tex(0),
+      m_shoulderbuttons_yellow_tex(0),
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
       m_hatchconfig_stage(hatchconfig_stage::none),
@@ -147,9 +149,17 @@ JoymenuScene::JoymenuScene()
     assert(ptr);
     m_buttons_tex = ptr->getHandle();
 
+    ptr = Ogre::TextureManager::getSingleton().load("buttons-yellow.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
+    assert(ptr);
+    m_buttons_yellow_tex = ptr->getHandle();
+
     ptr = Ogre::TextureManager::getSingleton().load("shoulderbuttons.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
     m_shoulderbuttons_tex = ptr->getHandle();
+
+    ptr = Ogre::TextureManager::getSingleton().load("shoulderbuttons-yellow.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
+    assert(ptr);
+    m_shoulderbuttons_yellow_tex = ptr->getHandle();
 
     readNeutralPositions(PLAYER1);
     readNeutralPositions(PLAYER2);
@@ -189,6 +199,9 @@ void JoymenuScene::updateUI()
         break;
     case configured_item::hatch:
         updateHatchConfig(m_config_player);
+        break;
+    case configured_item::action_buttons:
+        updateActionButtonConfig(m_config_player);
         break;
     } // No default so the compiler warns about missed values
 }
@@ -439,8 +452,9 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsTopLabels(int player)
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(offset+4);
-    centreCursorForTextX("1");
-    ImGui::Text("1");
+    str = to_string(plyconf.actbutton_up);
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
 }
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
@@ -471,12 +485,25 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsMainRow(int player)
     ImGui::Text(to_string(plyconf.hatch_right).c_str());
     ImGui::TableSetColumnIndex(offset+3);
     centreCursorForTextY();
-    ImGui::Text("2");
+    ImGui::Text(to_string(plyconf.actbutton_left).c_str());
     ImGui::TableSetColumnIndex(offset+4);
-    ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_yellow_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_buttons_tex), ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player = player;
+        m_config_item = configured_item::action_buttons;
+        m_actbuttonconfig_stage = actbuttonconfig_stage::top;
+    }
     ImGui::TableSetColumnIndex(offset+5);
     centreCursorForTextY();
-    ImGui::Text("3");
+    ImGui::Text(to_string(plyconf.actbutton_right).c_str());
 }
 
 void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
@@ -489,8 +516,9 @@ void JoymenuScene::updateGamepadConfigTable_ItemsActionsBottomLabels(int player)
     centreCursorForTextX(str.c_str());
     ImGui::Text(str.c_str());
     ImGui::TableSetColumnIndex(offset+4);
-    centreCursorForTextX("4");
-    ImGui::Text("4");
+    str = to_string(plyconf.actbutton_down);
+    centreCursorForTextX(str.c_str());
+    ImGui::Text(str.c_str());
 }
 
 void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherTitles(int player)
@@ -701,6 +729,58 @@ void JoymenuScene::updateHatchConfig(int player)
             prompt.clear();
             break;
         case hatchconfig_stage::none:
+            assert(false);
+            break;
+        } // No default to warn about missing items
+    }
+}
+
+void JoymenuScene::updateActionButtonConfig(int player)
+{
+    assert(m_config_item == configured_item::action_buttons);
+    static string prompt;
+
+    if (prompt.empty()) {
+        prompt = _("Please press the UP action button.");
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+    ImGui::Begin(_("Configuring action buttons"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextWrapped(prompt.c_str());
+    ImGui::NewLine();
+    ImGui::End();
+
+    auto& plyconf = GameState::instance.config[player];
+    int button    = findPressedButton(plyconf.joy_index);
+
+    if (button != -1) {
+        waitUntilButtonReleased(plyconf.joy_index, button);
+
+        switch (m_actbuttonconfig_stage) {
+        case actbuttonconfig_stage::top:
+            plyconf.actbutton_up    = button;
+            m_actbuttonconfig_stage = actbuttonconfig_stage::right;
+            prompt = _("Please press the RIGHT action button.");
+            break;
+        case actbuttonconfig_stage::right:
+            plyconf.actbutton_right = button;
+            m_actbuttonconfig_stage = actbuttonconfig_stage::bottom;
+            prompt = _("Please press the DOWN action button.");
+            break;
+        case actbuttonconfig_stage::bottom:
+            plyconf.actbutton_down  = button;
+            m_actbuttonconfig_stage = actbuttonconfig_stage::left;
+            prompt = _("Please press the LEFT action button.");
+            break;
+        case actbuttonconfig_stage::left:
+            plyconf.actbutton_left  = button;
+            m_actbuttonconfig_stage = actbuttonconfig_stage::none;
+            m_config_item           = configured_item::none;
+            m_config_player         = -1;
+            prompt.clear();
+            break;
+        case actbuttonconfig_stage::none:
             assert(false);
             break;
         } // No default to warn about missing items

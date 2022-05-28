@@ -72,6 +72,10 @@ namespace Core {
             unsigned char hatch_right = 0;
             unsigned char hatch_down = 0;
             unsigned char hatch_left = 0;
+            unsigned char actbutton_up = 0;
+            unsigned char actbutton_right = 0;
+            unsigned char actbutton_down = 0;
+            unsigned char actbutton_left = 0;
         } config[2]; // One configuration struct per player; use "player" enum indices for access.
 
         static GameState instance;
