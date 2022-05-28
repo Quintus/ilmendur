@@ -64,13 +64,21 @@ namespace SceneSystem {
         };
         shoulderbuttonconfig_stage m_shoulderbuttonconfig_stage;
 
+        enum class menubuttonconfig_stage {
+            none = 0,
+            menu,
+            hud
+        };
+        menubuttonconfig_stage m_menubuttonconfig_stage;
+
         enum class configured_item {
             none = 0,
             control_stick,
             camera_stick,
             hatch,
             action_buttons,
-            shoulder_buttons
+            shoulder_buttons,
+            menu_buttons
         };
         configured_item m_config_item;
         int m_config_player;
@@ -94,6 +102,7 @@ namespace SceneSystem {
         void updateHatchConfig(int player);
         void updateActionButtonConfig(int player);
         void updateShoulderButtonConfig(int player);
+        void updateMenuButtonConfig(int player);
     };
 
 }

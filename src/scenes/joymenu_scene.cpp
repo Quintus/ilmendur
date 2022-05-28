@@ -108,6 +108,7 @@ JoymenuScene::JoymenuScene()
       m_hatchconfig_stage(hatchconfig_stage::none),
       m_actbuttonconfig_stage(actbuttonconfig_stage::none),
       m_shoulderbuttonconfig_stage(shoulderbuttonconfig_stage::none),
+      m_menubuttonconfig_stage(menubuttonconfig_stage::none),
       m_config_item(configured_item::none),
       m_config_player(-1)
 {
@@ -207,6 +208,9 @@ void JoymenuScene::updateUI()
         break;
     case configured_item::shoulder_buttons:
         updateShoulderButtonConfig(m_config_player);
+        break;
+    case configured_item::menu_buttons:
+        updateMenuButtonConfig(m_config_player);
         break;
     } // No default so the compiler warns about missed values
 }
@@ -566,13 +570,27 @@ void JoymenuScene::updateGamepadConfigTable_AttackDefenceOtherMainRow(int player
     centreCursorForTextY();
     ImGui::Text(to_string(plyconf.shoulderbutton_right).c_str());
     ImGui::TableSetColumnIndex(offset+4);
-    // TRANS: Label for the Menu button, keep the brackets
-    ImGui::Text(_("[MENU]"));
-    // TRANS: Label for the HUD (= Head Up Display) button, keep the brackets
-    ImGui::Text(_("[HUD]"));
+    currpos = ImGui::GetCursorPos();
+    ImGui::Dummy(ImVec2(CTRL_WIDGET_HEIGHT, CTRL_WIDGET_HEIGHT));
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetCursorPos(currpos);
+        // TRANS: Label for the Menu button, keep the brackets
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), _("[MENU]"));
+        // TRANS: Label for the HUD (= Head Up Display) button, keep the brackets
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), _("[HUD]"));
+    } else {
+        ImGui::SetCursorPos(currpos);
+        ImGui::Text(_("[MENU]"));
+        ImGui::Text(_("[HUD]"));
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        m_config_player = player;
+        m_config_item = configured_item::menu_buttons;
+        m_menubuttonconfig_stage = menubuttonconfig_stage::menu;
+    }
     ImGui::TableSetColumnIndex(offset+5);
-    ImGui::Text("9");
-    ImGui::Text("8");
+    ImGui::Text(to_string(plyconf.menu_button).c_str());
+    ImGui::Text(to_string(plyconf.hud_button).c_str());
 }
 
 void JoymenuScene::updateJoystickConfig(int player)
@@ -841,6 +859,48 @@ void JoymenuScene::updateShoulderButtonConfig(int player)
             prompt.clear();
             break;
         case shoulderbuttonconfig_stage::none:
+            assert(false);
+            break;
+        } // No default to warn about missing items
+    }
+}
+
+void JoymenuScene::updateMenuButtonConfig(int player)
+{
+    assert(m_config_item == configured_item::menu_buttons);
+    static string prompt;
+
+    if (prompt.empty()) {
+        prompt = _("Please press the desired MENU button.");
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(100.0f, 100.0f));
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+    ImGui::Begin(_("Configuring menu buttons"), NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextWrapped(prompt.c_str());
+    ImGui::NewLine();
+    ImGui::End();
+
+    auto& plyconf = GameState::instance.config[player];
+    int button    = findPressedButton(plyconf.joy_index);
+
+    if (button != -1) {
+        waitUntilButtonReleased(plyconf.joy_index, button);
+
+        switch (m_menubuttonconfig_stage) {
+        case menubuttonconfig_stage::menu:
+            plyconf.menu_button  = button;
+            m_menubuttonconfig_stage = menubuttonconfig_stage::hud;
+            prompt = _("Please press the desired HUD toggle button.");
+            break;
+        case menubuttonconfig_stage::hud:
+            plyconf.hud_button = button;
+            m_menubuttonconfig_stage = menubuttonconfig_stage::none;
+            m_config_item                = configured_item::none;
+            m_config_player              = -1;
+            prompt.clear();
+            break;
+        case menubuttonconfig_stage::none:
             assert(false);
             break;
         } // No default to warn about missing items
