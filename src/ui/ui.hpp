@@ -2,6 +2,10 @@
 #define ILMENDUR_UI_HPP
 #include <OGRE/Overlay/OgreImGuiOverlay.h>
 
+namespace SceneSystem {
+    class Scene;
+}
+
 namespace UISystem {
 
     /**
@@ -21,8 +25,11 @@ namespace UISystem {
      */
     class GUIEngine {
     public:
+        static GUIEngine& getSingleton();
         GUIEngine();
         ~GUIEngine();
+
+        void enable(SceneSystem::Scene& target_scene);
 
         bool processKeyInput(int key, int scancode, int action, int mods);
         bool processCharInput(unsigned int codepoint);
@@ -32,6 +39,7 @@ namespace UISystem {
     private:
         static void setClipboardText(void* ptr, const char* text);
         static const char* getClipboardText(void* ptr);
+        Ogre::ImGuiOverlay* mp_imgui_overlay;
     };
 }
 

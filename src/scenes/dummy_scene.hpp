@@ -2,7 +2,6 @@
 #define ILMENDUR_DUMMY_SCENE_HPP
 #include "scene.hpp"
 #include "../physics/physics.hpp"
-#include "../ui/ui.hpp"
 
 class StaticGeometry;
 class Freya;
@@ -37,8 +36,6 @@ namespace SceneSystem {
         Freya* mp_player;
 
         float m_run_threshold;
-
-        UISystem::GUIEngine* mp_ui_system;
     };
 
 }

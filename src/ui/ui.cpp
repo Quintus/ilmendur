@@ -1,32 +1,33 @@
 #include "ui.hpp"
 #include "../core/application.hpp"
 #include "../core/window.hpp"
+#include "../scenes/scene.hpp"
 #include <GLFW/glfw3.h>
+#include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/Overlay/OgreOverlayManager.h>
 #include <OGRE/OgreTextureManager.h>
-#include <iostream>
 
 using namespace std;
 using namespace UISystem;
 
-static Ogre::ImGuiOverlay* sp_imgui_overlay = nullptr;
+static UISystem::GUIEngine* sp_gui_engine = nullptr;
 
 /**
  * Construct a new GUI engine instance. Ensure the Ogre overlay system
  * is enabled before you call this.
  */
 GUIEngine::GUIEngine()
+    : mp_imgui_overlay(new Ogre::ImGuiOverlay())
 {
-    if (sp_imgui_overlay) {
-        return;
+    if (sp_gui_engine) {
+        throw(std::runtime_error("There can only be one instance of GUIEngine!"));
     }
 
     // General setup
-    sp_imgui_overlay = new Ogre::ImGuiOverlay();
-    sp_imgui_overlay->setZOrder(300);
-    sp_imgui_overlay->addFont("LinLibertine_R", "fonts");
-    sp_imgui_overlay->show();
-    Ogre::OverlayManager::getSingleton().addOverlay(sp_imgui_overlay);
+    mp_imgui_overlay->setZOrder(300);
+    mp_imgui_overlay->addFont("LinLibertine_R", "fonts");
+    mp_imgui_overlay->show();
+    Ogre::OverlayManager::getSingleton().addOverlay(mp_imgui_overlay);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowTitleAlign, ImVec2(0.5f, 0.5f));
 
@@ -80,7 +81,13 @@ GUIEngine::GUIEngine()
 
 GUIEngine::~GUIEngine()
 {
-    //Ogre::OverlayManager::getSingleton().destroy(mp_imgui_overlay);
+    Ogre::OverlayManager::getSingleton().destroy(mp_imgui_overlay);
+    sp_gui_engine = nullptr;
+}
+
+GUIEngine& GUIEngine::getSingleton()
+{
+    return *sp_gui_engine;
 }
 
 /// Write callback for ImGUI's clipboard functionality.
@@ -93,6 +100,17 @@ void GUIEngine::setClipboardText(void* ptr, const char* text)
 const char* GUIEngine::getClipboardText(void* ptr)
 {
     return glfwGetClipboardString(reinterpret_cast<GLFWwindow*>(ptr));
+}
+
+/**
+ * Allows the scene to draw UI elements. What this function actually does
+ * is to enable Ogre's Overlay system, but as the overlay system is only
+ * used for the UI elements, and no other Ogre overlays are used, this
+ * is equivalent.
+ */
+void GUIEngine::enable(SceneSystem::Scene& scene)
+{
+    scene.getSceneManager().addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
 }
 
 /**

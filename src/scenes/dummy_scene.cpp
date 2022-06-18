@@ -11,7 +11,6 @@
 #include "../ui/ui.hpp"
 #include <GLFW/glfw3.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
-#include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/OgreMath.h>
 #include <btBulletDynamicsCommon.h>
 #include <iostream>
@@ -34,8 +33,7 @@ DummyScene::DummyScene()
       mp_camera(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr),
-      m_run_threshold(0.0f),
-      mp_ui_system(nullptr)
+      m_run_threshold(0.0f)
 {
     // Enable physics
     mp_physics = new PhysicsSystem::PhysicsEngine(mp_scene_manager->getRootSceneNode());
@@ -43,8 +41,8 @@ DummyScene::DummyScene()
     // register our scene with the RTSS
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
-    // Enable the overlay system for this scene
-    mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
+    // Enable the GUI system for this scene
+    UISystem::GUIEngine::getSingleton().enable(*this);
 
     // Sky box
     mp_scene_manager->setSkyBox(true, "testskybox");
@@ -103,9 +101,6 @@ void DummyScene::activate()
 {
     Scene::activate();
 
-    // Enable UI
-    mp_ui_system = new UISystem::GUIEngine();
-
     // Add a viewport with the given camera to the render window.
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(mp_camera);
 }
@@ -113,9 +108,6 @@ void DummyScene::activate()
 void DummyScene::deactivate()
 {
     Scene::deactivate();
-
-    delete mp_ui_system;
-    mp_ui_system = nullptr;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
 }
@@ -128,7 +120,7 @@ void DummyScene::update()
     handleJoyInput();
 
     // Draw UI
-    mp_ui_system->update();
+    UISystem::GUIEngine::getSingleton().update();
     ImGui::SetNextWindowPos(ImVec2(1180.0f, 10.0f));
     ImGui::Begin("(FPS)", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
     // TRANS: FPS = "Frames Per Second"
@@ -296,7 +288,7 @@ void DummyScene::handleMoveJoyInput()
 void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
 {
     // If Imgui processes the key input, do not process it again.
-    if (mp_ui_system->processKeyInput(key, scancode, action, mods)) {
+    if (UISystem::GUIEngine::getSingleton().processKeyInput(key, scancode, action, mods)) {
         return;
     }
 
@@ -340,17 +332,17 @@ void DummyScene::processKeyInput(int key, int scancode, int action, int mods)
 
 void DummyScene::processCharInput(unsigned int codepoint)
 {
-    mp_ui_system->processCharInput(codepoint);
+    UISystem::GUIEngine::getSingleton().processCharInput(codepoint);
 }
 
 void DummyScene::processMouseButton(int button, int action, int mods)
 {
-    mp_ui_system->processMouseButton(button, action, mods);
+    UISystem::GUIEngine::getSingleton().processMouseButton(button, action, mods);
 }
 
 void DummyScene::processCursorMove(double xpos, double ypos)
 {
-    mp_ui_system->processCursorMove(xpos, ypos);
+    UISystem::GUIEngine::getSingleton().processCursorMove(xpos, ypos);
 }
 
 /**

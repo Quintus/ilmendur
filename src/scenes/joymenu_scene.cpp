@@ -5,8 +5,8 @@
 #include "../core/i18n.hpp"
 #include "../core/timer.hpp"
 #include "../core/game_state.hpp"
+#include "../ui/ui.hpp"
 #include <OGRE/OgreTextureManager.h>
-#include <OGRE/Overlay/OgreOverlaySystem.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
 #include <GLFW/glfw3.h>
 #include <algorithm>
@@ -94,7 +94,6 @@ static inline std::string joyStickComboItemName(int joyindex)
 
 JoymenuScene::JoymenuScene()
     : Scene("Joystick configuration menu scene"),
-      mp_ui_system(nullptr),
       m_crossedcircle_tex(0),
       m_crossedcircle_yellow_tex(0),
       m_steercross_tex(0),
@@ -120,8 +119,8 @@ JoymenuScene::JoymenuScene()
 
     Ogre::RTShader::ShaderGenerator::getSingletonPtr()->addSceneManager(mp_scene_manager);
 
-    // Enable the overlay system for this scene
-    mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
+    // Enable the GUI system for this scene
+    UISystem::GUIEngine::getSingleton().enable(*this);
 
     Ogre::SceneNode* p_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
     p_cam_node->setPosition(0, 0, 0);
@@ -178,9 +177,6 @@ void JoymenuScene::activate()
 {
     Scene::activate();
 
-    // Enable UI
-    mp_ui_system = new UISystem::GUIEngine();
-
     // Show something (black scene)
     Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(mp_camera);
 }
@@ -188,9 +184,6 @@ void JoymenuScene::activate()
 void JoymenuScene::deactivate()
 {
     Scene::deactivate();
-
-    delete mp_ui_system;
-    mp_ui_system = nullptr;
 
     Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
 }
@@ -205,7 +198,7 @@ void JoymenuScene::update()
 
 void JoymenuScene::updateUI()
 {
-    mp_ui_system->update();
+    UISystem::GUIEngine::getSingleton().update();
     updateGamepadConfigUI();
 
     switch (m_config_item) {
@@ -941,21 +934,21 @@ void JoymenuScene::processKeyInput(int key, int scancode, int action, int mods)
     if (key == GLFW_KEY_ESCAPE) {
         finish();
     } else {
-        mp_ui_system->processKeyInput(key, scancode, action, mods);
+        UISystem::GUIEngine::getSingleton().processKeyInput(key, scancode, action, mods);
     }
 }
 
 void JoymenuScene::processCharInput(unsigned int codepoint)
 {
-    mp_ui_system->processCharInput(codepoint);
+    UISystem::GUIEngine::getSingleton().processCharInput(codepoint);
 }
 
 void JoymenuScene::processMouseButton(int button, int action, int mods)
 {
-    mp_ui_system->processMouseButton(button, action, mods);
+    UISystem::GUIEngine::getSingleton().processMouseButton(button, action, mods);
 }
 
 void JoymenuScene::processCursorMove(double xpos, double ypos)
 {
-    mp_ui_system->processCursorMove(xpos, ypos);
+    UISystem::GUIEngine::getSingleton().processCursorMove(xpos, ypos);
 }

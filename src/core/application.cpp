@@ -5,6 +5,7 @@
 #include "../os/paths.hpp"
 #include "../scenes/dummy_scene.hpp"
 #include "../scenes/joymenu_scene.hpp"
+#include "../ui/ui.hpp"
 #include <buildconfig.hpp>
 #include <GLFW/glfw3.h>
 #include <OGRE/RTShaderSystem/OgreRTShaderSystem.h>
@@ -309,6 +310,8 @@ void Application::run()
     setupOgreRTSS();
     // Loading the resources requires the RTSS to be active.
     loadOgreResources();
+    // Initialising the UI system requires the Ogre resources to be loaded.
+    new UISystem::GUIEngine(); // This stores the singleton pointer on itself
 
     // For now, only display the dummy scene
     //m_scene_stack.push(move(make_unique<SceneSystem::DummyScene>()));
@@ -357,6 +360,10 @@ void Application::run()
         m_scene_stack.top()->deactivate();
         m_scene_stack.pop();
     }
+
+    // Shutdown UI system
+    UISystem::GUIEngine& ui = UISystem::GUIEngine::getSingleton();
+    delete &ui;
 
     shutdownOgreRTSS();
     delete mp_window;

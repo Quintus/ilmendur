@@ -1,7 +1,6 @@
 #ifndef ILMENDUR_JOYMENU_SCENE_HPP
 #define ILMENDUR_JOYMENU_SCENE_HPP
 #include "scene.hpp"
-#include "../ui/ui.hpp"
 
 namespace Core {
     class Timer;
@@ -21,7 +20,6 @@ namespace SceneSystem {
         virtual void processCursorMove(double xpos, double ypos);
         virtual void update();
     private:
-        UISystem::GUIEngine* mp_ui_system;
         Ogre::ResourceHandle m_crossedcircle_tex;
         Ogre::ResourceHandle m_crossedcircle_yellow_tex;
         Ogre::ResourceHandle m_steercross_tex;
