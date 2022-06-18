@@ -17,6 +17,9 @@ namespace SceneSystem {
         Scene(const std::string& name);
         virtual ~Scene();
 
+        virtual void activate();
+        virtual void deactivate();
+
         const std::string& getName() { return m_name; }
 
         bool hasPhysics() const { return mp_physics != nullptr; }

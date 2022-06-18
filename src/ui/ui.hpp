@@ -32,7 +32,6 @@ namespace UISystem {
     private:
         static void setClipboardText(void* ptr, const char* text);
         static const char* getClipboardText(void* ptr);
-        Ogre::ImGuiOverlay* mp_imgui_overlay;
     };
 }
 

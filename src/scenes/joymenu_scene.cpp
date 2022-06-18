@@ -103,6 +103,7 @@ JoymenuScene::JoymenuScene()
       m_buttons_yellow_tex(0),
       m_shoulderbuttons_tex(0),
       m_shoulderbuttons_yellow_tex(0),
+      mp_camera(nullptr),
       mp_config_timer(nullptr),
       m_joyconfig_stage(joyconfig_stage::none),
       m_hatchconfig_stage(hatchconfig_stage::none),
@@ -122,15 +123,11 @@ JoymenuScene::JoymenuScene()
     // Enable the overlay system for this scene
     mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
 
-    // Enable UI
-    mp_ui_system = new UISystem::GUIEngine();
-
     Ogre::SceneNode* p_cam_node = mp_scene_manager->getRootSceneNode()->createChildSceneNode();
     p_cam_node->setPosition(0, 0, 0);
-    Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
-    p_camera->setNearClipDistance(0.1);
-    p_camera->setAutoAspectRatio(true);
-    Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
+    mp_camera = mp_scene_manager->createCamera("myCam");
+    mp_camera->setNearClipDistance(0.1);
+    mp_camera->setAutoAspectRatio(true);
 
     Ogre::TexturePtr ptr = Ogre::TextureManager::getSingleton().load("crossedcircle.png", "ui", Ogre::TEX_TYPE_2D, 1, 1.0f, Ogre::PF_BYTE_RGBA);
     assert(ptr);
@@ -174,10 +171,28 @@ JoymenuScene::~JoymenuScene()
         delete mp_config_timer;
         mp_config_timer = nullptr;
     }
+    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
+}
+
+void JoymenuScene::activate()
+{
+    Scene::activate();
+
+    // Enable UI
+    mp_ui_system = new UISystem::GUIEngine();
+
+    // Show something (black scene)
+    Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(mp_camera);
+}
+
+void JoymenuScene::deactivate()
+{
+    Scene::deactivate();
+
+    delete mp_ui_system;
+    mp_ui_system = nullptr;
 
     Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
-    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
-    delete mp_ui_system;
 }
 
 void JoymenuScene::update()

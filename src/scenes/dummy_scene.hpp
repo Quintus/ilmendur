@@ -14,6 +14,8 @@ namespace SceneSystem {
     public:
         DummyScene();
         virtual ~DummyScene();
+        virtual void activate();
+        virtual void deactivate();
 
         virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void processCharInput(unsigned int codepoint);
@@ -30,6 +32,7 @@ namespace SceneSystem {
         Ogre::SceneNode* mp_area_node;
         Ogre::SceneNode* mp_camera_target;
         Ogre::SceneNode* mp_cam_node;
+        Ogre::Camera* mp_camera;
         StaticGeometry* mp_ground;
         Freya* mp_player;
 

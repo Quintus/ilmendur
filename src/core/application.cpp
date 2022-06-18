@@ -273,7 +273,9 @@ SceneSystem::Scene& Application::currentScene()
  */
 void Application::pushScene(unique_ptr<SceneSystem::Scene> p_scene)
 {
+    m_scene_stack.top()->deactivate();
     m_scene_stack.push(move(p_scene));
+    m_scene_stack.top()->activate();
 }
 
 /**
@@ -291,6 +293,7 @@ void Application::pushScene(unique_ptr<SceneSystem::Scene> p_scene)
  */
 void Application::popScene()
 {
+    m_scene_stack.top()->deactivate();
     m_scene_stack.pop();
 }
 
@@ -324,6 +327,7 @@ void Application::run()
     // Main loop
     chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
     chrono::high_resolution_clock::time_point t2 = t1;
+    m_scene_stack.top()->activate();
     while (m_scene_stack.size() > 0) {
         t2 = chrono::high_resolution_clock::now();
         m_fps = 1000.0f / chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
@@ -338,16 +342,19 @@ void Application::run()
 
         if (m_scene_stack.top()->isFinishing()) {
             SceneSystem::Scene* p_next_scene = m_scene_stack.top()->nextScene();
+            m_scene_stack.top()->deactivate();
             m_scene_stack.pop();
 
             if (p_next_scene) {
                 m_scene_stack.push(move(unique_ptr<SceneSystem::Scene>(p_next_scene)));
+                m_scene_stack.top()->activate();
             }
         }
     }
 
     // Clear all remaining scenes, if any
     while (m_scene_stack.size() > 0) {
+        m_scene_stack.top()->deactivate();
         m_scene_stack.pop();
     }
 

@@ -31,6 +31,7 @@ DummyScene::DummyScene()
       mp_area_node(nullptr),
       mp_camera_target(nullptr),
       mp_cam_node(nullptr),
+      mp_camera(nullptr),
       mp_ground(nullptr),
       mp_player(nullptr),
       m_run_threshold(0.0f),
@@ -44,9 +45,6 @@ DummyScene::DummyScene()
 
     // Enable the overlay system for this scene
     mp_scene_manager->addRenderQueueListener(Ogre::OverlaySystem::getSingletonPtr());
-
-    // Enable UI
-    mp_ui_system = new UISystem::GUIEngine();
 
     // Sky box
     mp_scene_manager->setSkyBox(true, "testskybox");
@@ -85,13 +83,10 @@ DummyScene::DummyScene()
     mp_cam_node->setOrientation(Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X) * Ogre::Quaternion(Ogre::Degree(270), Ogre::Vector3::UNIT_Y));
 
     // create the camera
-    Ogre::Camera* p_camera = mp_scene_manager->createCamera("myCam");
-    p_camera->setNearClipDistance(0.1);
-    p_camera->setAutoAspectRatio(true);
-    mp_cam_node->attachObject(p_camera);
-
-    // Add a viewport with the given camera to the render window.
-    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(p_camera);
+    mp_camera = mp_scene_manager->createCamera("myCam");
+    mp_camera->setNearClipDistance(0.1);
+    mp_camera->setAutoAspectRatio(true);
+    mp_cam_node->attachObject(mp_camera);
 
     calculateJoyZones();
 }
@@ -101,10 +96,28 @@ DummyScene::~DummyScene()
     delete mp_player;
     delete mp_ground;
     delete mp_physics;
+    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
+}
+
+void DummyScene::activate()
+{
+    Scene::activate();
+
+    // Enable UI
+    mp_ui_system = new UISystem::GUIEngine();
+
+    // Add a viewport with the given camera to the render window.
+    Core::Application::getSingleton().getWindow().getOgreRenderWindow()->addViewport(mp_camera);
+}
+
+void DummyScene::deactivate()
+{
+    Scene::deactivate();
+
     delete mp_ui_system;
+    mp_ui_system = nullptr;
 
     Core::Application::getSingleton().getWindow().getOgreRenderWindow()->removeAllViewports();
-    Ogre::RTShader::ShaderGenerator::getSingletonPtr()->removeSceneManager(mp_scene_manager);
 }
 
 void DummyScene::update()

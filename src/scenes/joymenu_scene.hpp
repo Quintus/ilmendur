@@ -13,6 +13,8 @@ namespace SceneSystem {
     public:
         JoymenuScene();
         virtual ~JoymenuScene();
+        virtual void activate();
+        virtual void deactivate();
         virtual void processKeyInput(int key, int scancode, int action, int mods);
         virtual void processCharInput(unsigned int codepoint);
         virtual void processMouseButton(int button, int action, int mods);
@@ -28,6 +30,7 @@ namespace SceneSystem {
         Ogre::ResourceHandle m_buttons_yellow_tex;
         Ogre::ResourceHandle m_shoulderbuttons_tex;
         Ogre::ResourceHandle m_shoulderbuttons_yellow_tex;
+        Ogre::Camera* mp_camera;
 
         Core::Timer* mp_config_timer;
         std::vector<float> m_neutral_joyaxes[2];

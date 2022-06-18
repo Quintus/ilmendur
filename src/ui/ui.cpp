@@ -9,18 +9,24 @@
 using namespace std;
 using namespace UISystem;
 
+static Ogre::ImGuiOverlay* sp_imgui_overlay = nullptr;
+
 /**
  * Construct a new GUI engine instance. Ensure the Ogre overlay system
  * is enabled before you call this.
  */
 GUIEngine::GUIEngine()
 {
+    if (sp_imgui_overlay) {
+        return;
+    }
+
     // General setup
-    mp_imgui_overlay = new Ogre::ImGuiOverlay();
-    mp_imgui_overlay->setZOrder(300);
-    mp_imgui_overlay->addFont("LinLibertine_R", "fonts");
-    mp_imgui_overlay->show();
-    Ogre::OverlayManager::getSingleton().addOverlay(mp_imgui_overlay);
+    sp_imgui_overlay = new Ogre::ImGuiOverlay();
+    sp_imgui_overlay->setZOrder(300);
+    sp_imgui_overlay->addFont("LinLibertine_R", "fonts");
+    sp_imgui_overlay->show();
+    Ogre::OverlayManager::getSingleton().addOverlay(sp_imgui_overlay);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowTitleAlign, ImVec2(0.5f, 0.5f));
 
@@ -74,7 +80,7 @@ GUIEngine::GUIEngine()
 
 GUIEngine::~GUIEngine()
 {
-    Ogre::OverlayManager::getSingleton().destroy(mp_imgui_overlay);
+    //Ogre::OverlayManager::getSingleton().destroy(mp_imgui_overlay);
 }
 
 /// Write callback for ImGUI's clipboard functionality.

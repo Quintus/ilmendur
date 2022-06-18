@@ -7,6 +7,13 @@
 using namespace SceneSystem;
 using namespace std;
 
+/**
+ * Constructor. Override in subclasses to your likening.
+ * However, DO NOT acquire global resources like Ogre's render
+ * window here, because your scene might be constructed in the
+ * background while another scene is running. Override activate()
+ * and deactivate() to deal with the acquisisation of global resources.
+ */
 Scene::Scene(const string& name)
     : mp_physics(nullptr),
       mp_scene_manager(Ogre::Root::getSingleton().createSceneManager()),
@@ -16,10 +23,40 @@ Scene::Scene(const string& name)
 {
 }
 
+/**
+ * Destructor. Override in subclasses to your likening. However,
+ * DO NOT release global resources like Ogre's render window
+ * here, because it might not even be owned by your scene
+ * anymore at the point the destructor runs. Use deactivate()
+ * for releasing such resources.
+ */
 Scene::~Scene()
 {
     Ogre::Root::getSingleton().destroySceneManager(mp_scene_manager);
     mp_scene_manager = nullptr;
+}
+
+/**
+ * Called when this Scene instance becomes the top of the scene
+ * stack. It is guaranteed to be called after the constructor
+ * has completed.
+ *
+ * Use this method to acquire global resources like Ogre's render window,
+ * and release said resources in deactivate().
+ */
+void Scene::activate()
+{
+}
+
+/**
+ * Called when this Scene gets pushed down or deleted from the scene
+ * stack. Guaranteed to be called before the destructor runs.
+ *
+ * Use this method to release the global resources acquired by
+ * activate().
+ */
+void Scene::deactivate()
+{
 }
 
 /**
