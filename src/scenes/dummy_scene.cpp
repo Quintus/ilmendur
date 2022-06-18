@@ -129,13 +129,13 @@ void DummyScene::draw()
 
 void DummyScene::handleJoyInput()
 {
-    //handleCamJoyInput();
-    //handleMoveJoyInput();
+    handleCamJoyInput();
+    handleMoveJoyInput();
 }
 
 void DummyScene::handleCamJoyInput()
 {
-    const auto& config = GameState::instance.config[FREYA];
+    const auto& config = GameState::instance.config[PLAYER1];
     const float* joyaxes = nullptr;
     int axescount = 0;
     joyaxes = glfwGetJoystickAxes(config.joy_index, &axescount);
@@ -202,7 +202,7 @@ void DummyScene::handleCamJoyInput()
 void DummyScene::handleMoveJoyInput()
 {
     static bool s_moving = false;
-    const auto& config = GameState::instance.config[FREYA];
+    const auto& config = GameState::instance.config[PLAYER1];
     const float* joyaxes = nullptr;
     int axescount = 0;
     joyaxes = glfwGetJoystickAxes(config.joy_index, &axescount);
@@ -361,6 +361,6 @@ void DummyScene::processCursorMove(double xpos, double ypos)
  */
 void DummyScene::calculateJoyZones()
 {
-    float usable_zone = 1.0f - GameState::instance.config[FREYA].joy_dead_zone;
+    float usable_zone = 1.0f - GameState::instance.config[PLAYER1].joy_dead_zone;
     m_run_threshold = 0.3333f * usable_zone;
 }
