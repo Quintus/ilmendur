@@ -1,0 +1,39 @@
+                        LICENSING INFORMATION
+
+Ilmendur is distributed under the licensing terms outlined below. In
+short: the source code is licensed under the GPLv3, the support media
+and anything else are licensed as CC-BY-SA 4.0. If you intend to
+distribute the entire game in binary form as a whole containing both
+assets and object code, please pay special attention to the
+compatibility clause in the CC-BY-SA license, which makes this
+possible.
+
+Any programming libraries Ilmendur depends on are not shipped with the
+game. Obtain them elsewhere and use them in accordance with each
+dependency's respective license. Thus, there is no licensing
+information for these dependencies to be found in this file.
+
+                          -- Source Code --
+
+Copyright (C) 2021 Marvin Gülker and the Ilmendur team
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The full text of the GNU General Public License is provided in the
+file LICENSE.GPL.
+
+   -- Anything else (namely support media like graphics, audios) --
+
+Copyright (C) 2021 Marvin Gülker and the project team
+
+This work is licensed under a Creative Commons Attribution-ShareAlike
+4.0 International License. The full text of this license is provided
+in the file LICENSE.CC.
