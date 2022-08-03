@@ -59,8 +59,6 @@ Tileset::Tileset(const std::string& name)
     assert(fs::exists(abs_path));
     std::string str(READ_FILE(file));
     mp_texid = IMG_LoadTexture_RW(Ilmendur::instance().sdlRenderer(), SDL_RWFromMem(str.data(), str.size()), 1);
-
-    // TODO
 }
 
 Tileset::~Tileset()
@@ -81,4 +79,14 @@ SDL_Rect Tileset::operator[](int lid) const
                          lid / m_columns * TILEWIDTH,
                          TILEWIDTH,
                          TILEWIDTH});
+}
+
+/**
+ * Retrieves the SDL_Texture corresponding to this tileset.
+ * Do not delete or modify this pointer; the memory is owned
+ * by this class.
+ */
+SDL_Texture* Tileset::sdlTexture()
+{
+    return mp_texid;
 }

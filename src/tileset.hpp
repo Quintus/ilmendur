@@ -10,6 +10,7 @@ public:
     ~Tileset();
 
     SDL_Rect operator[](int lid) const;
+    SDL_Texture* sdlTexture();
 private:
     std::string m_name;
     int m_columns;
