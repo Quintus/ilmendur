@@ -1,8 +1,15 @@
 #include "ilmendur.hpp"
+#include "buildconfig.hpp"
 #include <stdexcept>
 #include <cassert>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#ifdef ILMENDUR_DEBUG_BUILD
+#include <iostream>
+#endif
+
+using namespace std;
 
 static Ilmendur* sp_ilmendur = nullptr;
 
@@ -11,23 +18,33 @@ Ilmendur::Ilmendur()
       mp_renderer(nullptr)
 {
     if (sp_ilmendur) {
-        throw(std::runtime_error("Ilmendur is a singleton!"));
+        throw(runtime_error("Ilmendur is a singleton!"));
     }
     sp_ilmendur = this;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        throw(std::runtime_error("SDL_Init() failed!"));
+        throw(runtime_error("SDL_Init() failed!"));
     }
     if (IMG_Init(IMG_INIT_PNG) < 0) {
-        throw(std::runtime_error("IMG_Init() failed!"));
+        throw(runtime_error("IMG_Init() failed!"));
     }
 
-    if (SDL_CreateWindowAndRenderer(640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI, &mp_window, &mp_renderer) < 0) {
-        throw(std::runtime_error("SDL_CreateWindowAndRenderer() failed!"));
+    // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
+    if (SDL_CreateWindowAndRenderer(640, 480, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
+        throw(runtime_error("SDL_CreateWindowAndRenderer() failed!"));
     }
 
     assert(mp_window);
     assert(mp_renderer);
+
+#ifdef ILMENDUR_DEBUG_BUILD
+    SDL_RendererInfo ri;
+    SDL_GetRendererInfo(mp_renderer, &ri);
+    cout << "Renderer information: " << endl
+         << "    Name:             " << ri.name << endl
+         << "    Supported flags:  " << ri.flags << endl
+         << "    Max texture size: " << ri.max_texture_width << "x" << ri.max_texture_height << endl;
+#endif
 }
 
 Ilmendur::~Ilmendur()
@@ -47,7 +64,7 @@ Ilmendur& Ilmendur::instance()
 
 int Ilmendur::run()
 {
-    SDL_SetRenderDrawColor(mp_renderer, 255, 0, 0, 255);
+    //SDL_SetRenderDrawColor(mp_renderer, 255, 0, 0, 255);
     bool run = true;
     while (run) {
         SDL_Event ev;
@@ -58,6 +75,7 @@ int Ilmendur::run()
         }
 
         SDL_RenderClear(mp_renderer);
+
         SDL_RenderPresent(mp_renderer);
     }
 
