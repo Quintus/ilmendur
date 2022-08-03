@@ -2,8 +2,8 @@
 #include "ilmendur.hpp"
 #include "os.hpp"
 #include "util.hpp"
-#include <iostream>
 #include <fstream>
+#include <utility>
 #include <cassert>
 #include <pugixml.hpp>
 #include <SDL2/SDL_image.h>
@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 Tileset::Tileset(const std::string& name)
     : m_name(name),
       m_columns(0),
+      m_tilecount(0),
       mp_texid(nullptr)
 {
     fs::path abs_path(OS::gameDataDir() / fs::u8path("tilesets") / fs::u8path(name + ".tsx"));
@@ -37,13 +38,14 @@ Tileset::Tileset(const std::string& name)
         throw(std::runtime_error(string("Tileset '" + name + "' does not have " + to_string(TILEWIDTH) + "px tile height")));
     }
 
-    m_columns = doc.child("tileset").attribute("columns").as_int();
+    m_columns   = doc.child("tileset").attribute("columns").as_int();
+    m_tilecount = doc.child("tileset").attribute("tilecount").as_int();
 
     // Safety measure to prevent potential problems: Ensure that the
     // internal Tiled tileset name and the its file name are identical.
     assert(m_name == doc.child("tileset").attribute("name").value());
 
-    // Only 32x32 tilesets are supported
+    // Only TILEWIDTHxTILEWIDTH tilesets are supported
     assert(TILEWIDTH == doc.child("tileset").attribute("tilewidth").as_int());
     assert(TILEWIDTH == doc.child("tileset").attribute("tileheight").as_int());
     file.close();
@@ -66,4 +68,17 @@ Tileset::~Tileset()
     if (mp_texid) {
         SDL_DestroyTexture(mp_texid);
     }
+}
+
+/**
+ * Returns an SDL_Rect describing the region from the tileset texture
+ * that corresponds to the Tiled local tile ID `lid`.
+ */
+SDL_Rect Tileset::operator[](int lid) const
+{
+    assert(lid < m_tilecount);
+    return move(SDL_Rect{lid % m_columns * TILEWIDTH,
+                         lid / m_columns * TILEWIDTH,
+                         TILEWIDTH,
+                         TILEWIDTH});
 }
