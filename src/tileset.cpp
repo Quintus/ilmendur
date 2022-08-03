@@ -39,13 +39,22 @@ Tileset::Tileset(const std::string& name)
 
     m_columns = doc.child("tileset").attribute("columns").as_int();
 
+    // Safety measure to prevent potential problems: Ensure that the
+    // internal Tiled tileset name and the its file name are identical.
+    assert(m_name == doc.child("tileset").attribute("name").value());
+
+    // Only 32x32 tilesets are supported
+    assert(TILEWIDTH == doc.child("tileset").attribute("tilewidth").as_int());
+    assert(TILEWIDTH == doc.child("tileset").attribute("tileheight").as_int());
     file.close();
+
+    // Read the actual image file from disk (assumes the same directory as the TSX file),
+    // and upload it to the graphics card.
     string imgpath = doc.child("tileset").child("image").attribute("source").value();
     abs_path       = OS::gameDataDir() / fs::u8path("tilesets") / fs::u8path(imgpath);
     file           = fstream(abs_path, fstream::in | fstream::binary);
 
     assert(fs::exists(abs_path));
-
     std::string str(READ_FILE(file));
     mp_texid = IMG_LoadTexture_RW(Ilmendur::instance().sdlRenderer(), SDL_RWFromMem(str.data(), str.size()), 1);
 
