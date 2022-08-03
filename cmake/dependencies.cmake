@@ -66,6 +66,18 @@ ExternalProject_Add(sdl
              -DSDL_SHARED=OFF
              -DSDL_STATIC=ON)
 
+ExternalProject_Add(pugixml
+  URL "https://github.com/zeux/pugixml/releases/download/v1.11.4/pugixml-1.11.4.tar.gz"
+  URL_HASH SHA256=8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/pugixml
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DBUILD_STATIC_LIBS=ON
+             -DBUILD_TESTS=OFF)
+
 ExternalProject_Add(sdl_image
   DEPENDS sdl libpng
   URL "https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.0/SDL2_image-2.6.0.tar.gz"
@@ -103,7 +115,7 @@ ExternalProject_Add(sdl_image
 # Get linking order right
 # The most basic libraries must come last in the linking list.
 
-add_dependencies(ilmendur sdl sdl_image)
+add_dependencies(ilmendur sdl sdl_image pugixml)
 target_link_libraries(ilmendur ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2_image.a
                                ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2.a)
 
@@ -157,6 +169,7 @@ else() # That is, Linux or another good Unix
 endif()
 
 target_link_libraries(ilmendur
+  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libpugixml.a
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libpng16.a
   ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libz.a
   m)
