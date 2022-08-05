@@ -32,6 +32,25 @@ static TmxProperties readProperties(const pugi::xml_node& node)
     return props;
 }
 
+static vector<int> parseGidCsv(const std::string& csv)
+{
+    vector<int> result;
+    size_t pos = 0;
+    size_t ppos = 0;
+    while ((pos = csv.find(",", pos)) != string::npos) {
+        int gid = atoi(csv.substr(ppos+1, pos-ppos).c_str());
+        result.push_back(gid);
+        // TODO: Detect rotations
+        ppos = pos;
+        pos++;
+    }
+
+    int gid = atoi(csv.substr(ppos+1, pos-ppos).c_str());
+    result.push_back(gid);
+
+    return result;
+}
+
 static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapname)
 {
     Map::Layer layer;
@@ -42,6 +61,8 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
         layer.data.p_tile_layer->width  = node.attribute("width").as_int();
         layer.data.p_tile_layer->height = node.attribute("height").as_int();
         layer.data.p_tile_layer->props  = readProperties(node);
+
+        layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
     } else if (node.name() == string("objectgroup")) {
         layer.type = Map::LayerType::Object;
         layer.data.p_obj_layer = new TmxObjLayer();
@@ -101,11 +122,6 @@ Map::Map(const std::string& name)
     }
 }
 
-void Map::draw()
-{
-    // TODO
-}
-
 Map::~Map()
 {
     for(Layer& layer: m_layers) {
@@ -123,3 +139,9 @@ Map::~Map()
         }
     }
 }
+
+void Map::draw()
+{
+    // TODO
+}
+
