@@ -13,37 +13,32 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-Tileset::Tileset(const std::string& name)
-    : m_name(name),
-      m_columns(0),
+Tileset::Tileset(const fs::path& filename)
+    : m_columns(0),
       m_tilecount(0),
       mp_texid(nullptr)
 {
-    fs::path abs_path(OS::gameDataDir() / fs::u8path("tilesets") / fs::u8path(name + ".tsx"));
+    fs::path abs_path(OS::gameDataDir() / fs::u8path("tilesets") / filename);
     fstream file(abs_path);
     assert(fs::exists(abs_path));
 
     pugi::xml_document doc;
     if (!doc.load(file)) {
-        throw(std::runtime_error(string("Failed to load tileset '") + name + "'"));
+        throw(std::runtime_error(string("Failed to load tileset file '") + abs_path.c_str() + "'"));
     }
 
     if (doc.child("tileset").attribute("version").value() != string("1.5")) {
         throw(std::runtime_error(string("Expected TSX tileset format version 1.5, got '") + doc.child("tileset").attribute("version").value() + "'."));
     }
     if (doc.child("tileset").attribute("tilewidth").as_int() != TILEWIDTH) {
-        throw(std::runtime_error(string("Tileset '" + name + "' does not have " + to_string(TILEWIDTH) + "px tile width")));
+        throw(std::runtime_error(string("Tileset '" + m_name + "' does not have " + to_string(TILEWIDTH) + "px tile width")));
     }
     if (doc.child("tileset").attribute("tileheight").as_int() != TILEWIDTH) {
-        throw(std::runtime_error(string("Tileset '" + name + "' does not have " + to_string(TILEWIDTH) + "px tile height")));
+        throw(std::runtime_error(string("Tileset '" + m_name + "' does not have " + to_string(TILEWIDTH) + "px tile height")));
     }
 
     m_columns   = doc.child("tileset").attribute("columns").as_int();
     m_tilecount = doc.child("tileset").attribute("tilecount").as_int();
-
-    // Safety measure to prevent potential problems: Ensure that the
-    // internal Tiled tileset name and the its file name are identical.
-    assert(m_name == doc.child("tileset").attribute("name").value());
 
     // Only TILEWIDTHxTILEWIDTH tilesets are supported
     assert(TILEWIDTH == doc.child("tileset").attribute("tilewidth").as_int());

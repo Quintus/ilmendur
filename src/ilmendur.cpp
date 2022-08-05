@@ -1,5 +1,6 @@
 #include "ilmendur.hpp"
 #include "buildconfig.hpp"
+#include "map.hpp"
 #include <stdexcept>
 #include <cassert>
 #include <SDL2/SDL.h>
@@ -64,6 +65,8 @@ Ilmendur& Ilmendur::instance()
 
 int Ilmendur::run()
 {
+    Map m("Oak Fortress");
+
     //SDL_SetRenderDrawColor(mp_renderer, 255, 0, 0, 255);
     bool run = true;
     while (run) {

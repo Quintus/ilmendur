@@ -1,12 +1,13 @@
 #ifndef ILMENDUR_TILESET_HPP
 #define ILMENDUR_TILESET_HPP
 #include <string>
+#include <filesystem>
 #include <SDL2/SDL.h>
 
 class Tileset
 {
 public:
-    Tileset(const std::string& name);
+    Tileset(const std::filesystem::path& filename);
     ~Tileset();
 
     SDL_Rect operator[](int lid) const;
