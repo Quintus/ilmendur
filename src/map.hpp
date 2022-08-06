@@ -28,6 +28,9 @@ struct TmxTileLayer {
     int height;
     TmxProperties props;
     std::vector<int> gids;
+
+    enum class direction { up, down, both };
+    direction dir;
 };
 
 class Map

@@ -62,6 +62,15 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
         layer.data.p_tile_layer->height = node.attribute("height").as_int();
         layer.data.p_tile_layer->props  = readProperties(node);
 
+        string facedir = layer.data.p_tile_layer->props.get("facedir");
+        if (facedir == string("down")) {
+            layer.data.p_tile_layer->dir = TmxTileLayer::direction::down;
+        } else if (facedir == string("both")) {
+            layer.data.p_tile_layer->dir = TmxTileLayer::direction::both;
+        } else {
+            layer.data.p_tile_layer->dir = TmxTileLayer::direction::up;
+        }
+
         layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
     } else if (node.name() == string("objectgroup")) {
         layer.type = Map::LayerType::Object;
@@ -157,14 +166,17 @@ void Map::draw(SDL_Renderer* p_stage)
         const Layer& layer = m_layers[li];
         switch (layer.type) {
         case LayerType::Tile:
-            for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
-                int gid = layer.data.p_tile_layer->gids[i];
-                if (readTile(p_tilesettexture, srcrect, gid)) {
-                    destrect.x = i % m_width * TILEWIDTH;
-                    destrect.y = i / m_width * TILEWIDTH;
-                    SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
+            if (layer.data.p_tile_layer->dir == TmxTileLayer::direction::up) {
+                for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
+                    int gid = layer.data.p_tile_layer->gids[i];
+                    if (readTile(p_tilesettexture, srcrect, gid)) {
+                        destrect.x = i % m_width * TILEWIDTH;
+                        destrect.y = i / m_width * TILEWIDTH;
+                        SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
+                    }
                 }
             }
+            // TODO: Handle "down" and "both" direction depending on the player view direction.
         default:
             // Ignore
             break;
