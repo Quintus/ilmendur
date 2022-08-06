@@ -115,7 +115,7 @@ Map::Map(const std::string& name)
             fs::path source = fs::u8path(node.attribute("source").value()).filename(); // Discard directory information as it's irrelevant
             assert(firstgid > 0);
 
-            m_tilesets.emplace(make_pair(firstgid, Tileset(source)));
+            m_tilesets[firstgid] = new Tileset(source);
         } else {
             m_layers.push_back(readLayer(node, m_name));
         }
@@ -138,10 +138,61 @@ Map::~Map()
             break;
         }
     }
+
+    for(auto iter = m_tilesets.begin(); iter != m_tilesets.end(); iter++) {
+        delete iter->second;
+    }
 }
 
-void Map::draw()
+void Map::draw(SDL_Renderer* p_stage)
 {
-    // TODO
+    SDL_Rect srcrect;
+    SDL_Rect destrect;
+    SDL_Texture* p_tilesettexture = nullptr;
+
+    destrect.w = TILEWIDTH;
+    destrect.h = TILEWIDTH;
+
+    for(size_t li=0; li < m_layers.size(); li++) {
+        const Layer& layer = m_layers[li];
+        switch (layer.type) {
+        case LayerType::Tile:
+            for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
+                int gid = layer.data.p_tile_layer->gids[i];
+                if (readTile(p_tilesettexture, srcrect, gid)) {
+                    destrect.x = i % m_width * TILEWIDTH;
+                    destrect.y = i / m_width * TILEWIDTH;
+                    SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
+                }
+            }
+        default:
+            // Ignore
+            break;
+        }
+    }
 }
 
+bool Map::readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid)
+{
+    static map<int,Tileset*>::iterator iter;
+    if (gid == 0) {
+        return false;
+    }
+
+    for(iter=m_tilesets.begin(); iter != m_tilesets.end(); iter++) {
+        if (gid >= iter->first) {
+            ++iter;
+            if (iter == m_tilesets.end() || gid < iter->first) {
+                --iter;
+                p_texid = iter->second->sdlTexture();
+                iter->second->readTile(rect, gid - iter->first);
+                return true;
+            } else {
+                --iter;
+            }
+        }
+    }
+
+    assert(false);
+    return false;
+}

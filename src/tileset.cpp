@@ -19,7 +19,7 @@ Tileset::Tileset(const fs::path& filename)
       mp_texid(nullptr)
 {
     fs::path abs_path(OS::gameDataDir() / fs::u8path("tilesets") / filename);
-    fstream file(abs_path);
+    ifstream file(abs_path);
     assert(fs::exists(abs_path));
 
     pugi::xml_document doc;
@@ -30,6 +30,9 @@ Tileset::Tileset(const fs::path& filename)
     if (doc.child("tileset").attribute("version").value() != string("1.5")) {
         throw(std::runtime_error(string("Expected TSX tileset format version 1.5, got '") + doc.child("tileset").attribute("version").value() + "'."));
     }
+
+    m_name = doc.child("tileset").attribute("name").value();
+
     if (doc.child("tileset").attribute("tilewidth").as_int() != TILEWIDTH) {
         throw(std::runtime_error(string("Tileset '" + m_name + "' does not have " + to_string(TILEWIDTH) + "px tile width")));
     }
@@ -49,11 +52,12 @@ Tileset::Tileset(const fs::path& filename)
     // and upload it to the graphics card.
     string imgpath = doc.child("tileset").child("image").attribute("source").value();
     abs_path       = OS::gameDataDir() / fs::u8path("tilesets") / fs::u8path(imgpath);
-    file           = fstream(abs_path, fstream::in | fstream::binary);
+    file           = ifstream(abs_path, ifstream::in | ifstream::binary);
 
     assert(fs::exists(abs_path));
     std::string str(READ_FILE(file));
     mp_texid = IMG_LoadTexture_RW(Ilmendur::instance().sdlRenderer(), SDL_RWFromMem(str.data(), str.size()), 1);
+    assert(mp_texid);
 }
 
 Tileset::~Tileset()
@@ -64,16 +68,16 @@ Tileset::~Tileset()
 }
 
 /**
- * Returns an SDL_Rect describing the region from the tileset texture
+ * Fills an SDL_Rect with the region describing the tileset texture
  * that corresponds to the Tiled local tile ID `lid`.
  */
-SDL_Rect Tileset::operator[](int lid) const
+void Tileset::readTile(SDL_Rect& rect, int lid) const
 {
     assert(lid < m_tilecount);
-    return move(SDL_Rect{lid % m_columns * TILEWIDTH,
-                         lid / m_columns * TILEWIDTH,
-                         TILEWIDTH,
-                         TILEWIDTH});
+    rect.x = lid % m_columns * TILEWIDTH;
+    rect.y = lid / m_columns * TILEWIDTH;
+    rect.w = TILEWIDTH;
+    rect.h = TILEWIDTH;
 }
 
 /**

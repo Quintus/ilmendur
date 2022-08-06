@@ -36,7 +36,7 @@ public:
     Map(const std::string& name);
     ~Map();
 
-    void draw();
+    void draw(SDL_Renderer* p_stage);
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.
@@ -50,8 +50,9 @@ public:
     };
 
 private:
+    bool readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid);
     std::string m_name;
-    std::map<int,Tileset> m_tilesets;
+    std::map<int,Tileset*> m_tilesets;
     std::vector<Layer> m_layers;
     int m_width;
     int m_height;

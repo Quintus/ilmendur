@@ -4,13 +4,20 @@
 #include <filesystem>
 #include <SDL2/SDL.h>
 
+/**
+ * Class representing a tileset. This object is not copyable --
+ * it contains an SDL_Texture, which refers to memory on the
+ * graphics card.
+ *
+ * TODO: Actually delete the copy constructor
+ */
 class Tileset
 {
 public:
     Tileset(const std::filesystem::path& filename);
     ~Tileset();
 
-    SDL_Rect operator[](int lid) const;
+    void readTile(SDL_Rect& rect, int lid) const;
     SDL_Texture* sdlTexture();
 private:
     std::string m_name;
