@@ -1,6 +1,8 @@
 #include "ilmendur.hpp"
 #include "buildconfig.hpp"
 #include "map.hpp"
+#include <chrono>
+#include <thread>
 #include <stdexcept>
 #include <cassert>
 #include <SDL2/SDL.h>
@@ -11,6 +13,12 @@
 #endif
 
 using namespace std;
+
+/* Target framerate in frames per second (fps) and
+ * the resulting target length of one frame, in
+ * milliseconds. */
+const unsigned int TARGET_FRAMERATE{40};
+const chrono::milliseconds TARGET_FRAMETIME{1000 / TARGET_FRAMERATE};
 
 static Ilmendur* sp_ilmendur = nullptr;
 
@@ -65,10 +73,17 @@ Ilmendur& Ilmendur::instance()
 
 int Ilmendur::run()
 {
+    using namespace std::chrono;
+
     Map m("Oak Fortress");
 
     bool run = true;
+
+    high_resolution_clock::time_point start_time;
+    milliseconds passed_time;
     while (run) {
+        start_time = high_resolution_clock::now();
+
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             if (ev.type == SDL_QUIT) {
@@ -80,6 +95,17 @@ int Ilmendur::run()
         SDL_RenderClear(mp_renderer);
         m.draw(mp_renderer);
         SDL_RenderPresent(mp_renderer);
+
+        // Throttle framerate to a fixed one (fixed frame rate)
+        passed_time = duration_cast<milliseconds>(high_resolution_clock::now() - start_time);
+        if (passed_time < TARGET_FRAMETIME) {
+            this_thread::sleep_for(TARGET_FRAMETIME - passed_time);
+        }
+#ifdef ILMENDUR_DEBUG_BUILD
+        else {
+            cout << "Warning: Framerate below " << TARGET_FRAMERATE << "!" << endl;
+        }
+#endif
     }
 
     return 0;
