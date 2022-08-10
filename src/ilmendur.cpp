@@ -14,11 +14,8 @@
 
 using namespace std;
 
-/* Target framerate in frames per second (fps) and
- * the resulting target length of one frame, in
- * milliseconds. */
-const unsigned int TARGET_FRAMERATE{40};
-const chrono::milliseconds TARGET_FRAMETIME{1000 / TARGET_FRAMERATE};
+// The maximum length of one frame, calculated from the desired frame rate.
+const chrono::milliseconds TARGET_FRAMETIME{1000 / ILMENDUR_TARGET_FRAMERATE};
 
 static Ilmendur* sp_ilmendur = nullptr;
 
@@ -103,7 +100,7 @@ int Ilmendur::run()
         }
 #ifdef ILMENDUR_DEBUG_BUILD
         else {
-            cout << "Warning: Framerate below " << TARGET_FRAMERATE << "!" << endl;
+            cout << "Warning: Framerate below " << ILMENDUR_TARGET_FRAMERATE << "!" << endl;
         }
 #endif
     }

@@ -2,6 +2,9 @@
 #define ILMENDUR_ILMENDUR_HPP
 #include <SDL2/SDL.h>
 
+/// Target framerate in frames per second (fps).
+const unsigned int ILMENDUR_TARGET_FRAMERATE = 40;
+
 class Ilmendur
 {
 public:
