@@ -17,8 +17,14 @@ public:
 
     Vector2<T>() { x = 0; y = 0; }
     Vector2<T>(const Vector2<T>& other) { x = other.x; y = other.y; }
-    Vector2<T>(Vector2<T>&& other) { x = other.x; y = other.y; other.x = 0; other.y = 0; }
+    Vector2<T>(Vector2<T>&& other) { x = other.x; y = other.y; other.clear(); }
     Vector2<T>(T other_x, T other_y) { x = other_x; y = other_y; }
+
+    /// Resets this vector to a zero length vector.
+    void clear() {
+        x = 0;
+        y = 0;
+    }
 
     /**
      * Performant check for whether this vector is of zero length
@@ -35,6 +41,32 @@ public:
      */
     float length() const {
         return sqrtf(x*x + y*y);
+    }
+
+    /**
+     * Normalises the vector, that is, scales it so that its length()
+     * is exactly 1, keeping its direction. Note that the result of
+     * this operation always is a vector on the float base type, because
+     * such a scale operation is unlikely to yield exact integral values
+     * for the x and y components.
+     */
+    Vector2<float> normalise() {
+        return (*this) * (1.0f / length());
+    }
+
+    /// Copy assignment operator.
+    Vector2<T> operator=(const Vector2<T>& other) {
+        x = other.x;
+        y = other.y;
+        return *this;
+    }
+
+    /// Move assignment operator.
+    Vector2<T> operator=(Vector2<T>&& other) {
+        x = other.x;
+        y = other.y;
+        other.clear();
+        return *this;
     }
 
     Vector2<T> operator+(const Vector2<T>& other) const {
