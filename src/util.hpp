@@ -55,14 +55,14 @@ public:
     }
 
     /// Copy assignment operator.
-    Vector2<T> operator=(const Vector2<T>& other) {
+    Vector2<T>& operator=(const Vector2<T>& other) {
         x = other.x;
         y = other.y;
         return *this;
     }
 
     /// Move assignment operator.
-    Vector2<T> operator=(Vector2<T>&& other) {
+    Vector2<T>& operator=(Vector2<T>&& other) {
         x = other.x;
         y = other.y;
         other.clear();
