@@ -1,5 +1,6 @@
 #include "ilmendur.hpp"
 #include "buildconfig.hpp"
+#include "texture_pool.hpp"
 #include "map.hpp"
 #include <chrono>
 #include <thread>
@@ -21,7 +22,8 @@ static Ilmendur* sp_ilmendur = nullptr;
 
 Ilmendur::Ilmendur()
     : mp_window(nullptr),
-      mp_renderer(nullptr)
+      mp_renderer(nullptr),
+      mp_texture_pool(nullptr)
 {
     if (sp_ilmendur) {
         throw(runtime_error("Ilmendur is a singleton!"));
@@ -55,6 +57,10 @@ Ilmendur::Ilmendur()
 
 Ilmendur::~Ilmendur()
 {
+    if (mp_texture_pool) {
+        delete mp_texture_pool;
+    }
+
     SDL_DestroyRenderer(mp_renderer);
     SDL_DestroyWindow(mp_window);
 
@@ -71,6 +77,10 @@ Ilmendur& Ilmendur::instance()
 int Ilmendur::run()
 {
     using namespace std::chrono;
+
+    // This loads all textures from the disk and uploads them to the
+    // graphics card.
+    mp_texture_pool = new TexturePool();
 
     Map m("Oak Fortress");
 

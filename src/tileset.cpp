@@ -1,6 +1,7 @@
 #include "tileset.hpp"
 #include "ilmendur.hpp"
 #include "os.hpp"
+#include "texture_pool.hpp"
 #include "util.hpp"
 #include <fstream>
 #include <utility>
@@ -48,23 +49,14 @@ Tileset::Tileset(const fs::path& filename)
     assert(TILEWIDTH == doc.child("tileset").attribute("tileheight").as_int());
     file.close();
 
-    // Read the actual image file from disk (assumes the same directory as the TSX file),
-    // and upload it to the graphics card.
-    string imgpath = doc.child("tileset").child("image").attribute("source").value();
-    abs_path       = OS::gameDataDir() / fs::u8path("tilesets") / fs::u8path(imgpath);
-    file           = ifstream(abs_path, ifstream::in | ifstream::binary);
-
-    assert(fs::exists(abs_path));
-    std::string str(READ_FILE(file));
-    mp_texid = IMG_LoadTexture_RW(Ilmendur::instance().sdlRenderer(), SDL_RWFromMem(str.data(), str.size()), 1);
+    string imgpath = string("tilesets/") + doc.child("tileset").child("image").attribute("source").value();
+    mp_texid = Ilmendur::instance().texturePool()[imgpath]->p_texture;
     assert(mp_texid);
 }
 
 Tileset::~Tileset()
 {
-    if (mp_texid) {
-        SDL_DestroyTexture(mp_texid);
-    }
+    // mp_texid is owned by the texture pool and destroyed there
 }
 
 /**

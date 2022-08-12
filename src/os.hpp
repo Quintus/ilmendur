@@ -1,6 +1,5 @@
 #ifndef ILMENDUR_OS_HPP
 #define ILMENDUR_OS_HPP
-
 #include <string>
 #include <filesystem>
 
