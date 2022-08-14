@@ -25,6 +25,8 @@ static int iniHandler(void* ptr, const char* section, const char* name, const ch
             p_texinfo->origx = atoi(value);
         } else if (strcmp(name, "origy") == 0) {
             p_texinfo->origy = atoi(value);
+        } else if (strcmp(name, "animated") == 0) {
+            p_texinfo->animation_time = atoi(value);
         } else if (strcmp(name, "licensestr") == 0) {
             // Ignore this one
         } else {

@@ -36,7 +36,7 @@ private:
     int m_current_frame;
     animation_mode m_ani_mode;
     direction m_lookdir;
-    float m_wait_time;
+    int m_ani_ticks;
 
     Vector2f m_pos;
     Vector2f m_targetpos;

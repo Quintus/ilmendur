@@ -16,7 +16,7 @@ Actor::Actor(const string& graphic)
       m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
-      m_wait_time(1.0f),
+      m_ani_ticks(0),
       m_move_start(0),
       m_passed_distance(0.0f),
       m_total_distance(0.0f)
@@ -147,15 +147,16 @@ void Actor::update()
     // Update frame for animation if requested
     switch (m_ani_mode) {
     case animation_mode::always:
-        // TODO: Honour m_wait_time
-        nextFrame();
+        if (++m_ani_ticks >= ILMENDUR_TARGET_FRAMERATE * (mp_texinfo->animation_time / 1000.0)) {
+            nextFrame();
+            m_ani_ticks = 0;
+        }
         break;
     case animation_mode::on_move:
         if (isMoving()) {
-            float step = 1.0f / mp_texinfo->frames;
-            float next_step = (m_current_frame + 1) * step;
-            if (m_passed_distance >= next_step) {
+            if (++m_ani_ticks >= ILMENDUR_TARGET_FRAMERATE * (mp_texinfo->animation_time / 1000.0)) {
                 nextFrame();
+                m_ani_ticks = 0;
             }
         }
         break;
@@ -219,7 +220,11 @@ void Actor::move()
         m_total_distance = 0.0f;
         m_movedir.clear();
         m_targetpos.clear();
-        setFrame(0);
+
+        // Ensure the animation always ends with the straight up graphic
+        if (m_ani_mode == animation_mode::on_move) {
+            setFrame(0);
+        }
     } else {
         Vector2f translation = m_movedir * distance_per_frame;
         m_pos.x += translation.x;

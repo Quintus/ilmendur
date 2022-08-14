@@ -88,7 +88,7 @@ int Ilmendur::run()
     Actor a("chars/spaceship.png");
     a.warp(Vector2f(32, 32));
     a.turn(Actor::direction::left);
-    a.moveTo(Vector2f(500, 32), 32.0f);
+    a.moveTo(Vector2f(32, 200), 32.0f);
 
     bool run = true;
 
