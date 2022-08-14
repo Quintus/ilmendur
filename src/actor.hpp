@@ -17,16 +17,20 @@ public:
     Actor(const std::string& graphic = "");
     virtual ~Actor();
 
-    void update();
-    void draw(SDL_Renderer* p_stage);
+    virtual void update();
+    virtual void draw(SDL_Renderer* p_stage);
     void setGraphic(const std::string& graphic);
 
     bool isMoving();
     void moveTo(const Vector2f& targetpos, float velocity);
     void moveTo(const Vector2f& targetpos, std::function<float(uint64_t)> velfunc);
+    void stopMoving();
     void warp(const Vector2f& targetpos);
     void turn(direction dir);
 
+    inline const Vector2f& position() const { return m_pos; }
+    inline const Vector2f& moveDirection() const { return m_movedir; }
+    inline direction lookDirection() const { return m_lookdir; }
 private:
     void move();
     void setFrame(unsigned int frameno);
@@ -38,6 +42,7 @@ private:
     direction m_lookdir;
     int m_ani_ticks;
 
+protected:
     Vector2f m_pos;
     Vector2f m_targetpos;
     Vector2f m_movedir;

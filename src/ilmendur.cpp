@@ -2,7 +2,7 @@
 #include "buildconfig.hpp"
 #include "texture_pool.hpp"
 #include "map.hpp"
-#include "actor.hpp"
+#include "player.hpp"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -85,10 +85,9 @@ int Ilmendur::run()
 
     Map m("Oak Fortress");
 
-    Actor a("chars/spaceship.png");
-    a.warp(Vector2f(32, 32));
-    a.turn(Actor::direction::left);
-    a.moveTo(Vector2f(32, 200), 32.0f);
+    Player p;
+    p.warp(Vector2f(32, 32));
+    p.turn(Actor::direction::left);
 
     bool run = true;
 
@@ -97,19 +96,103 @@ int Ilmendur::run()
     while (run) {
         start_time = high_resolution_clock::now();
 
+        bool keydowns[4];
+
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
+            case SDL_QUIT:
+                run = false;
+                break;
+            case SDL_KEYDOWN:
+                switch (ev.key.keysym.sym) {
+                case SDLK_UP:
+                    keydowns[0] = true;
+                    break;
+                case SDLK_RIGHT:
+                    keydowns[1] = true;
+                    break;
+                case SDLK_DOWN:
+                    keydowns[2] = true;
+                    break;
+                case SDLK_LEFT:
+                    keydowns[3] = true;
+                    break;
+                }
+                if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                    p.go(Player::godir::n);
+                } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                    p.go(Player::godir::e);
+                } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
+                    p.go(Player::godir::s);
+                } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
+                    p.go(Player::godir::w);
+                } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                    p.go(Player::godir::ne);
+                } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
+                    p.go(Player::godir::se);
+                } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
+                    p.go(Player::godir::sw);
+                } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
+                    p.go(Player::godir::nw);
+                }
+                break;
+            case SDL_KEYUP:
+                switch (ev.key.keysym.sym) {
+                case SDLK_UP:
+                    keydowns[0] = false;
+                    break;
+                case SDLK_RIGHT:
+                    keydowns[1] = false;
+                    break;
+                case SDLK_DOWN:
+                    keydowns[2] = false;
+                    break;
+                case SDLK_LEFT:
+                    keydowns[3] = false;
+                    break;
+                default:
+                    // Ignore
+                    break;
+                }
+                if (p.isMoving()) {
+                    if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                        p.go(Player::godir::n);
+                    } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                        p.go(Player::godir::e);
+                    } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
+                        p.go(Player::godir::s);
+                    } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
+                        p.go(Player::godir::w);
+                    } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                        p.go(Player::godir::ne);
+                    } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
+                        p.go(Player::godir::se);
+                    } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
+                        p.go(Player::godir::sw);
+                    } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
+                        p.go(Player::godir::nw);
+                    } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
+                        p.stopMoving();
+                    }
+                }
+                break;
+            default:
+                // Ignore
+                break;
+            }
+
             if (ev.type == SDL_QUIT) {
                 run = false;
             }
         }
 
-        a.update();
+        p.update();
 
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
         m.draw(mp_renderer);
-        a.draw(mp_renderer);
+        p.draw(mp_renderer);
         SDL_RenderPresent(mp_renderer);
 
         // Throttle framerate to a fixed one (fixed frame rate)

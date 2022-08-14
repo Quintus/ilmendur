@@ -74,6 +74,12 @@ void Actor::moveTo(const Vector2f& targetpos, float velocity)
  * because you want a stone to slowly stop rolling instead of progressing
  * further in a linear fashion. In that case, setting `velfunc` to something
  * involving e.g. the tanh() function could be useful.
+ *
+ * It is possible to pass INFINITY as members of `targetpos`. In that case,
+ * the actor is going to continue moving until stopMoving() is called. Beware
+ * that your `velfunc` should handle this case then. Do not pass INFINITY for
+ * only one component, unless that other component is zero. Doing so will
+ * cause an exception when the function tries to normalise the vector.
  */
 void Actor::moveTo(const Vector2f& targetpos, function<float(uint64_t)> velfunc)
 {
@@ -108,6 +114,29 @@ void Actor::moveTo(const Vector2f& targetpos, function<float(uint64_t)> velfunc)
                 }
             }
         }
+    }
+}
+
+/**
+ * Forcibly stop the actor’s current movement, if any, right now.
+ * Any values passed to the moveTo() methods are discarded, to
+ * continue movement, you will need to make another call to
+ * moveTo().
+ */
+void Actor::stopMoving()
+{
+    std::function<float(uint64_t)> emptyfunc;
+    m_velfunc.swap(emptyfunc); // Clear the function object
+    m_movedir.clear();
+    m_targetpos.clear();
+    m_move_start      = 0;
+    m_passed_distance = 0.0f;
+    m_total_distance  = 0.0f;
+
+    // Ensure the animation always ends with the straight up graphic,
+    // unless this actor is permanently animated anyway.
+    if (m_ani_mode == animation_mode::on_move) {
+        setFrame(0);
     }
 }
 
@@ -212,19 +241,7 @@ void Actor::move()
 
     if (m_passed_distance >= m_total_distance) {
         m_pos = m_targetpos;
-
-        std::function<float(uint64_t)> emptyfunc;
-        m_velfunc.swap(emptyfunc); // Clear the function object
-        m_move_start = 0;
-        m_passed_distance = 0.0f;
-        m_total_distance = 0.0f;
-        m_movedir.clear();
-        m_targetpos.clear();
-
-        // Ensure the animation always ends with the straight up graphic
-        if (m_ani_mode == animation_mode::on_move) {
-            setFrame(0);
-        }
+        stopMoving();
     } else {
         Vector2f translation = m_movedir * distance_per_frame;
         m_pos.x += translation.x;
