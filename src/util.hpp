@@ -5,6 +5,16 @@
 /// Reads the entire file `file' (an std::ifstream) and returns it as a string.
 #define READ_FILE(file) std::istreambuf_iterator<char>(file.rdbuf()), std::istreambuf_iterator<char>()
 
+/***
+ * Returns true if the two floats `a' and `b' are close enough
+ * (given by delta, which defaults to 0.1) to count as being
+ * equal. Otherwise returns false.
+ */
+inline bool float_equal(float a, float b, float delta = 0.1)
+{
+    return fabs(a - b) < delta;
+}
+
 /**
  * Simple 2-dimensional vector.
  */
@@ -84,6 +94,10 @@ public:
     // Dot product
     T operator*(Vector2<T> other) const {
         return x * other.x + y * other.y;
+    }
+
+    bool operator==(const Vector2<T>& other) const {
+        return x == other.x && y == other.y;
     }
 
     // Cross product does not make much sense for 2D vectors,

@@ -87,6 +87,8 @@ int Ilmendur::run()
 
     Actor a("chars/spaceship.png");
     a.warp(Vector2f(32, 32));
+    a.turn(Actor::direction::up);
+    a.moveTo(Vector2f(100, 200), 32.0f);
 
     bool run = true;
 
@@ -101,6 +103,8 @@ int Ilmendur::run()
                 run = false;
             }
         }
+
+        a.update();
 
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);

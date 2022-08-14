@@ -25,6 +25,7 @@ public:
     void moveTo(const Vector2f& targetpos, float velocity);
     void moveTo(const Vector2f& targetpos, std::function<float(uint64_t)> velfunc);
     void warp(const Vector2f& targetpos);
+    void turn(direction dir);
 
 private:
     void move();

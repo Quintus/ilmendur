@@ -48,7 +48,8 @@ bool Actor::isMoving()
 
 /**
  * Request this actor to move to the position `targetpos`. `velocity` gives
- * the moving speed in pixels per second.
+ * the moving speed in pixels per second. For reference, a value of 32.0f
+ * will make the actor cross one field in one second.
  *
  * Under the hood, this function calls the more general moveTo()
  * overload with a constant velocity alteration function that always
@@ -76,6 +77,10 @@ void Actor::moveTo(const Vector2f& targetpos, float velocity)
  */
 void Actor::moveTo(const Vector2f& targetpos, function<float(uint64_t)> velfunc)
 {
+    if (m_pos == targetpos) {
+        return;
+    }
+
     Vector2f translation(targetpos.x - m_pos.x, targetpos.y - m_pos.y);
     m_passed_distance = 0.0f;
     m_total_distance  = translation.length();
@@ -83,6 +88,32 @@ void Actor::moveTo(const Vector2f& targetpos, function<float(uint64_t)> velfunc)
     m_targetpos       = targetpos;
     m_move_start      = SDL_GetTicks64();
     m_velfunc         = velfunc;
+
+    if (m_lookdir != direction::none) { // Actors that do not look anywhere do not need their look direction to be changed.
+        float xdist = targetpos.x - m_pos.x;
+        float ydist = targetpos.y - m_pos.y;
+
+        if (!float_equal(fabs(xdist), fabs(ydist))) { // Do not change lookdir if the X and Y distance covered are about equal.
+            if (fabs(xdist) > fabs(ydist)) {
+                if (xdist > 0) {
+                    m_lookdir = direction::right;
+                } else {
+                    m_lookdir = direction::left;
+                }
+            } else if (fabs(xdist) < fabs(ydist)) {
+                if (ydist > 0) {
+                    m_lookdir = direction::down;
+                } else {
+                    m_lookdir = direction::up;
+                }
+            }
+        }
+    }
+}
+
+void Actor::turn(direction dir)
+{
+    m_lookdir = dir;
 }
 
 /**
