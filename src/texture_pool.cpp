@@ -21,6 +21,10 @@ static int iniHandler(void* ptr, const char* section, const char* name, const ch
             p_texinfo->stridex = atoi(value);
         } else if (strcmp(name, "stridey") == 0) {
             p_texinfo->stridey = atoi(value);
+        } else if (strcmp(name, "origx") == 0) {
+            p_texinfo->origx = atoi(value);
+        } else if (strcmp(name, "origy") == 0) {
+            p_texinfo->origy = atoi(value);
         } else if (strcmp(name, "licensestr") == 0) {
             // Ignore this one
         } else {
@@ -43,8 +47,8 @@ static void parseIni(TextureInfo* p_texinfo, const fs::path& inipath)
     p_texinfo->stridex        = p_texinfo->width;
     p_texinfo->stridey        = p_texinfo->height;
     p_texinfo->animation_time = 0;
-    p_texinfo->origx          = p_texinfo->width / 2;
-    p_texinfo->origy          = p_texinfo->height / 2;
+    p_texinfo->origx          = -1; // Default depends on stridex, which may be read from file
+    p_texinfo->origy          = -1; // Default depends on stridey, which may be read from file
 
     ifstream file(inipath, ifstream::in);
     string iniraw(READ_FILE(file));
@@ -63,6 +67,14 @@ static void parseIni(TextureInfo* p_texinfo, const fs::path& inipath)
         throw(runtime_error(errmsg));
     } else if (result < 0) {
         throw(runtime_error(string("Internal inih error ") + to_string(result) + " while processing INI file `" + inipath.string() + "!"));
+    }
+
+    // Calculate defaults that depend on other values
+    if (p_texinfo->origx == -1) {
+        p_texinfo->origx = p_texinfo->stridex / 2;
+    }
+    if (p_texinfo->origy == -1) {
+        p_texinfo->origy = p_texinfo->stridey / 2;
     }
 
     // Convenience calculation
