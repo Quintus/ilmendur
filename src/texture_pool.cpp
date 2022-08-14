@@ -21,7 +21,7 @@ static int iniHandler(void* ptr, const char* section, const char* name, const ch
             p_texinfo->stridex = atoi(value);
         } else if (strcmp(name, "stridey") == 0) {
             p_texinfo->stridey = atoi(value);
-        } else if (strcmp(name, "licensestr")) {
+        } else if (strcmp(name, "licensestr") == 0) {
             // Ignore this one
         } else {
             cerr << "INI warning: Ignoring unknown key `" << name << "' in section `" << section << "'" << endl;
@@ -93,7 +93,7 @@ TexturePool::TexturePool()
         }
     }
 
-    for (const fs::directory_entry& iter: fs::directory_iterator(OS::gameDataDir() / fs::u8path("gfx"))) {
+    for (const fs::directory_entry& iter: fs::recursive_directory_iterator(OS::gameDataDir() / fs::u8path("gfx"))) {
         if (iter.path().extension() == fs::u8path(".png")) {
             ifstream file(iter.path(), ifstream::in | ifstream::binary);
             string binary(READ_FILE(file));
