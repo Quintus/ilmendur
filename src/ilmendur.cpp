@@ -2,6 +2,7 @@
 #include "buildconfig.hpp"
 #include "texture_pool.hpp"
 #include "map.hpp"
+#include "actor.hpp"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -84,6 +85,9 @@ int Ilmendur::run()
 
     Map m("Oak Fortress");
 
+    Actor a("chars/spaceship.png");
+    a.warp(Vector2f(32, 32));
+
     bool run = true;
 
     high_resolution_clock::time_point start_time;
@@ -101,6 +105,7 @@ int Ilmendur::run()
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
         m.draw(mp_renderer);
+        a.draw(mp_renderer);
         SDL_RenderPresent(mp_renderer);
 
         // Throttle framerate to a fixed one (fixed frame rate)

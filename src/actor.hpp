@@ -3,6 +3,10 @@
 #include "util.hpp"
 #include <cstdint>
 #include <functional>
+#include <string>
+#include <SDL2/SDL.h>
+
+struct TextureInfo;
 
 class Actor
 {
@@ -10,22 +14,25 @@ public:
     enum class direction { none, up, right, down, left };
     enum class animation_mode { never, on_move, always };
 
-    Actor();
+    Actor(const std::string& graphic = "");
     virtual ~Actor();
 
     void update();
+    void draw(SDL_Renderer* p_stage);
+    void setGraphic(const std::string& graphic);
 
-    unsigned int frames();
     bool isMoving();
     void moveTo(const Vector2f& targetpos, float velocity);
     void moveTo(const Vector2f& targetpos, std::function<float(uint64_t)> velfunc);
+    void warp(const Vector2f& targetpos);
 
 private:
     void move();
     void setFrame(unsigned int frameno);
     void nextFrame();
 
-    unsigned int m_current_frame;
+    TextureInfo* mp_texinfo;
+    int m_current_frame;
     animation_mode m_ani_mode;
     direction m_lookdir;
     float m_wait_time;

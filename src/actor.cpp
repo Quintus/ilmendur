@@ -1,14 +1,19 @@
 #include "actor.hpp"
 #include "ilmendur.hpp"
+#include "texture_pool.hpp"
 #include <cassert>
 #include <SDL2/SDL.h>
+
+
+#include <iostream>
 
 #define TILEWIDTH 32
 
 using namespace std;
 
-Actor::Actor()
-    : m_current_frame(0),
+Actor::Actor(const string& graphic)
+    : mp_texinfo(nullptr),
+      m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
       m_wait_time(1.0f),
@@ -16,10 +21,24 @@ Actor::Actor()
       m_passed_distance(0.0f),
       m_total_distance(0.0f)
 {
+    setGraphic(graphic);
 }
 
 Actor::~Actor()
 {
+}
+
+/**
+ * Set this actor to the given graphic. The graphics path is as per
+ * TexturePool's [] operator.
+ */
+void Actor::setGraphic(const string& graphic)
+{
+    if (graphic.empty()) {
+        mp_texinfo = nullptr;
+    } else {
+        mp_texinfo = Ilmendur::instance().texturePool()[graphic];
+    }
 }
 
 bool Actor::isMoving()
@@ -66,10 +85,13 @@ void Actor::moveTo(const Vector2f& targetpos, function<float(uint64_t)> velfunc)
     m_velfunc         = velfunc;
 }
 
-unsigned int Actor::frames()
+/**
+ * Immediately warps this actor to the target position, not playing
+ * any kind of move animation.
+ */
+void Actor::warp(const Vector2f& targetpos)
 {
-    // TODO: Calculate image width / stridex
-    return TILEWIDTH; // DEBUG!
+    m_pos = targetpos;
 }
 
 void Actor::setFrame(unsigned int frameno)
@@ -79,7 +101,7 @@ void Actor::setFrame(unsigned int frameno)
 
 void Actor::nextFrame()
 {
-    if (++m_current_frame >= frames()) {
+    if (++m_current_frame >= mp_texinfo->frames) {
         m_current_frame = 0;
     }
 }
@@ -99,7 +121,7 @@ void Actor::update()
         break;
     case animation_mode::on_move:
         if (isMoving()) {
-            float step = 1.0f / frames();
+            float step = 1.0f / mp_texinfo->frames;
             float next_step = (m_current_frame + 1) * step;
             if (m_passed_distance >= next_step) {
                 nextFrame();
@@ -109,6 +131,46 @@ void Actor::update()
     case animation_mode::never:
         break;
     } // No default to provoke compiler warnings on missing elements
+}
+
+void Actor::draw(SDL_Renderer* p_stage)
+{
+    if (!mp_texinfo) { // Invisible actor
+        return;
+    }
+
+    SDL_Rect srcrect;
+    SDL_Rect destrect;
+
+    destrect.w = mp_texinfo->stridex;
+    destrect.h = mp_texinfo->stridey;
+    destrect.x = m_pos.x - mp_texinfo->origx;
+    destrect.y = m_pos.y - mp_texinfo->origy;
+
+    srcrect.x  = m_current_frame * mp_texinfo->stridex;
+    srcrect.w  = mp_texinfo->stridex;
+    srcrect.h  = mp_texinfo->stridex;
+    if (mp_texinfo->stridey == mp_texinfo->height) {
+        srcrect.y = 0;
+    } else {
+        switch (m_lookdir) {
+        case direction::none:
+        case direction::up: // fall-through
+            srcrect.y = 0;
+            break;
+        case direction::right:
+            srcrect.y = mp_texinfo->stridey;
+            break;
+        case direction::down:
+            srcrect.y = mp_texinfo->stridey * 2;
+            break;
+        case direction::left:
+            srcrect.y = mp_texinfo->stridey * 3;
+            break;
+        }
+    }
+
+    SDL_RenderCopy(p_stage, mp_texinfo->p_texture, &srcrect, &destrect);
 }
 
 void Actor::move()
