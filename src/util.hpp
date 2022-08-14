@@ -1,6 +1,7 @@
 #ifndef ILMENDUR_UTIL_HPP
 #define ILMENDUR_UTIL_HPP
 #include <cmath>
+#include <stdexcept>
 
 /// Reads the entire file `file' (an std::ifstream) and returns it as a string.
 #define READ_FILE(file) std::istreambuf_iterator<char>(file.rdbuf()), std::istreambuf_iterator<char>()
@@ -59,9 +60,45 @@ public:
      * this operation always is a vector on the float base type, because
      * such a scale operation is unlikely to yield exact integral values
      * for the x and y components.
+     *
+     * If this vector isInfinite(), special rules apply. It is possible
+     * to normalise an infinite vector if and only if one of the following
+     * conditions is true:
+     *
+     * - Both components are infinite.
+     * - One component is infinite, the other component is zero.
+     *
+     * In all other cases, trying to normalise the infinite vector causes
+     * an exception of type std::domain_error.
      */
-    Vector2<float> normalise() {
-        return (*this) * (1.0f / length());
+    Vector2<float> normalise() const {
+        if (std::isinf(x)) {
+            if (std::isinf(y)) { // Infinity handling
+                return Vector2<float>(x > 0 ? 1.0f : -1.0f, y > 0 ? 1.0f : -1.0f);
+            } else if (y == 0.0f) {
+                return Vector2<float>(x > 0 ? 1.0f : -1.0f, 0.0f);
+            } else {
+                throw(std::domain_error("Cannot normalise vector with only one infinite component if the other component is not zero"));
+            }
+        } else if (std::isinf(y)) { // Infinity handling
+            if (std::isinf(x)) {
+                return Vector2<float>(x > 0 ? 1.0f : -1.0f, y > 0 ? 1.0f : -1.0f);
+            } else if (x == 0.0f) {
+                return Vector2<float>(0.0f, y > 0 ? 1.0f : -1.0f);
+            } else {
+                throw(std::domain_error("Cannot normalise vector with only one infinite component if the other component is not zero"));
+            }
+        } else { // The normal case.
+            return (*this) * (1.0f / length());
+        }
+    }
+
+    /**
+     * Determines if this vector has an infinite length, i.e. whether
+     * one of its components is infinite.
+     */
+    bool isInfinite() const {
+        return std::isinf(x) || std::isinf(y);
     }
 
     /// Copy assignment operator.
