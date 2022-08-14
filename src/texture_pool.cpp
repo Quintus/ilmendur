@@ -128,6 +128,19 @@ TexturePool::~TexturePool()
     }
 }
 
+/**
+ * Access a texture and its metadata as it is stored in the texture
+ * pool. `name` is a path, which is either of these:
+ *
+ * - A string starting with `tilesets/`, referring to a file in the
+ *   `tilesets/` directory.
+ * - Any other string, which is treated as a filename relative to the
+ *   `gfx/` directory.
+ *
+ * The method returns an instance of TextureInfo. Access its `p_texture`
+ * member to gain access to the actual SDL texture. The returned pointer
+ * must not be freed; it is owned by TexturePool.
+ */
 TextureInfo* TexturePool::operator[](const std::string& name)
 {
     return m_textures[name];
