@@ -40,6 +40,7 @@ public:
     ~Map();
 
     void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
+    SDL_Rect drawRect() const;
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.

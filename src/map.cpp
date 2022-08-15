@@ -185,6 +185,15 @@ void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
     }
 }
 
+/**
+ * Returns the drawing rectangle for the entire map in world coordinates.
+ * The X/Y position for a map is always zero.
+ */
+SDL_Rect Map::drawRect() const
+{
+    return SDL_Rect{0, 0, m_width * TILEWIDTH, m_height * TILEWIDTH};
+}
+
 bool Map::readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid)
 {
     static map<int,Tileset*>::iterator iter;

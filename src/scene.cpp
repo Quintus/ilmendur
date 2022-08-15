@@ -13,6 +13,7 @@ Scene::Scene()
 {
     // DEBUG: This should only be in a subclass probably
     mp_map = new Map("Oak Fortress");
+    mp_cam1->setBounds(mp_map->drawRect());
 }
 
 Scene::~Scene()
@@ -51,6 +52,7 @@ void Scene::update()
         p_actor->update();
     }
 
+    // Centre camera on the player
     if (mp_player) {
         mp_cam1->setPosition(mp_player->position());
     }

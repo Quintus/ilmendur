@@ -15,9 +15,11 @@ public:
     inline const SDL_Rect& getView() { return m_view; }
 
     void setPosition(const Vector2f& pos);
+    void setBounds(const SDL_Rect& r);
 private:
     Scene& mr_scene;
     SDL_Rect m_view;
+    SDL_Rect m_bounds;
 };
 
 #endif /* ILMENDUR_CAMERA_HPP */
