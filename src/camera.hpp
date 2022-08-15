@@ -13,6 +13,8 @@ public:
 
     void setView(const SDL_Rect& r);
     inline const SDL_Rect& getView() { return m_view; }
+
+    void setPosition(const Vector2f& pos);
 private:
     Scene& mr_scene;
     SDL_Rect m_view;

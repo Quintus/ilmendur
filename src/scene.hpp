@@ -3,6 +3,7 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
+class Player;
 class Actor;
 class Camera;
 class Map;
@@ -17,11 +18,13 @@ public:
     void draw(SDL_Renderer* p_renderer);
 
     void addActor(Actor* p_actor);
+    inline void setPlayer(Player* p_player) { mp_player = p_player; }
 private:
     std::vector<Actor*> m_actors;
     Camera* mp_cam1;
     Camera* mp_cam2;
     Map* mp_map;
+    Player* mp_player;
 };
 
 #endif /* ILMENDUR_SCENE_HPP */

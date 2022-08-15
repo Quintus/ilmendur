@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "scene.hpp"
 
 #define PLAYER_VELOCITY 80
 
@@ -7,6 +8,7 @@ using namespace std;
 Player::Player(Scene& scene)
     : Actor(scene, "chars/spaceship.png")
 {
+    scene.setPlayer(this);
 }
 
 Player::~Player()

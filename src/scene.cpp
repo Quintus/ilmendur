@@ -2,12 +2,14 @@
 #include "camera.hpp"
 #include "actor.hpp"
 #include "map.hpp"
+#include "player.hpp"
 
 using namespace std;
 
 Scene::Scene()
     : mp_cam1(new Camera(*this)),
-      mp_cam2(new Camera(*this))
+      mp_cam2(new Camera(*this)),
+      mp_player(nullptr)
 {
     // DEBUG: This should only be in a subclass probably
     mp_map = new Map("Oak Fortress");
@@ -49,10 +51,9 @@ void Scene::update()
         p_actor->update();
     }
 
-    //SDL_Rect camview = mp_cam1->getView();
-    //camview.x += 1;
-    //camview.y += 1;
-    //mp_cam1->setView(camview);
+    if (mp_player) {
+        mp_cam1->setPosition(mp_player->position());
+    }
 }
 
 void Scene::draw(SDL_Renderer* p_stage)
