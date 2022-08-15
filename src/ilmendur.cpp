@@ -97,8 +97,6 @@ int Ilmendur::run()
     while (run) {
         start_time = high_resolution_clock::now();
 
-        bool keydowns[4];
-
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
@@ -108,74 +106,27 @@ int Ilmendur::run()
             case SDL_KEYDOWN:
                 switch (ev.key.keysym.sym) {
                 case SDLK_UP:
-                    keydowns[0] = true;
-                    break;
-                case SDLK_RIGHT:
-                    keydowns[1] = true;
-                    break;
-                case SDLK_DOWN:
-                    keydowns[2] = true;
-                    break;
-                case SDLK_LEFT:
-                    keydowns[3] = true;
-                    break;
-                }
-                if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p->go(Player::godir::n);
-                } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p->go(Player::godir::e);
-                } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
-                    p->go(Player::godir::s);
-                } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                    p->go(Player::godir::w);
-                } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p->go(Player::godir::ne);
-                } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
-                    p->go(Player::godir::se);
-                } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
-                    p->go(Player::godir::sw);
-                } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                    p->go(Player::godir::nw);
-                }
-                break;
-            case SDL_KEYUP:
-                switch (ev.key.keysym.sym) {
-                case SDLK_UP:
-                    keydowns[0] = false;
-                    break;
-                case SDLK_RIGHT:
-                    keydowns[1] = false;
-                    break;
-                case SDLK_DOWN:
-                    keydowns[2] = false;
-                    break;
-                case SDLK_LEFT:
-                    keydowns[3] = false;
+                case SDLK_RIGHT: // fall-through
+                case SDLK_DOWN:  // fall-through
+                case SDLK_LEFT:  // fall-through
+                    p->checkInput();
                     break;
                 default:
                     // Ignore
                     break;
                 }
-                if (p->isMoving()) {
-                    if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p->go(Player::godir::n);
-                    } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p->go(Player::godir::e);
-                    } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
-                        p->go(Player::godir::s);
-                    } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                        p->go(Player::godir::w);
-                    } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p->go(Player::godir::ne);
-                    } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
-                        p->go(Player::godir::se);
-                    } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
-                        p->go(Player::godir::sw);
-                    } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                        p->go(Player::godir::nw);
-                    } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p->stopMoving();
-                    }
+                break;
+            case SDL_KEYUP:
+                switch (ev.key.keysym.sym) {
+                case SDLK_UP:
+                case SDLK_RIGHT: // fall-through
+                case SDLK_DOWN:  // fall-through
+                case SDLK_LEFT:  // fall-through
+                    p->checkInput();
+                    break;
+                default:
+                    // Ignore
+                    break;
                 }
                 break;
             default:

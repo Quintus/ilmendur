@@ -20,39 +20,43 @@ void Player::update()
     Actor::update();
 }
 
-void Player::go(godir dir)
+/**
+ * Check the keyboard state for player movement input.
+ * Call this from the event loop.
+ */
+void Player::checkInput()
 {
     Vector2f vec;
-    switch (dir) {
-    case godir::n:
-        vec = Vector2f(0.0f, -1.0f);
-        turn(direction::up);
-        break;
-    case godir::ne:
-        vec = Vector2f(1.0f, -1.0f).normalise();
-        break;
-    case godir::e:
+    const uint8_t* keys = SDL_GetKeyboardState(nullptr);
+
+    if (keys[SDL_SCANCODE_UP]) {
+        if (keys[SDL_SCANCODE_RIGHT]) {
+            vec = Vector2f(1.0f, -1.0f).normalise();
+        } else if (keys[SDL_SCANCODE_LEFT]) {
+            vec = Vector2f(-1.0f, -1.0f).normalise();
+        } else { // Only up
+            vec = Vector2f(0.0f, -1.0f);
+            turn(direction::up);
+        }
+    } else if (keys[SDL_SCANCODE_DOWN]) {
+        if (keys[SDL_SCANCODE_RIGHT]) {
+            vec = Vector2f(1.0f, 1.0f).normalise();
+        } else if (keys[SDL_SCANCODE_LEFT]) {
+            vec = Vector2f(-1.0f, 1.0f).normalise();
+        } else { // Only down
+            vec = Vector2f(0.0f, 1.0f);
+            turn(direction::down);
+        }
+    } else if (keys[SDL_SCANCODE_RIGHT]) { // Only right
         vec = Vector2f(1.0f, 0.0f);
         turn(direction::right);
-        break;
-    case godir::se:
-        vec = Vector2f(1.0f, 1.0f).normalise();
-        break;
-    case godir::s:
-        vec = Vector2f(0.0f, 1.0f);
-        turn(direction::down);
-        break;
-    case godir::sw:
-        vec = Vector2f(-1.0f, 1.0f).normalise();
-        break;
-    case godir::w:
+    } else if (keys[SDL_SCANCODE_LEFT]) { // Only left
         vec = Vector2f(-1.0f, 0.0f);
         turn(direction::left);
-        break;
-    case godir::nw:
-        vec = Vector2f(-1.0f, -1.0f).normalise();
-        break;
-    } // No default so the compiler can warn about missing values
+    } else if (isMoving()) { // No arrow keys pressed, stop if not standing still already.
+        stopMoving();
+        return; // The rest is only for the movement operation.
+    }
 
     if (isMoving()) {
         // If already moving, just alter the move direction

@@ -9,9 +9,7 @@ public:
     ~Player();
 
     virtual void update();
-
-    enum class godir { n, ne, e, se, s, sw, w, nw };
-    void go(godir dir);
+    void checkInput();
 };
 
 #endif /* ILMENDUR_PLAYER_HPP */
