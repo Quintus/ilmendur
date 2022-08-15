@@ -2,10 +2,8 @@
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
 #include "scene.hpp"
+#include "map.hpp"
 #include <SDL2/SDL.h>
-
-
-#include <iostream>
 
 #define TILEWIDTH 32
 
@@ -209,6 +207,19 @@ SDL_Rect Actor::drawRect() const
     return result;
 }
 
+/**
+ * Returns the collision rectangle, in world coordinates.
+ */
+SDL_Rect Actor::collisionBox() const
+{
+    SDL_Rect result;
+    result.w = mp_texinfo->collw;
+    result.h = mp_texinfo->collh;
+    result.x = m_pos.x - mp_texinfo->origx + mp_texinfo->collx;
+    result.y = m_pos.y - mp_texinfo->origy + mp_texinfo->colly;
+    return result;
+}
+
 void Actor::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 {
     if (!mp_texinfo) { // Invisible actor
@@ -264,5 +275,27 @@ void Actor::move()
         Vector2f translation = m_movedir * distance_per_frame;
         m_pos.x += translation.x;
         m_pos.y += translation.y;
+
+        // Do not walk off the map. It is allowed to have the drawing rectangle
+        // hang into the void, but not the collision box, i.e., the map's edge
+        // counts as a wall.
+        SDL_Rect maprect = mr_scene.map()->drawRect();
+        SDL_Rect collrect = collisionBox();
+        if (collrect.x < maprect.x) {
+            m_pos.x = maprect.x + mp_texinfo->origx - mp_texinfo->collx;
+            stopMoving();
+        }
+        if (collrect.x + collrect.w > maprect.x + maprect.w) {
+            m_pos.x = maprect.x + maprect.w - mp_texinfo->origx - mp_texinfo->collx;
+            stopMoving();
+        }
+        if (collrect.y < maprect.y) {
+            m_pos.y = maprect.y + mp_texinfo->origy - mp_texinfo->colly;
+            stopMoving();
+        }
+        if (collrect.y + collrect.h > maprect.y + maprect.h) {
+            m_pos.y = maprect.y + maprect.h - mp_texinfo->origy - mp_texinfo->colly;
+            stopMoving();
+        }
     }
 }

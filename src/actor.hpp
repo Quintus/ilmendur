@@ -30,6 +30,7 @@ public:
     void turn(direction dir);
 
     SDL_Rect drawRect() const;
+    SDL_Rect collisionBox() const;
 
     inline const Vector2f& position() const { return m_pos; }
     inline const Vector2f& moveDirection() const { return m_movedir; }
