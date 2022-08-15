@@ -25,6 +25,14 @@ static int iniHandler(void* ptr, const char* section, const char* name, const ch
             p_texinfo->origx = atoi(value);
         } else if (strcmp(name, "origy") == 0) {
             p_texinfo->origy = atoi(value);
+        } else if (strcmp(name, "collx") == 0) {
+            p_texinfo->collx = atoi(value);
+        } else if (strcmp(name, "colly") == 0) {
+            p_texinfo->colly = atoi(value);
+        } else if (strcmp(name, "collw") == 0) {
+            p_texinfo->collw = atoi(value);
+        } else if (strcmp(name, "collh") == 0) {
+            p_texinfo->collh = atoi(value);
         } else if (strcmp(name, "animated") == 0) {
             p_texinfo->animation_time = atoi(value);
         } else if (strcmp(name, "licensestr") == 0) {
@@ -49,6 +57,10 @@ static void parseIni(TextureInfo* p_texinfo, const fs::path& inipath)
     p_texinfo->stridex        = p_texinfo->width;
     p_texinfo->stridey        = p_texinfo->height;
     p_texinfo->animation_time = 0;
+    p_texinfo->collx          = 0;
+    p_texinfo->colly          = 0;
+    p_texinfo->collw          = -1; // Default depends on stridex, which may be read from file
+    p_texinfo->collh          = -1; // Default depends on stridex, which may be read from file
     p_texinfo->origx          = -1; // Default depends on stridex, which may be read from file
     p_texinfo->origy          = -1; // Default depends on stridey, which may be read from file
 
@@ -77,6 +89,12 @@ static void parseIni(TextureInfo* p_texinfo, const fs::path& inipath)
     }
     if (p_texinfo->origy == -1) {
         p_texinfo->origy = p_texinfo->stridey / 2;
+    }
+    if (p_texinfo->collw == -1) {
+        p_texinfo->collw = p_texinfo->stridex;
+    }
+    if (p_texinfo->collh == -1) {
+        p_texinfo->collh = p_texinfo->stridey;
     }
 
     // Convenience calculation

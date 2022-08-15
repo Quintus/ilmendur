@@ -23,6 +23,10 @@ struct TextureInfo
     int stridey;            ///< For animated graphics: height of one frame (equals `height` otherwise)
     int origx;              ///< Origin X coördinate (defaults to 1/2 of `stridex` if unset in INI)
     int origy;              ///< Origin Y coördinate (defaults to 1/2 of `stridey` if unset in INI)
+    int collx;              ///< Collision box X coördinate (defaults to 0)
+    int colly;              ///< Collision box Y coördinate (defaults to 0)
+    int collw;              ///< Collision box width (defaults to `stridex` if unset in INI)
+    int collh;              ///< Collision box height (defaults to `stridey` if unset in INI)
 };
 
 /**
