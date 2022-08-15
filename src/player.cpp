@@ -4,8 +4,8 @@
 
 using namespace std;
 
-Player::Player()
-    : Actor("chars/spaceship.png")
+Player::Player(Scene& scene)
+    : Actor(scene, "chars/spaceship.png")
 {
 }
 

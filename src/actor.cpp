@@ -1,7 +1,7 @@
 #include "actor.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
-#include <cassert>
+#include "scene.hpp"
 #include <SDL2/SDL.h>
 
 
@@ -11,8 +11,9 @@
 
 using namespace std;
 
-Actor::Actor(const string& graphic)
-    : mp_texinfo(nullptr),
+Actor::Actor(Scene& scene, const string& graphic)
+    : mr_scene(scene),
+      mp_texinfo(nullptr),
       m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
@@ -22,6 +23,7 @@ Actor::Actor(const string& graphic)
       m_total_distance(0.0f)
 {
     setGraphic(graphic);
+    mr_scene.addActor(this);
 }
 
 Actor::~Actor()
@@ -194,20 +196,36 @@ void Actor::update()
     } // No default to provoke compiler warnings on missing elements
 }
 
-void Actor::draw(SDL_Renderer* p_stage)
+/**
+ * Returns the draw rectangle, in world coordinates.
+ */
+SDL_Rect Actor::drawRect() const
+{
+    SDL_Rect result;
+    result.w = mp_texinfo->stridex;
+    result.h = mp_texinfo->stridey;
+    result.x = m_pos.x - mp_texinfo->origx;
+    result.y = m_pos.y - mp_texinfo->origy;
+    return result;
+}
+
+void Actor::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 {
     if (!mp_texinfo) { // Invisible actor
         return;
     }
 
+    SDL_Rect destrect = drawRect();
+    // Do not draw this actor if it is not within the camera view
+    if (!SDL_HasIntersection(&destrect, p_camview)) {
+        return;
+    }
+
+    // TODO: Honor p_camview width and height for scaling purposes.
+    destrect.x -= p_camview->x;
+    destrect.y -= p_camview->y;
+
     SDL_Rect srcrect;
-    SDL_Rect destrect;
-
-    destrect.w = mp_texinfo->stridex;
-    destrect.h = mp_texinfo->stridey;
-    destrect.x = m_pos.x - mp_texinfo->origx;
-    destrect.y = m_pos.y - mp_texinfo->origy;
-
     srcrect.x  = m_current_frame * mp_texinfo->stridex;
     srcrect.w  = mp_texinfo->stridex;
     srcrect.h  = mp_texinfo->stridex;

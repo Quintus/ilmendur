@@ -1,5 +1,6 @@
 #ifndef ILMENDUR_UTIL_HPP
 #define ILMENDUR_UTIL_HPP
+#include <SDL2/SDL.h>
 #include <cmath>
 #include <stdexcept>
 
@@ -152,5 +153,14 @@ public:
 // Type shortcuts.
 typedef Vector2<float> Vector2f;
 typedef Vector2<int>   Vector2i;
+
+/// Tests whether the given `point` is located within the given `rect`.
+inline bool isPointInRect(const Vector2f& point, const SDL_Rect& rect)
+{
+    return point.x >= rect.x &&
+        point.y >= rect.y &&
+        point.x < rect.x + rect.w &&
+        point.y < rect.y + rect.h;
+}
 
 #endif /* ILMENDUR_UTIL_HPP */

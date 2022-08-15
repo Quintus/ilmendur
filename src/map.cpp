@@ -153,12 +153,13 @@ Map::~Map()
     }
 }
 
-void Map::draw(SDL_Renderer* p_stage)
+void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 {
     SDL_Rect srcrect;
     SDL_Rect destrect;
     SDL_Texture* p_tilesettexture = nullptr;
 
+    // TODO: Honor p_camview width and height for scaling purposes.
     destrect.w = TILEWIDTH;
     destrect.h = TILEWIDTH;
 
@@ -170,8 +171,8 @@ void Map::draw(SDL_Renderer* p_stage)
                 for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
                     int gid = layer.data.p_tile_layer->gids[i];
                     if (readTile(p_tilesettexture, srcrect, gid)) {
-                        destrect.x = i % m_width * TILEWIDTH;
-                        destrect.y = i / m_width * TILEWIDTH;
+                        destrect.x = (i % m_width * TILEWIDTH) - p_camview->x;
+                        destrect.y = (i / m_width * TILEWIDTH) - p_camview->y;
                         SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
                     }
                 }

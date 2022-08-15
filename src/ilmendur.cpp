@@ -3,6 +3,7 @@
 #include "texture_pool.hpp"
 #include "map.hpp"
 #include "player.hpp"
+#include "scene.hpp"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -83,11 +84,11 @@ int Ilmendur::run()
     // graphics card.
     mp_texture_pool = new TexturePool();
 
-    Map m("Oak Fortress");
+    Scene testscene;
 
-    Player p;
-    p.warp(Vector2f(32, 32));
-    p.turn(Actor::direction::left);
+    Player* p = new Player(testscene);
+    p->warp(Vector2f(32, 32));
+    p->turn(Actor::direction::left);
 
     bool run = true;
 
@@ -120,21 +121,21 @@ int Ilmendur::run()
                     break;
                 }
                 if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p.go(Player::godir::n);
+                    p->go(Player::godir::n);
                 } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p.go(Player::godir::e);
+                    p->go(Player::godir::e);
                 } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
-                    p.go(Player::godir::s);
+                    p->go(Player::godir::s);
                 } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                    p.go(Player::godir::w);
+                    p->go(Player::godir::w);
                 } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                    p.go(Player::godir::ne);
+                    p->go(Player::godir::ne);
                 } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
-                    p.go(Player::godir::se);
+                    p->go(Player::godir::se);
                 } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
-                    p.go(Player::godir::sw);
+                    p->go(Player::godir::sw);
                 } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                    p.go(Player::godir::nw);
+                    p->go(Player::godir::nw);
                 }
                 break;
             case SDL_KEYUP:
@@ -155,25 +156,25 @@ int Ilmendur::run()
                     // Ignore
                     break;
                 }
-                if (p.isMoving()) {
+                if (p->isMoving()) {
                     if (keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p.go(Player::godir::n);
+                        p->go(Player::godir::n);
                     } else if (!keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p.go(Player::godir::e);
+                        p->go(Player::godir::e);
                     } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && !keydowns[3]) {
-                        p.go(Player::godir::s);
+                        p->go(Player::godir::s);
                     } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                        p.go(Player::godir::w);
+                        p->go(Player::godir::w);
                     } else if (keydowns[0] && keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p.go(Player::godir::ne);
+                        p->go(Player::godir::ne);
                     } else if (!keydowns[0] && keydowns[1] && keydowns[2] && !keydowns[3]) {
-                        p.go(Player::godir::se);
+                        p->go(Player::godir::se);
                     } else if (!keydowns[0] && !keydowns[1] && keydowns[2] && keydowns[3]) {
-                        p.go(Player::godir::sw);
+                        p->go(Player::godir::sw);
                     } else if (keydowns[0] && !keydowns[1] && !keydowns[2] && keydowns[3]) {
-                        p.go(Player::godir::nw);
+                        p->go(Player::godir::nw);
                     } else if (!keydowns[0] && !keydowns[1] && !keydowns[2] && !keydowns[3]) {
-                        p.stopMoving();
+                        p->stopMoving();
                     }
                 }
                 break;
@@ -187,12 +188,11 @@ int Ilmendur::run()
             }
         }
 
-        p.update();
+        testscene.update();
 
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
-        m.draw(mp_renderer);
-        p.draw(mp_renderer);
+        testscene.draw(mp_renderer);
         SDL_RenderPresent(mp_renderer);
 
         // Throttle framerate to a fixed one (fixed frame rate)

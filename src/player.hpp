@@ -5,7 +5,7 @@
 class Player: public Actor
 {
 public:
-    Player();
+    Player(Scene& scene);
     ~Player();
 
     virtual void update();

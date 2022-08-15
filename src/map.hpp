@@ -39,7 +39,7 @@ public:
     Map(const std::string& name);
     ~Map();
 
-    void draw(SDL_Renderer* p_stage);
+    void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.

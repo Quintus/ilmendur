@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 
 struct TextureInfo;
+class Scene;
 
 class Actor
 {
@@ -14,11 +15,11 @@ public:
     enum class direction { none, up, right, down, left };
     enum class animation_mode { never, on_move, always };
 
-    Actor(const std::string& graphic = "");
+    Actor(Scene& scene, const std::string& graphic = "");
     virtual ~Actor();
 
     virtual void update();
-    virtual void draw(SDL_Renderer* p_stage);
+    virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     void setGraphic(const std::string& graphic);
 
     bool isMoving();
@@ -28,6 +29,8 @@ public:
     void warp(const Vector2f& targetpos);
     void turn(direction dir);
 
+    SDL_Rect drawRect() const;
+
     inline const Vector2f& position() const { return m_pos; }
     inline const Vector2f& moveDirection() const { return m_movedir; }
     inline direction lookDirection() const { return m_lookdir; }
@@ -36,6 +39,7 @@ private:
     void setFrame(unsigned int frameno);
     void nextFrame();
 
+    Scene& mr_scene;
     TextureInfo* mp_texinfo;
     int m_current_frame;
     animation_mode m_ani_mode;
