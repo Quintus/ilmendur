@@ -17,6 +17,9 @@
 
 using namespace std;
 
+#define NORMAL_WINDOW_WIDTH 960
+#define NORMAL_WINDOW_HEIGHT 1020
+
 // The maximum length of one frame, calculated from the desired frame rate.
 const chrono::milliseconds TARGET_FRAMETIME{1000 / ILMENDUR_TARGET_FRAMERATE};
 
@@ -40,7 +43,7 @@ Ilmendur::Ilmendur()
     }
 
     // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
-    if (SDL_CreateWindowAndRenderer(640, 480, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
+    if (SDL_CreateWindowAndRenderer(NORMAL_WINDOW_WIDTH, NORMAL_WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
         throw(runtime_error("SDL_CreateWindowAndRenderer() failed!"));
     }
 
@@ -76,6 +79,28 @@ Ilmendur& Ilmendur::instance()
     return *sp_ilmendur;
 }
 
+/**
+ * The part of the rendering area describing player 1.
+ */
+SDL_Rect Ilmendur::viewportPlayer1() const
+{
+    int width = 0;
+    int height = 0;
+    SDL_GetRendererOutputSize(mp_renderer, &width, &height);
+    return SDL_Rect{0,0,width-1,height}; // -1 for a small divider space
+}
+
+/**
+ * The part of the rendering area describing player 2.
+ */
+SDL_Rect Ilmendur::viewportPlayer2() const
+{
+    int width = 0;
+    int height = 0;
+    SDL_GetRendererOutputSize(mp_renderer, &width, &height);
+    return SDL_Rect{width+1,0,width-1,height};
+}
+
 int Ilmendur::run()
 {
     using namespace std::chrono;
@@ -87,7 +112,7 @@ int Ilmendur::run()
     Scene testscene;
 
     Player* p = new Player(testscene);
-    p->warp(Vector2f(32, 32));
+    p->warp(Vector2f(1600, 2600));
     p->turn(Actor::direction::left);
 
     bool run = true;
@@ -123,6 +148,9 @@ int Ilmendur::run()
                 case SDLK_DOWN:  // fall-through
                 case SDLK_LEFT:  // fall-through
                     p->checkInput();
+                    break;
+                case SDLK_ESCAPE:
+                    run = false;
                     break;
                 default:
                     // Ignore

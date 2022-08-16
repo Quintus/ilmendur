@@ -3,17 +3,19 @@
 #include "actor.hpp"
 #include "map.hpp"
 #include "player.hpp"
+#include "ilmendur.hpp"
 
 using namespace std;
 
 Scene::Scene()
-    : mp_cam1(new Camera(*this)),
-      mp_cam2(new Camera(*this)),
+    : mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
+      mp_cam2(new Camera(*this, Ilmendur::instance().viewportPlayer2())),
       mp_player(nullptr)
 {
     // DEBUG: This should only be in a subclass probably
     mp_map = new Map("Oak Fortress");
     mp_cam1->setBounds(mp_map->drawRect());
+    mp_cam1->setViewport(Ilmendur::instance().viewportPlayer1());
 }
 
 Scene::~Scene()
@@ -61,7 +63,8 @@ void Scene::update()
 void Scene::draw(SDL_Renderer* p_stage)
 {
     // For now only utilise camera 1
-    SDL_Rect camview = mp_cam1->getView();
+    mp_cam1->draw(p_stage);
+    SDL_Rect camview = mp_cam1->view();
 
     mp_map->draw(p_stage, &camview);
     for (Actor* p_actor: m_actors) {

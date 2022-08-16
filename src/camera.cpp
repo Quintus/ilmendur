@@ -1,20 +1,27 @@
 #include "camera.hpp"
+#include <cassert>
 
 using namespace std;
 
-Camera::Camera(Scene& m_scene)
+Camera::Camera(Scene& m_scene, const SDL_Rect& initial_view)
     : mr_scene(m_scene)
 {
-    m_view.x = 0;
-    m_view.y = 0;
-    // DEBUG: Hardcoded to window dimensions for now, change this!
-    m_view.w = 640;
-    m_view.h = 480;
+    m_view = initial_view;
+    assert(initial_view.w != 0);
+    assert(initial_view.h != 0);
+
+    // Setting the width components to zero makes callers ignore width
+    // and height restrictions.
 
     m_bounds.x = 0;
     m_bounds.y = 0;
     m_bounds.w = 0;
     m_bounds.h = 0;
+
+    m_viewport.x = 0;
+    m_viewport.y = 0;
+    m_viewport.w = 0;
+    m_viewport.h = 0;
 }
 
 Camera::~Camera()
@@ -24,6 +31,11 @@ Camera::~Camera()
 void Camera::setView(const SDL_Rect& r)
 {
     m_view = r;
+}
+
+void Camera::setViewport(const SDL_Rect& r)
+{
+    m_viewport = r;
 }
 
 /**
@@ -63,5 +75,12 @@ void Camera::setPosition(const Vector2f& pos)
         if (m_view.y + m_view.h >= m_bounds.y + m_bounds.h) {
             m_view.y = m_bounds.y + m_bounds.h - m_view.h;
         }
+    }
+}
+
+void Camera::draw(SDL_Renderer* p_renderer)
+{
+    if (m_viewport.w > 0) {
+        SDL_RenderSetViewport(p_renderer, &m_viewport);
     }
 }
