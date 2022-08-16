@@ -15,7 +15,9 @@ Scene::Scene()
     // DEBUG: This should only be in a subclass probably
     mp_map = new Map("Oak Fortress");
     mp_cam1->setBounds(mp_map->drawRect());
+    mp_cam2->setBounds(mp_map->drawRect());
     mp_cam1->setViewport(Ilmendur::instance().viewportPlayer1());
+    mp_cam2->setViewport(Ilmendur::instance().viewportPlayer2());
 }
 
 Scene::~Scene()
@@ -58,13 +60,23 @@ void Scene::update()
     if (mp_player) {
         mp_cam1->setPosition(mp_player->position());
     }
+    mp_cam2->setPosition(Vector2f(1600, 2600));
 }
 
 void Scene::draw(SDL_Renderer* p_stage)
 {
-    // For now only utilise camera 1
+    // Camera 1
     mp_cam1->draw(p_stage);
     SDL_Rect camview = mp_cam1->view();
+
+    mp_map->draw(p_stage, &camview);
+    for (Actor* p_actor: m_actors) {
+        p_actor->draw(p_stage, &camview);
+    }
+
+    // Camera 2
+    mp_cam2->draw(p_stage);
+    camview = mp_cam2->view();
 
     mp_map->draw(p_stage, &camview);
     for (Actor* p_actor: m_actors) {

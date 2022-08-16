@@ -17,7 +17,11 @@
 
 using namespace std;
 
-#define NORMAL_WINDOW_WIDTH 960
+/* Window dimensions. Do not occupy the full HD space by default,
+ * so that window decorations do not cause the window to become
+ * larger than the screen. Fullscreen mode uses the entire screen
+ * space. */
+#define NORMAL_WINDOW_WIDTH 1910
 #define NORMAL_WINDOW_HEIGHT 1020
 
 // The maximum length of one frame, calculated from the desired frame rate.
@@ -87,7 +91,7 @@ SDL_Rect Ilmendur::viewportPlayer1() const
     int width = 0;
     int height = 0;
     SDL_GetRendererOutputSize(mp_renderer, &width, &height);
-    return SDL_Rect{0,0,width-1,height}; // -1 for a small divider space
+    return SDL_Rect{0,0,width/2-1,height}; // -1 for a small divider space
 }
 
 /**
@@ -98,7 +102,7 @@ SDL_Rect Ilmendur::viewportPlayer2() const
     int width = 0;
     int height = 0;
     SDL_GetRendererOutputSize(mp_renderer, &width, &height);
-    return SDL_Rect{width+1,0,width-1,height};
+    return SDL_Rect{width/2+1,0,width/2-1,height};
 }
 
 int Ilmendur::run()
