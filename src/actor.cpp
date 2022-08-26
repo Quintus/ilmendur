@@ -4,6 +4,7 @@
 #include "scene.hpp"
 #include "map.hpp"
 #include <SDL2/SDL.h>
+#include <cassert>
 
 #define TILEWIDTH 32
 
@@ -39,6 +40,16 @@ void Actor::setGraphic(const string& graphic)
     } else {
         mp_texinfo = Ilmendur::instance().texturePool()[graphic];
     }
+
+    // Triggering this assert means that a non-existant graphics file was requested.
+    if (!graphic.empty()) {
+        assert(mp_texinfo);
+    }
+}
+
+void Actor::setAnimationMode(animation_mode mode)
+{
+    m_ani_mode = mode;
 }
 
 bool Actor::isMoving()

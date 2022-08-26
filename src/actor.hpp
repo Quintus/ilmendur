@@ -21,6 +21,7 @@ public:
     virtual void update();
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     void setGraphic(const std::string& graphic);
+    void setAnimationMode(animation_mode mode);
 
     bool isMoving();
     void moveTo(const Vector2f& targetpos, float velocity);
