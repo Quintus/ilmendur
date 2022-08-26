@@ -10,6 +10,16 @@
 
 using namespace std;
 
+/**
+ * Constructs a new actor for use in the given scene. Always construct
+ * actors with the new operator, do not allocate them on the stack.
+ * The actor is taken care of by the `scene`, so do not free the
+ * constructed pointer yourself, it is owned by the scene.
+ *
+ * The actor is constructed with the requested graphic, or, if no
+ * graphic is requested, it will be invisible. The parameter
+ * `graphic` takes the same values as TexturePool's [] operator.
+ */
 Actor::Actor(Scene& scene, const string& graphic)
     : mr_scene(scene),
       mp_texinfo(nullptr),
