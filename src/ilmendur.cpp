@@ -173,6 +173,8 @@ int Ilmendur::run()
 
         testscene.update();
 
+        SDL_RenderSetViewport(mp_renderer, nullptr);
+        SDL_RenderSetClipRect(mp_renderer, nullptr);
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
         testscene.draw(mp_renderer);

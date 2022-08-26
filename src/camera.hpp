@@ -25,6 +25,7 @@ private:
     SDL_Rect m_view;
     SDL_Rect m_bounds;
     SDL_Rect m_viewport;
+    SDL_Rect m_cliprect;
 };
 
 #endif /* ILMENDUR_CAMERA_HPP */
