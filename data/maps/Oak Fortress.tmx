@@ -323,20 +323,16 @@
 </data>
  </layer>
  <objectgroup id="3" name="Objektebene 1">
-  <object id="1" x="1732" y="2368" width="44" height="470">
+  <object id="1" x="1732" y="2561" width="44" height="348">
    <properties>
-    <property name="wall" value="yes"/>
+    <property name="type" value="collbox"/>
    </properties>
-  </object>
-  <object id="4" x="1703" y="2611">
-   <properties>
-    <property name="animation" value="glow"/>
-   </properties>
-   <point/>
   </object>
   <object id="5" x="1905.36" y="2671.79">
    <properties>
-    <property name="object" value="mageflag-waving"/>
+    <property name="animation_mode" value="always"/>
+    <property name="graphic" value="flags/mageflag-waving.png"/>
+    <property name="type" value="static"/>
    </properties>
    <point/>
   </object>

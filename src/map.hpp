@@ -17,9 +17,24 @@ struct TmxProperties {
     bool getBool(const std::string& name) { return bool_props[name]; };
 };
 
+struct TmxObject {
+    enum class Type {
+        static_object,
+        npc,
+        collision_box
+    };
+
+    int id;
+    Type type;
+    float x;
+    float y;
+    TmxProperties props;
+};
+
 struct TmxObjLayer
 {
     TmxProperties props;
+    std::vector<TmxObject> objects;
 };
 
 struct TmxTileLayer {

@@ -13,19 +13,22 @@ namespace fs = std::filesystem;
 static TmxProperties readProperties(const pugi::xml_node& node)
 {
     TmxProperties props;
+    const pugi::xml_node& properties_node = node.child("properties");
 
-    for (const pugi::xml_node& prop_node: node.children("properties")) {
-        string prop_name = prop_node.attribute("name").value();
-        string prop_val  = prop_node.attribute("value").value();
-        string prop_type = prop_node.attribute("type").value();
-        if (prop_type == "int") {
-            props.int_props[prop_name] = atoi(prop_val.c_str());
-        } else if (prop_type == "float") {
-            props.float_props[prop_name] = atof(prop_val.c_str());
-        } else if (prop_type == "bool") {
-            props.int_props[prop_name] = prop_val == "true";
-        } else { // Treat all the rest as strings, these types are not used
-            props.string_props[prop_name] = prop_val;
+    if (properties_node) {
+        for (const pugi::xml_node& prop_node: properties_node.children("property")) {
+            string prop_name = prop_node.attribute("name").value();
+            string prop_val  = prop_node.attribute("value").value();
+            string prop_type = prop_node.attribute("type").value();
+            if (prop_type == "int") {
+                props.int_props[prop_name] = atoi(prop_val.c_str());
+            } else if (prop_type == "float") {
+                props.float_props[prop_name] = atof(prop_val.c_str());
+            } else if (prop_type == "bool") {
+                props.int_props[prop_name] = prop_val == "true";
+            } else { // Treat all the rest as strings, these types are not used
+                props.string_props[prop_name] = prop_val;
+            }
         }
     }
 
@@ -47,6 +50,39 @@ static vector<int> parseGidCsv(const std::string& csv)
 
     int gid = atoi(csv.substr(ppos+1, pos-ppos).c_str());
     result.push_back(gid);
+
+    return result;
+}
+
+static vector<TmxObject> readTmxObjects(const pugi::xml_node& node)
+{
+    vector<TmxObject> result;
+
+    for(const pugi::xml_node& obj_node: node.children("object")) {
+        TmxObject obj;
+        obj.id    = obj_node.attribute("id").as_int();
+        obj.x     = obj_node.attribute("x").as_float();
+        obj.y     = obj_node.attribute("y").as_float();
+        obj.props = readProperties(obj_node);
+
+        // TMX file is invalid TMX if one of these asserts triggers.
+        assert(obj.id > 0);
+        assert(obj.x >= 0.0f);
+        assert(obj.y >= 0.0f);
+
+        string type = obj.props.get("type");
+        if (type == string("static")) {
+            obj.type = TmxObject::Type::static_object;
+        } else if (type == string("npc")) {
+            obj.type = TmxObject::Type::npc;
+        } else if (type == string("collbox")) {
+            obj.type = TmxObject::Type::collision_box;
+        } else {
+            // Valid TMX, but an error by the map editor: unknown object type requested.
+            throw(runtime_error(string("Unknown object type `") + type + "' found in TMX file!"));
+        }
+
+    }
 
     return result;
 }
@@ -74,8 +110,9 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
         layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
     } else if (node.name() == string("objectgroup")) {
         layer.type = Map::LayerType::Object;
-        layer.data.p_obj_layer = new TmxObjLayer();
-        // TODO
+        layer.data.p_obj_layer          = new TmxObjLayer();
+        layer.data.p_obj_layer->props   = readProperties(node);
+        layer.data.p_obj_layer->objects = readTmxObjects(node);
     // TODO: Remaining TMX layer types
     } else {
         throw(runtime_error(string("Unsupported <map> child type `") + node.name() + "' in map `" + mapname + "'!"));
