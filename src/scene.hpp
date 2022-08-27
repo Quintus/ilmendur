@@ -19,7 +19,7 @@ public:
 
     void addActor(Actor* p_actor);
     inline void setPlayer(Player* p_player) { mp_player = p_player; }
-    inline Map* map() { return mp_map; }
+    inline Map& map() { return *mp_map; }
 private:
     std::vector<Actor*> m_actors;
     Camera* mp_cam1;

@@ -5,10 +5,9 @@
 
 using namespace std;
 
-Player::Player(Scene& scene)
-    : Actor(scene, "chars/spaceship.png")
+Player::Player()
+    : Actor("chars/spaceship.png")
 {
-    scene.setPlayer(this);
 }
 
 Player::~Player()

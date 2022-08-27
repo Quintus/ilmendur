@@ -11,18 +11,15 @@
 using namespace std;
 
 /**
- * Constructs a new actor for use in the given scene. Always construct
- * actors with the new operator, do not allocate them on the stack.
- * The actor is taken care of by the `scene`, so do not free the
- * constructed pointer yourself, it is owned by the scene.
+ * Constructs a new actor without an associated scene. To associate it
+ * with a scene, call Scene::addActor().
  *
  * The actor is constructed with the requested graphic, or, if no
  * graphic is requested, it will be invisible. The parameter
  * `graphic` takes the same values as TexturePool's [] operator.
  */
-Actor::Actor(Scene& scene, const string& graphic)
-    : mr_scene(scene),
-      mp_texinfo(nullptr),
+Actor::Actor(const string& graphic)
+    : mp_texinfo(nullptr),
       m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
@@ -32,7 +29,6 @@ Actor::Actor(Scene& scene, const string& graphic)
       m_total_distance(0.0f)
 {
     setGraphic(graphic);
-    mr_scene.addActor(this);
 }
 
 Actor::~Actor()
@@ -187,6 +183,11 @@ void Actor::nextFrame()
     }
 }
 
+/**
+ * Update this actor for the current frame. Only call this if the
+ * current scene actually contains the actor; the method does some
+ * operations involving data from the current scene.
+ */
 void Actor::update()
 {
     // Progress movement, if any
@@ -297,10 +298,14 @@ void Actor::move()
         m_pos.x += translation.x;
         m_pos.y += translation.y;
 
-        // Do not walk off the map. It is allowed to have the drawing rectangle
-        // hang into the void, but not the collision box, i.e., the map's edge
-        // counts as a wall.
-        SDL_Rect maprect = mr_scene.map()->drawRect();
+        /* Do not walk off the map. It is allowed to have the drawing rectangle
+         * hang into the void, but not the collision box, i.e., the map's edge
+         * counts as a wall. Note that move() is called from within update(),
+         * which in turn is only called for the active scene. It can thus be
+         * assumed that the scene being updated is the one this actor is in,
+         * allowing to skip a circular association between Actor and Scene/Map
+         * instances. Instead, just retrieve the current scene. */
+        SDL_Rect maprect = Ilmendur::instance().currentScene().map().drawRect();
         SDL_Rect collrect = collisionBox();
         if (collrect.x < maprect.x) {
             m_pos.x = maprect.x + mp_texinfo->origx - mp_texinfo->collx;

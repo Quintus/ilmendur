@@ -15,7 +15,7 @@ public:
     enum class direction { none, up, right, down, left };
     enum class animation_mode { never, on_move, always };
 
-    Actor(Scene& scene, const std::string& graphic = "");
+    Actor(const std::string& graphic = "");
     virtual ~Actor();
 
     virtual void update();
@@ -41,7 +41,6 @@ private:
     void setFrame(unsigned int frameno);
     void nextFrame();
 
-    Scene& mr_scene;
     TextureInfo* mp_texinfo;
     int m_current_frame;
     animation_mode m_ani_mode;

@@ -6,6 +6,7 @@
 const unsigned int ILMENDUR_TARGET_FRAMERATE = 40;
 
 class TexturePool;
+class Scene;
 
 class Ilmendur
 {
@@ -20,6 +21,7 @@ public:
     inline SDL_Window*   sdlWindow()   { return mp_window; }
     inline SDL_Renderer* sdlRenderer() { return mp_renderer; }
     inline TexturePool&  texturePool() { return *mp_texture_pool; }
+           Scene&        currentScene();
 
     SDL_Rect viewportPlayer1() const;
     SDL_Rect viewportPlayer2() const;
@@ -28,6 +30,7 @@ private:
     SDL_Window*   mp_window;
     SDL_Renderer* mp_renderer;
     TexturePool*  mp_texture_pool;
+    Scene* mp_testscene;
 };
 
 #endif /* ILMENDUR_ILMENDUR_HPP */

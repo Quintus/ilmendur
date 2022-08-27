@@ -32,7 +32,8 @@ static Ilmendur* sp_ilmendur = nullptr;
 Ilmendur::Ilmendur()
     : mp_window(nullptr),
       mp_renderer(nullptr),
-      mp_texture_pool(nullptr)
+      mp_texture_pool(nullptr),
+      mp_testscene(nullptr)
 {
     if (sp_ilmendur) {
         throw(runtime_error("Ilmendur is a singleton!"));
@@ -66,6 +67,8 @@ Ilmendur::Ilmendur()
 
 Ilmendur::~Ilmendur()
 {
+    delete mp_testscene;
+
     if (mp_texture_pool) {
         delete mp_texture_pool;
     }
@@ -113,11 +116,19 @@ int Ilmendur::run()
     // graphics card.
     mp_texture_pool = new TexturePool();
 
-    Scene testscene;
+    // TODO: Implement a proper scene stack.
+    mp_testscene = new Scene();
 
-    Player* p = new Player(testscene);
+    Player* p = new Player();
     p->warp(Vector2f(1600, 2600));
     p->turn(Actor::direction::left);
+    mp_testscene->addActor(p);
+    mp_testscene->setPlayer(p);
+
+    Actor* a = new Actor("flags/mageflag-waving.png");
+    a->setAnimationMode(Actor::animation_mode::always);
+    a->warp(Vector2f(1935, 2635));
+    mp_testscene->addActor(a);
 
     bool run = true;
 
@@ -171,13 +182,13 @@ int Ilmendur::run()
             }
         }
 
-        testscene.update();
+        mp_testscene->update();
 
         SDL_RenderSetViewport(mp_renderer, nullptr);
         SDL_RenderSetClipRect(mp_renderer, nullptr);
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
-        testscene.draw(mp_renderer);
+        mp_testscene->draw(mp_renderer);
         SDL_RenderPresent(mp_renderer);
 
         // Throttle framerate to a fixed one (fixed frame rate)
@@ -193,4 +204,9 @@ int Ilmendur::run()
     }
 
     return 0;
+}
+
+Scene& Ilmendur::currentScene()
+{
+    return *mp_testscene;
 }
