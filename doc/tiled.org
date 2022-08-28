@@ -1,0 +1,41 @@
+#+TITLE: Instructions for use of Tiled
+#+LANGUAGE: en
+#+AUTHOR: Quintus
+
+* Overview
+
+Ilmendur loads maps from the TMX file format which is used by the open-source programme [[https://www.mapeditor.org/][Tiled]]. Details of this file format can be found in Tiled’s [[https://doc.mapeditor.org/en/stable/reference/tmx-map-format/][documentation]]. This document only describes the specialities added on top of TMX specific to Ilmendur, which make use of Tiled’s ability to add arbitrary key/value pairs to both layers and objects. The allowed values for these key/value pairs, or “properties” in TMX terms, are outlined below.
+
+** TODO Layers
+
+TODO: Write this section.
+
+** Objects
+
+*** type
+
+Each object is required to have a property called =type= that denotes to which kind of actor it belongs in the game. Currently the following values for =type= are supported:
+
+- static :: This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
+- npc :: This is a non-playable character (NPC). Ignored currently.
+- collbox :: This is a collision box element. Use this for making e.g. walls impassible.
+
+It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position.
+
+*** animation_mode
+
+The =animation_mode= property describes how the actor is meant to be animated. It defaults to =on_move= if not explicitely set. The following values are supported:
+
+- never :: This actor is not animated, not even if moving.
+- on_move :: This actor is not animated normally, but it is if it moves.
+- always :: This actor is permanently animated, even if not moving.
+
+“Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
+
+*** graphic
+
+The =graphic= key gives the filename of the graphic to show for an actor. It is relative to the directory =data/gfx/= in the source tree.[fn:1]
+
+* Footnotes
+
+[fn:1] Actually, the involved logic is a little more complex. Refer to the documentation of the TexturePool class for the exact details.

@@ -1,0 +1,22 @@
+#+TITLE: INI Format
+#+LANGUAGE: en
+#+AUTHOR: Quintus
+
+* Overview
+
+INI files accompany each graphic file that is meant to be used in the construction of actors. The INI file format divides a plain-text file into sections denoted by brackets, followed by key-value pairs. Currently, Ilmendur only supports a single section called =[object]=. Its valid key/value pairs are described below.
+
+* =[object]= section
+
+| Key        | Allowed values | Meaning                                    | Default value  |
+|------------+----------------+--------------------------------------------+----------------|
+| origx      | integers >= 0  | X origin of the first frame                | stridex/2      |
+| origy      | integers >= 0  | Y origin of the first frame                | stridey/2      |
+| stridex    | integers >= 0  | Width of first frame                       | (image width)  |
+| stridey    | integers >= 0  | Height of first frame                      | (image height) |
+| animated   | integers >= 0  | Milliseconds a single frame is shown.      | 0              |
+| collx      | integers >= 0  | Collision box X co-ordinate                | 0              |
+| colly      | integers >= 0  | Collision box Y co-ordinate                | 0              |
+| collw      | integers >= 0  | Collision box width                        | stridex        |
+| collh      | integers >= 0  | Collision box height                       | stridey        |
+| licensestr | string         | Licensing information; ignored by the game | (none)         |
