@@ -385,15 +385,42 @@ void Map::checkCollideMapBoundary(Actor* p_actor)
  */
 void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
 {
-    // Stop if a collision with another actor on the same layer happened.
+    using Collision = pair<Actor*,Actor*>;
+
+    // First, collect all intersecting actors.
+    vector<Collision> collisions;
     SDL_Rect collrect = p_actor->collisionBox();
     SDL_Rect other_collbox;
     for(Actor* p_other: layer.actors) {
+        // Collision of an actor with itself is not possible.
+        if (p_actor->m_id == p_other->m_id) {
+            continue;
+        }
+
         other_collbox = p_other->collisionBox();
         if (SDL_HasIntersection(&collrect, &other_collbox)) {
-            p_actor->stopMoving();
-            // TODO: Fire some event. TODO2: On which of the two?
+            // Ensure the actor with the smaller ID always comes first.
+            if (p_actor->m_id < p_other->m_id) {
+                collisions.push_back(make_pair(p_actor, p_other));
+            } else {
+                collisions.push_back(make_pair(p_other, p_actor));
+            }
         }
+    }
+
+    /* The above code will yield duplicates: each actor colliding with
+     * another actor will be included twice. The above code ensures
+     * that the pairs are equal, as the actor with the lower ID always
+     * comes first. */
+    unique(collisions.begin(),
+           collisions.end(),
+           [](Collision& coll1, Collision& coll2) { return coll1.first->m_id == coll2.first->m_id && coll1.second->m_id == coll2.second->m_id; });
+
+    // Now execute all the collisions.
+    for(Collision& coll: collisions) {
+        coll.first->stopMoving();
+        coll.second->stopMoving();
+        // TODO: Fire some event. TODO2: On which of the two?
     }
 }
 
