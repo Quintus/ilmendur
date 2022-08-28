@@ -61,6 +61,9 @@ public:
 
 private:
     bool readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid);
+    void checkCollisions();
+    void checkCollideMapBoundary(Actor* p_actor);
+    void checkCollideActors(Actor* p_actor, TmxObjLayer& layer);
     std::string m_name;
     std::map<int,Tileset*> m_tilesets;
     std::vector<Layer> m_layers;

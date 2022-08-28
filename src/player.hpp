@@ -8,7 +8,7 @@ public:
     Player();
     ~Player();
 
-    virtual void update(const Map& map);
+    virtual void update();
     void checkInput();
 };
 

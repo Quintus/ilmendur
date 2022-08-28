@@ -15,9 +15,9 @@ Player::~Player()
 {
 }
 
-void Player::update(const Map& map)
+void Player::update()
 {
-    Actor::update(map);
+    Actor::update();
 }
 
 /**

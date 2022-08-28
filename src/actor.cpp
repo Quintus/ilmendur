@@ -12,7 +12,7 @@ using namespace std;
 
 /**
  * Constructs a new actor without an associated scene. To associate it
- * with a scene, call Scene::addActor().
+ * with a map, call Map::addActor().
  *
  * The actor is constructed with the requested graphic, or, if no
  * graphic is requested, it will be invisible. The parameter
@@ -184,16 +184,11 @@ void Actor::nextFrame()
     }
 }
 
-/**
- * Update this actor for the current frame. Pass the map on which
- * the actor moves (it is used to ensure the actor does not walk
- * off the map.)
- */
-void Actor::update(const Map& map)
+void Actor::update()
 {
     // Progress movement, if any
     if (isMoving()) {
-        move(map);
+        move();
     }
 
     // Update frame for animation if requested
@@ -232,14 +227,25 @@ SDL_Rect Actor::drawRect() const
 
 /**
  * Returns the collision rectangle, in world coordinates.
+ * Unless overridden by a subclass, invisible actors do not
+ * have a collision box; for them, this method returns a
+ * rectangle with width and height set to zero and X and Y
+ * set to the position().
  */
 SDL_Rect Actor::collisionBox() const
 {
     SDL_Rect result;
-    result.w = mp_texinfo->collw;
-    result.h = mp_texinfo->collh;
-    result.x = m_pos.x - mp_texinfo->origx + mp_texinfo->collx;
-    result.y = m_pos.y - mp_texinfo->origy + mp_texinfo->colly;
+    if (mp_texinfo) {
+        result.w = mp_texinfo->collw;
+        result.h = mp_texinfo->collh;
+        result.x = m_pos.x - mp_texinfo->origx + mp_texinfo->collx;
+        result.y = m_pos.y - mp_texinfo->origy + mp_texinfo->colly;
+    } else {
+        result.w = 0;
+        result.h = 0;
+        result.x = m_pos.x;
+        result.y = m_pos.y;
+    }
     return result;
 }
 
@@ -286,7 +292,7 @@ void Actor::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
     SDL_RenderCopy(p_stage, mp_texinfo->p_texture, &srcrect, &destrect);
 }
 
-void Actor::move(const Map& map)
+void Actor::move()
 {
     float distance_per_frame = m_velfunc(SDL_GetTicks64() - m_move_start) / static_cast<float>(ILMENDUR_TARGET_FRAMERATE);
     m_passed_distance += distance_per_frame;
@@ -298,27 +304,7 @@ void Actor::move(const Map& map)
         Vector2f translation = m_movedir * distance_per_frame;
         m_pos.x += translation.x;
         m_pos.y += translation.y;
-
-        /* Do not walk off the map. It is allowed to have the drawing rectangle
-         * hang into the void, but not the collision box, i.e., the map's edge
-         * counts as a wall. */
-        SDL_Rect maprect = map.drawRect();
-        SDL_Rect collrect = collisionBox();
-        if (collrect.x < maprect.x) {
-            m_pos.x = maprect.x + mp_texinfo->origx - mp_texinfo->collx;
-            stopMoving();
-        }
-        if (collrect.x + collrect.w > maprect.x + maprect.w) {
-            m_pos.x = maprect.x + maprect.w - mp_texinfo->origx - mp_texinfo->collx;
-            stopMoving();
-        }
-        if (collrect.y < maprect.y) {
-            m_pos.y = maprect.y + mp_texinfo->origy - mp_texinfo->colly;
-            stopMoving();
-        }
-        if (collrect.y + collrect.h > maprect.y + maprect.h) {
-            m_pos.y = maprect.y + maprect.h - mp_texinfo->origy - mp_texinfo->colly;
-            stopMoving();
-        }
     }
+
+    // Note: Collision checks happen in Map::update().
 }

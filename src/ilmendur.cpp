@@ -122,7 +122,7 @@ int Ilmendur::run()
     Player* p = new Player();
     p->warp(Vector2f(1600, 2600));
     p->turn(Actor::direction::left);
-    mp_testscene->map().addActor(p, "Objektebene 1");
+    mp_testscene->map().addActor(p, "chars");
     mp_testscene->setPlayer(p);
 
     bool run = true;

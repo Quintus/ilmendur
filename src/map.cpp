@@ -1,6 +1,7 @@
 #include "map.hpp"
 #include "os.hpp"
 #include "actor.hpp"
+#include "collbox.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
 #include <fstream>
@@ -68,6 +69,8 @@ vector<Actor*> readTmxObjects(const pugi::xml_node& node)
         int id              = obj_node.attribute("id").as_int();
         float x             = obj_node.attribute("x").as_float();
         float y             = obj_node.attribute("y").as_float();
+        float w             = obj_node.attribute("width").as_float(); // zero if unset
+        float h             = obj_node.attribute("height").as_float(); // zero if unset
         TmxProperties props = readProperties(obj_node);
 
         assert(id > 0);
@@ -78,6 +81,8 @@ vector<Actor*> readTmxObjects(const pugi::xml_node& node)
             const string& ani     = props.get("animation_mode");
             assert(!graphic.empty());
 
+            // Note: Actors should always be placed with Point objects in
+            // Tiled, which do not have width/height values in the TMX file.
             Actor* p_actor = new Actor(id, graphic);
             p_actor->warp(Vector2f(x, y));
 
@@ -97,7 +102,12 @@ vector<Actor*> readTmxObjects(const pugi::xml_node& node)
         } else if (type == string("npc")) {
             cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
         } else if (type == string("collbox")) {
-            cout << "DEBUG WARNING: Ignoring collbox actor for now" << endl;
+            SDL_Rect rect;
+            rect.x = x;
+            rect.y = y;
+            rect.w = w;
+            rect.h = h;
+            result.push_back(new CollisionBox(id, rect));
         } else {
             // Valid TMX, but an error by the map editor: unknown object type requested.
             throw(runtime_error(string("Unknown object type `") + type + "' found in TMX file!"));
@@ -300,8 +310,89 @@ void Map::update()
     for(Layer& layer: m_layers) {
         if (layer.type == LayerType::Object) {
             for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                p_actor->update(*this);
+                p_actor->update();
             }
+        }
+    }
+
+    // After everyone has moved, check collisions and reset positions
+    // appropriately.
+    checkCollisions();
+}
+
+/**
+ * Checks for collisions, rectifying impossible result positions.
+ * Note that apart from collision with the map boundary, collisions
+ * can only occur between actors on the same layer.
+ */
+void Map::checkCollisions()
+{
+    for(Layer& layer: m_layers) {
+        if (layer.type == LayerType::Object) {
+            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
+                checkCollideMapBoundary(p_actor);
+                checkCollideActors(p_actor, *layer.data.p_obj_layer);
+            }
+        }
+    }
+}
+
+void Map::checkCollideMapBoundary(Actor* p_actor)
+{
+    /* Do not walk off the map. It is allowed to have the drawing rectangle
+     * hang into the void, but not the collision box, i.e., the map's edge
+     * counts as a wall. */
+    SDL_Rect maprect = drawRect();
+    if (p_actor->isInvisible()) {
+        if (p_actor->m_pos.x < 0.0f) {
+            p_actor->m_pos.x = 0.0f;
+        }
+        if (p_actor->m_pos.x >= maprect.w) {
+            p_actor->m_pos.x = maprect.w - 1.0f;
+        }
+        if (p_actor->m_pos.y < 0.0f) {
+            p_actor->m_pos.y = 0.0f;
+        }
+        if (p_actor->m_pos.y >= maprect.h) {
+            p_actor->m_pos.y = maprect.h - 1.0f;
+        }
+    } else {
+        SDL_Rect collrect = p_actor->collisionBox();
+        if (collrect.x < maprect.x) {
+            p_actor->m_pos.x = maprect.x + p_actor->mp_texinfo->origx - p_actor->mp_texinfo->collx;
+            p_actor->stopMoving();
+        }
+        if (collrect.x + collrect.w > maprect.x + maprect.w) {
+            p_actor->m_pos.x = maprect.x + maprect.w - p_actor->mp_texinfo->origx - p_actor->mp_texinfo->collx;
+            p_actor->stopMoving();
+        }
+        if (collrect.y < maprect.y) {
+            p_actor->m_pos.y = maprect.y + p_actor->mp_texinfo->origy - p_actor->mp_texinfo->colly;
+            p_actor->stopMoving();
+        }
+        if (collrect.y + collrect.h > maprect.y + maprect.h) {
+            p_actor->m_pos.y = maprect.y + maprect.h - p_actor->mp_texinfo->origy - p_actor->mp_texinfo->colly;
+            p_actor->stopMoving();
+        }
+    }
+
+    // TODO: Fire event on p_actor
+}
+
+/**
+ * Checks collisions with other actors. Only actors on the same
+ * layer can collide.
+ */
+void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
+{
+    // Stop if a collision with another actor on the same layer happened.
+    SDL_Rect collrect = p_actor->collisionBox();
+    SDL_Rect other_collbox;
+    for(Actor* p_other: layer.actors) {
+        other_collbox = p_other->collisionBox();
+        if (SDL_HasIntersection(&collrect, &other_collbox)) {
+            p_actor->stopMoving();
+            // TODO: Fire some event. TODO2: On which of the two?
         }
     }
 }

@@ -19,7 +19,7 @@ public:
     Actor(int id, const std::string& graphic = "");
     virtual ~Actor();
 
-    virtual void update(const Map& map);
+    virtual void update();
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
@@ -32,14 +32,15 @@ public:
     void turn(direction dir);
 
     SDL_Rect drawRect() const;
-    SDL_Rect collisionBox() const;
+    virtual SDL_Rect collisionBox() const;
 
     inline int id() const { return m_id; }
     inline const Vector2f& position() const { return m_pos; }
     inline const Vector2f& moveDirection() const { return m_movedir; }
     inline direction lookDirection() const { return m_lookdir; }
+    inline bool isInvisible() const { return !!mp_texinfo; }
 private:
-    void move(const Map& map);
+    void move();
     void setFrame(unsigned int frameno);
     void nextFrame();
 
@@ -58,6 +59,9 @@ protected:
     float m_passed_distance;
     float m_total_distance;
     std::function<float(uint64_t)> m_velfunc;
+
+    // For collision checks Map needs access
+    friend class Map;
 };
 
 #endif /* ILMENDUR_ACTOR_HPP */
