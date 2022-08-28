@@ -38,7 +38,7 @@ public:
     inline const Vector2f& position() const { return m_pos; }
     inline const Vector2f& moveDirection() const { return m_movedir; }
     inline direction lookDirection() const { return m_lookdir; }
-    inline bool isInvisible() const { return !!mp_texinfo; }
+    inline bool isInvisible() const { return !mp_texinfo; }
 private:
     void move();
     void setFrame(unsigned int frameno);
