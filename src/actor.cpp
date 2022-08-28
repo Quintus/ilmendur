@@ -18,12 +18,13 @@ using namespace std;
  * graphic is requested, it will be invisible. The parameter
  * `graphic` takes the same values as TexturePool's [] operator.
  */
-Actor::Actor(const string& graphic)
+Actor::Actor(int id, const string& graphic)
     : mp_texinfo(nullptr),
       m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
       m_ani_ticks(0),
+      m_id(id),
       m_move_start(0),
       m_passed_distance(0.0f),
       m_total_distance(0.0f)
@@ -184,15 +185,15 @@ void Actor::nextFrame()
 }
 
 /**
- * Update this actor for the current frame. Only call this if the
- * current scene actually contains the actor; the method does some
- * operations involving data from the current scene.
+ * Update this actor for the current frame. Pass the map on which
+ * the actor moves (it is used to ensure the actor does not walk
+ * off the map.)
  */
-void Actor::update()
+void Actor::update(const Map& map)
 {
     // Progress movement, if any
     if (isMoving()) {
-        move();
+        move(map);
     }
 
     // Update frame for animation if requested
@@ -285,7 +286,7 @@ void Actor::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
     SDL_RenderCopy(p_stage, mp_texinfo->p_texture, &srcrect, &destrect);
 }
 
-void Actor::move()
+void Actor::move(const Map& map)
 {
     float distance_per_frame = m_velfunc(SDL_GetTicks64() - m_move_start) / static_cast<float>(ILMENDUR_TARGET_FRAMERATE);
     m_passed_distance += distance_per_frame;
@@ -300,12 +301,8 @@ void Actor::move()
 
         /* Do not walk off the map. It is allowed to have the drawing rectangle
          * hang into the void, but not the collision box, i.e., the map's edge
-         * counts as a wall. Note that move() is called from within update(),
-         * which in turn is only called for the active scene. It can thus be
-         * assumed that the scene being updated is the one this actor is in,
-         * allowing to skip a circular association between Actor and Scene/Map
-         * instances. Instead, just retrieve the current scene. */
-        SDL_Rect maprect = Ilmendur::instance().currentScene().map().drawRect();
+         * counts as a wall. */
+        SDL_Rect maprect = map.drawRect();
         SDL_Rect collrect = collisionBox();
         if (collrect.x < maprect.x) {
             m_pos.x = maprect.x + mp_texinfo->origx - mp_texinfo->collx;

@@ -1,9 +1,15 @@
 #include "map.hpp"
 #include "os.hpp"
+#include "actor.hpp"
+#include "ilmendur.hpp"
+#include "texture_pool.hpp"
 #include <fstream>
+#include <algorithm>
 #include <cstdlib>
 #include <cassert>
 #include <pugixml.hpp>
+
+#include <iostream>
 
 #define TILEWIDTH 32
 
@@ -54,35 +60,54 @@ static vector<int> parseGidCsv(const std::string& csv)
     return result;
 }
 
-static vector<TmxObject> readTmxObjects(const pugi::xml_node& node)
+vector<Actor*> readTmxObjects(const pugi::xml_node& node)
 {
-    vector<TmxObject> result;
+    vector<Actor*> result;
 
     for(const pugi::xml_node& obj_node: node.children("object")) {
-        TmxObject obj;
-        obj.id    = obj_node.attribute("id").as_int();
-        obj.x     = obj_node.attribute("x").as_float();
-        obj.y     = obj_node.attribute("y").as_float();
-        obj.props = readProperties(obj_node);
+        int id              = obj_node.attribute("id").as_int();
+        float x             = obj_node.attribute("x").as_float();
+        float y             = obj_node.attribute("y").as_float();
+        TmxProperties props = readProperties(obj_node);
 
-        // TMX file is invalid TMX if one of these asserts triggers.
-        assert(obj.id > 0);
-        assert(obj.x >= 0.0f);
-        assert(obj.y >= 0.0f);
+        assert(id > 0);
 
-        string type = obj.props.get("type");
+        string type = props.get("type");
         if (type == string("static")) {
-            obj.type = TmxObject::Type::static_object;
+            const string& graphic = props.get("graphic");
+            const string& ani     = props.get("animation_mode");
+            assert(!graphic.empty());
+
+            Actor* p_actor = new Actor(id, graphic);
+            p_actor->warp(Vector2f(x, y));
+
+            if (!ani.empty()) {
+                if (ani == string("never")) {
+                    p_actor->setAnimationMode(Actor::animation_mode::never);
+                } else if (ani == string("on_move")) {
+                    p_actor->setAnimationMode(Actor::animation_mode::on_move);
+                } else if (ani == string("always")) {
+                    p_actor->setAnimationMode(Actor::animation_mode::always);
+                } else {
+                    throw(runtime_error("Invalid animation mode `" + ani + "' for object with ID " + to_string(id) + "!"));
+                }
+            }
+
+            result.push_back(p_actor);
         } else if (type == string("npc")) {
-            obj.type = TmxObject::Type::npc;
+            cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
         } else if (type == string("collbox")) {
-            obj.type = TmxObject::Type::collision_box;
+            cout << "DEBUG WARNING: Ignoring collbox actor for now" << endl;
         } else {
             // Valid TMX, but an error by the map editor: unknown object type requested.
             throw(runtime_error(string("Unknown object type `") + type + "' found in TMX file!"));
         }
 
     }
+
+    sort(result.begin(),
+         result.end(),
+         [](Actor*& a, Actor*& b) { return a->id() < b->id(); });
 
     return result;
 }
@@ -110,9 +135,10 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
         layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
     } else if (node.name() == string("objectgroup")) {
         layer.type = Map::LayerType::Object;
-        layer.data.p_obj_layer          = new TmxObjLayer();
-        layer.data.p_obj_layer->props   = readProperties(node);
-        layer.data.p_obj_layer->objects = readTmxObjects(node);
+        layer.data.p_obj_layer         = new TmxObjLayer();
+        layer.data.p_obj_layer->name   = node.attribute("name").value();
+        layer.data.p_obj_layer->props  = readProperties(node);
+        layer.data.p_obj_layer->actors = readTmxObjects(node);
     // TODO: Remaining TMX layer types
     } else {
         throw(runtime_error(string("Unsupported <map> child type `") + node.name() + "' in map `" + mapname + "'!"));
@@ -176,6 +202,9 @@ Map::~Map()
             delete layer.data.p_tile_layer;
             break;
         case LayerType::Object:
+            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
+                delete p_actor;
+            }
             delete layer.data.p_obj_layer;
             break;
         case LayerType::Image: // Ignore
@@ -215,6 +244,12 @@ void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
                 }
             }
             // TODO: Handle "down" and "both" direction depending on the player view direction.
+            break;
+        case LayerType::Object:
+            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
+                p_actor->draw(p_stage, p_camview);
+            }
+            break;
         default:
             // Ignore
             break;
@@ -254,4 +289,45 @@ bool Map::readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid)
 
     assert(false);
     return false;
+}
+
+void Map::update()
+{
+    /* Note: This is not the place to optimise by trying to only update
+     * actors within the camera range. That would cause rather unnatural
+     * behaviour. Always update all actors on the stage, and optimise by
+     * not drawing them all in draw(). */
+    for(Layer& layer: m_layers) {
+        if (layer.type == LayerType::Object) {
+            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
+                p_actor->update(*this);
+            }
+        }
+    }
+}
+
+/**
+ * Add an actor to the map, to the layer named by `layername'. The map
+ * takes ownership of `p_actor', do not delete it anymore.
+ */
+void Map::addActor(Actor* p_actor, const string& layername)
+{
+    for(Layer& layer: m_layers) {
+        if (layer.type == LayerType::Object && layer.data.p_obj_layer->name == layername) {
+            // Insert the actor at the position corresponding to its ID.
+            for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
+                if ((*iter)->id() > p_actor->id()) {
+                    layer.data.p_obj_layer->actors.insert(iter, p_actor);
+                    return;
+                }
+            }
+            // If this is reached, the actor has a higher ID than all existing actors.
+            layer.data.p_obj_layer->actors.push_back(p_actor);
+            return;
+        }
+    }
+
+    // If this triggers, a non-existant layer was requested. Note that
+    // actors can only be added to object layers.
+    assert(false);
 }

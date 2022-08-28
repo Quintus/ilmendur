@@ -122,13 +122,8 @@ int Ilmendur::run()
     Player* p = new Player();
     p->warp(Vector2f(1600, 2600));
     p->turn(Actor::direction::left);
-    mp_testscene->addActor(p);
+    mp_testscene->map().addActor(p, "Objektebene 1");
     mp_testscene->setPlayer(p);
-
-    Actor* a = new Actor("flags/mageflag-waving.png");
-    a->setAnimationMode(Actor::animation_mode::always);
-    a->warp(Vector2f(1935, 2635));
-    mp_testscene->addActor(a);
 
     bool run = true;
 

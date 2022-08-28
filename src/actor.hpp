@@ -8,6 +8,7 @@
 
 struct TextureInfo;
 class Scene;
+class Map;
 
 class Actor
 {
@@ -15,10 +16,10 @@ public:
     enum class direction { none, up, right, down, left };
     enum class animation_mode { never, on_move, always };
 
-    Actor(const std::string& graphic = "");
+    Actor(int id, const std::string& graphic = "");
     virtual ~Actor();
 
-    virtual void update();
+    virtual void update(const Map& map);
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
@@ -33,11 +34,12 @@ public:
     SDL_Rect drawRect() const;
     SDL_Rect collisionBox() const;
 
+    inline int id() const { return m_id; }
     inline const Vector2f& position() const { return m_pos; }
     inline const Vector2f& moveDirection() const { return m_movedir; }
     inline direction lookDirection() const { return m_lookdir; }
 private:
-    void move();
+    void move(const Map& map);
     void setFrame(unsigned int frameno);
     void nextFrame();
 
@@ -48,6 +50,7 @@ private:
     int m_ani_ticks;
 
 protected:
+    int m_id;
     Vector2f m_pos;
     Vector2f m_targetpos;
     Vector2f m_movedir;

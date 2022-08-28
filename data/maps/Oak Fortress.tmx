@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="6">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="8">
  <tileset firstgid="1" source="../tilesets/Outside 1.tsx"/>
  <tileset firstgid="1025" source="../tilesets/Mage City.tsx"/>
  <tileset firstgid="1385" source="../tilesets/Outside 4.tsx"/>
@@ -329,6 +329,14 @@
    </properties>
   </object>
   <object id="5" x="1905.36" y="2671.79">
+   <properties>
+    <property name="animation_mode" value="always"/>
+    <property name="graphic" value="flags/mageflag-waving.png"/>
+    <property name="type" value="static"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="7" x="1329" y="2671.79">
    <properties>
     <property name="animation_mode" value="always"/>
     <property name="graphic" value="flags/mageflag-waving.png"/>

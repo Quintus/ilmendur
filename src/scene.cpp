@@ -22,10 +22,6 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-    for(Actor* p_actor: m_actors) {
-        delete p_actor;
-    }
-
     delete mp_map;
 
     if (mp_cam1) {
@@ -36,25 +32,10 @@ Scene::~Scene()
     }
 }
 
-/**
- * Register the given actor with this scene as a toplevel actor; the
- * Scene object takes ownership of the object. That is, when the scene
- * is destroyed, the Actor is as well. Do not free manually anymore.
- */
-void Scene::addActor(Actor* p_actor)
-{
-    m_actors.push_back(p_actor);
-}
-
 void Scene::update()
 {
-    /* Note: This is not the place to optimise by trying to only update
-     * actors within the camera range. That would cause rather unnatural
-     * behaviour. Always update all actors on the stage, and optimise by
-     * not drawing them all in draw(). */
-    for (Actor* p_actor: m_actors) {
-        p_actor->update();
-    }
+    // Update all actors
+    mp_map->update();
 
     // Centre camera on the player
     if (mp_player) {
@@ -66,20 +47,12 @@ void Scene::update()
 void Scene::draw(SDL_Renderer* p_stage)
 {
     // Camera 1
-    mp_cam1->draw(p_stage);
     SDL_Rect camview = mp_cam1->view();
-
+    mp_cam1->draw(p_stage);
     mp_map->draw(p_stage, &camview);
-    for (Actor* p_actor: m_actors) {
-        p_actor->draw(p_stage, &camview);
-    }
 
     // Camera 2
-    mp_cam2->draw(p_stage);
     camview = mp_cam2->view();
-
+    mp_cam2->draw(p_stage);
     mp_map->draw(p_stage, &camview);
-    for (Actor* p_actor: m_actors) {
-        p_actor->draw(p_stage, &camview);
-    }
 }

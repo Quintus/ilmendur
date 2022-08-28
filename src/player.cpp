@@ -1,12 +1,13 @@
 #include "player.hpp"
 #include "scene.hpp"
 
+#define PLAYER_ID 999999
 #define PLAYER_VELOCITY 80
 
 using namespace std;
 
 Player::Player()
-    : Actor("chars/spaceship.png")
+    : Actor(PLAYER_ID, "chars/spaceship.png")
 {
 }
 
@@ -14,9 +15,9 @@ Player::~Player()
 {
 }
 
-void Player::update()
+void Player::update(const Map& map)
 {
-    Actor::update();
+    Actor::update(map);
 }
 
 /**

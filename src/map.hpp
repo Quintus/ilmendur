@@ -17,24 +17,12 @@ struct TmxProperties {
     bool getBool(const std::string& name) { return bool_props[name]; };
 };
 
-struct TmxObject {
-    enum class Type {
-        static_object,
-        npc,
-        collision_box
-    };
-
-    int id;
-    Type type;
-    float x;
-    float y;
-    TmxProperties props;
-};
-
+class Actor;
 struct TmxObjLayer
 {
+    std::string name;
     TmxProperties props;
-    std::vector<TmxObject> objects;
+    std::vector<Actor*> actors;
 };
 
 struct TmxTileLayer {
@@ -55,7 +43,10 @@ public:
     ~Map();
 
     void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
+    void update();
     SDL_Rect drawRect() const;
+
+    void addActor(Actor* p_actor, const std::string& layername);
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.
