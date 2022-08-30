@@ -423,7 +423,14 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
     for(Collision& coll: collisions) {
         collrect1 = coll.first->collisionBox();
         collrect2 = coll.second->collisionBox();
-        assert(SDL_IntersectRect(&collrect1, &collrect2, &intersect) == SDL_TRUE);
+
+        /* If this condition evaluates to true, then the actors have already
+         * been de-collided by a prior collision execution in this frame,
+         * i.e. an actor collided with two or more actors in a single frame.
+         * In that case, skip the collision. */
+        if (SDL_IntersectRect(&collrect1, &collrect2, &intersect) != SDL_TRUE) {
+            continue;
+        }
 
         if (coll.first->isMoving() && !coll.second->isMoving()) {
             actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
@@ -463,9 +470,7 @@ void Map::actorAntiCollide(Actor& actor, SDL_Rect& collrect1, SDL_Rect& collrect
     } else if (actor.m_movedir.x < 0.0f && actor.m_movedir.y == 0.0f) { // West
         actor.stopMoving();
         actor.m_pos.x += intersect.w;
-    } else { // Something in between. Complicated.
-        assert(actor.m_movedir.x != 0.0f || actor.m_movedir.y != 0.0f);
-
+    } else { // Something in between. Complicated. (Note: both actors might not be moving at all!)
         /* The below seems to work fairly well. A clean solution would
          * probably generalise into a proper vector-movement based
          * approach. */
