@@ -417,10 +417,94 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
            [](Collision& coll1, Collision& coll2) { return coll1.first->m_id == coll2.first->m_id && coll1.second->m_id == coll2.second->m_id; });
 
     // Now execute all the collisions.
+    SDL_Rect collrect1;
+    SDL_Rect collrect2;
+    SDL_Rect intersect;
     for(Collision& coll: collisions) {
-        coll.first->stopMoving();
-        coll.second->stopMoving();
+        collrect1 = coll.first->collisionBox();
+        collrect2 = coll.second->collisionBox();
+        assert(SDL_IntersectRect(&collrect1, &collrect2, &intersect) == SDL_TRUE);
+
+        if (coll.first->isMoving() && !coll.second->isMoving()) {
+            actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
+        } else if (!coll.first->isMoving() && coll.second->isMoving()) {
+            actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
+        } else if (coll.first->isMoving() && coll.second->isMoving()) {
+            // If both are moving, move them both apart by half.
+            intersect.w /= 2.0f;
+            intersect.h /= 2.0f;
+            actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
+            actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
+        } else {
+            // If none is moving, move the smaller one out of the larger one.
+            if (collrect1.w * collrect1.h < collrect2.w * collrect2.h) {
+                actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
+            } else {
+                actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
+            }
+        }
+
         // TODO: Fire some event. TODO2: On which of the two?
+    }
+}
+
+void Map::actorAntiCollide(Actor& actor, SDL_Rect& collrect1, SDL_Rect& collrect2, SDL_Rect& intersect)
+{
+    // First, the easy cases: four cardinal directions.
+    if (actor.m_movedir.x == 0.0f && actor.m_movedir.y < 0.0f) { // North
+        actor.stopMoving();
+        actor.m_pos.y += intersect.h;
+    } else if (actor.m_movedir.x > 0.0f && actor.m_movedir.y == 0.0f) { // East
+        actor.stopMoving();
+        actor.m_pos.x -= intersect.w;
+    } else if (actor.m_movedir.x == 0.0f && actor.m_movedir.y > 0.0f) { // South
+        actor.stopMoving();
+        actor.m_pos.y -= intersect.h;
+    } else if (actor.m_movedir.x < 0.0f && actor.m_movedir.y == 0.0f) { // West
+        actor.stopMoving();
+        actor.m_pos.x += intersect.w;
+    } else { // Something in between. Complicated.
+        assert(actor.m_movedir.x != 0.0f || actor.m_movedir.y != 0.0f);
+
+        /* The below seems to work fairly well. A clean solution would
+         * probably generalise into a proper vector-movement based
+         * approach. */
+        if (intersect.h > intersect.w) {
+            if (collrect1.x <= collrect2.x) {
+                actor.m_pos.x -= intersect.w;
+            } else {
+                actor.m_pos.x += intersect.w;
+            }
+        } else {
+            if (collrect1.y <= collrect2.y) {
+                actor.m_pos.y -= intersect.h;
+            } else {
+                actor.m_pos.y += intersect.h;
+            }
+        }
+        actor.stopMoving();
+
+        // My prior attempt to do this properly follows:
+        ///* Der kollidierende Aktor wird zunächst horizontal verschoben, bis
+        // * er aus dem kollidierten Aktor entfernt wurde. Anschließend
+        // * wird der Sinussatz angewandt, um die noch fehlende korrekte
+        // * Y-Position des kollidierenden Aktors zu berechnen. Dabei darf
+        // * die Einbeziehung des zweiten Winkels wegfallen, da er 90°
+        // * beträgt und sin(90°)=1 gilt. Bewegt der Aktor sich auf der X-Achse,
+        // * kann die Berechnung ganz entfallen. */
+        //float angle = M_PI - actor.m_movedir.angleWith(Vector2f(0,1));
+        //actor.stopMoving();
+        //if (collrect1.x <= collrect2.x) { // Kollidierer kommt von links
+        //    actor.m_pos.x -= intersect.w;
+        //} else { // Kollidierer kommt von rechts
+        //    actor.m_pos.x += intersect.w;
+        //}
+        //if (!float_equal(0.5*M_PI - angle, 0.0f)) { // 0.5π rad = 90°
+        //    actor.m_pos.y += intersect.w / sinf(0.5*M_PI - angle);
+        //}
+        //
+        //cout << "This gives an angle of " << (180.0f*angle)/M_PI << "° with the Y axis" << endl;
+        //cout << "ID " << actor.m_id << " is now at (" << actor.m_pos.x << "|" << actor.m_pos.y << ")" << endl;        }
     }
 }
 

@@ -64,6 +64,7 @@ private:
     void checkCollisions();
     void checkCollideMapBoundary(Actor* p_actor);
     void checkCollideActors(Actor* p_actor, TmxObjLayer& layer);
+    void actorAntiCollide(Actor& actor, SDL_Rect& collrect1, SDL_Rect& collrect2, SDL_Rect& intersect);
     std::string m_name;
     std::map<int,Tileset*> m_tilesets;
     std::vector<Layer> m_layers;
