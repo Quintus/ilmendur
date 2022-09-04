@@ -47,6 +47,7 @@ public:
     SDL_Rect drawRect() const;
 
     void addActor(Actor* p_actor, const std::string& layername);
+    bool findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer);
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.

@@ -2,6 +2,7 @@
 #include "os.hpp"
 #include "actor.hpp"
 #include "collbox.hpp"
+#include "passage.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
 #include <fstream>
@@ -108,6 +109,35 @@ vector<Actor*> readTmxObjects(const pugi::xml_node& node)
             rect.w = w;
             rect.h = h;
             result.push_back(new CollisionBox(id, rect));
+        } else if (type == string("passage")) {
+            SDL_Rect rect;
+            rect.x = x;
+            rect.y = y;
+            rect.w = w;
+            rect.h = h;
+
+            const string& direction = props.get("direction");
+            Passage::pass_direction dir = 0;
+            if (direction.find("all") != string::npos) {
+                dir = Passage::up | Passage::right | Passage::down | Passage::left;
+            } else {
+                if (direction.find("up") != string::npos) {
+                    dir |= Passage::up;
+                }
+                if (direction.find("right") != string::npos) {
+                    dir |= Passage::right;
+                }
+                if (direction.find("down") != string::npos) {
+                    dir |= Passage::down;
+                }
+                if (direction.find("left") != string::npos) {
+                    dir |= Passage::left;
+                }
+            }
+
+            const string& target = props.get("target");
+            assert(!target.empty());
+            result.push_back(new Passage(id, rect, dir, target));
         } else {
             // Valid TMX, but an error by the map editor: unknown object type requested.
             throw(runtime_error(string("Unknown object type `") + type + "' found in TMX file!"));
@@ -451,6 +481,40 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
             }
         }
 
+        // TODO: Move this into event handler code
+        Passage* p_passage = nullptr;
+        Actor* p_other = nullptr;
+        if ((p_passage = dynamic_cast<Passage*>(coll.first))) {
+            p_other = coll.second;
+        } else {
+            p_passage = dynamic_cast<Passage*>(coll.second);
+            p_other = coll.first;
+        }
+        if (p_passage) {
+            // Find the layer the moving object is on, remove it from there,
+            // and move it to the target layer.
+            TmxObjLayer* p_layer = nullptr;
+            assert(findActor(p_other->m_id, nullptr, &p_layer));
+            assert(p_layer);
+            for(auto iter=p_layer->actors.begin(); iter != p_layer->actors.end(); iter++) {
+                if ((*iter)->m_id == p_other->m_id) {
+                    p_layer->actors.erase(iter);
+                    break;
+                }
+            }
+
+            for(auto iter=m_layers.begin(); iter != m_layers.end(); iter++) {
+                if (iter->type == LayerType::Object && iter->data.p_obj_layer->name == p_passage->m_targetlayer) {
+                    iter->data.p_obj_layer->actors.push_back(p_other);
+
+                    sort(iter->data.p_obj_layer->actors.begin(),
+                         iter->data.p_obj_layer->actors.end(),
+                         [](Actor* p_a, Actor* p_b){return p_a->m_id < p_b->m_id;});
+                    break;
+                }
+            }
+        }
+
         // TODO: Fire some event. TODO2: On which of the two?
     }
 }
@@ -537,4 +601,29 @@ void Map::addActor(Actor* p_actor, const string& layername)
     // If this triggers, a non-existant layer was requested. Note that
     // actors can only be added to object layers.
     assert(false);
+}
+
+bool Map::findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer)
+{
+    assert(id > 0);
+
+    for (Layer& layer: m_layers) {
+        if (layer.type == LayerType::Object) {
+            for (auto iter=layer.data.p_obj_layer->actors.begin();
+                 iter != layer.data.p_obj_layer->actors.end();
+                 iter++) {
+                if (id == (*iter)->m_id) {
+                    if (pp_actor) {
+                        *pp_actor = *iter;
+                    }
+                    if (pp_layer) {
+                        *pp_layer = layer.data.p_obj_layer;
+                    }
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }

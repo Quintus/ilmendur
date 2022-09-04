@@ -12,17 +12,20 @@ TODO: Write this section.
 
 ** Objects
 
-*** type
+*** Overview and =type= property
 
 Each object is required to have a property called =type= that denotes to which kind of actor it belongs in the game. Currently the following values for =type= are supported:
 
 - static :: This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
 - npc :: This is a non-playable character (NPC). Ignored currently.
 - collbox :: This is a collision box element. Use this for making e.g. walls impassible.
+- passage :: This actor allows players and NPCs to switch their current layer.
 
 It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position.
 
-*** animation_mode
+*** Properties applying to all types
+
+**** animation_mode
 
 The =animation_mode= property describes how the actor is meant to be animated. It defaults to =on_move= if not explicitely set. The following values are supported:
 
@@ -32,9 +35,27 @@ The =animation_mode= property describes how the actor is meant to be animated. I
 
 “Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
 
-*** graphic
+**** graphic
 
 The =graphic= key gives the filename of the graphic to show for an actor. It is relative to the directory =data/gfx/= in the source tree.[fn:1]
+
+*** Type-specific properties
+
+**** =passage= type
+
+The =passage= type defines objects which allow the player and NPCs to switch the layer they are currently moving on. This is required to use in-map stairs, bridges over passable ways below, and similar constructions. They have a direction in which they need to be passed in order to activate the layer switch and a target layer.
+
+=passage= actors are one-way by design. If it is intended to allow actors to pass between the connected layers both upwards and downwards, it is required to place a =passage= type actor on each of the two layers. This is because collisions are only possible with actors on the same layer. It might however be useful to only place a single =passage= actor in certain situations, e.g. holes that when passed will pass the player down to the ground layer, but cannot be used inversely to reach an upper layer.
+
+The allowed properties are as follows:
+
+| *Property name* | *Possible values*                               | *Explanation*                        |
+|-----------------+-------------------------------------------------+--------------------------------------|
+| type            | "passage"                                       | as per main text                     |
+| target          | string                                          | Gives the name of the target layer   |
+| direction       | comma-separated list of: up,down,right,left,all | Gives the allowed passing directions |
+
+=all= as the value for =direction= is a shortcut and equivalent to a value of =up,right,down,left=.
 
 * Footnotes
 
