@@ -1,0 +1,25 @@
+#+TITLE: Tips
+#+LANGUAGE: en
+#+AUTHOR: Ilmendur Team
+
+* Local and global transformation space
+
+- All scene nodes have a local transformation space and a global
+  transformation space.
+- The local space is relative to whatever orientation the scene node
+  currently has. This makes it easy to say things like “move forward”,
+  whatever direction “forward” may be in global terms.
+- All models face down the X axis as per instructions for the artists.
+  Hence, “move forward” is equal to increasing X in the local space
+  for nodes connected to models.
+- Ogre cameras face up (!) the Z axis. Hence, “move forward” for an
+  Ogre camera means decreasing the Z coordinate in local space.
+
+* Reference point for quaternions
+
+- Ogre quaternions rotate relative the natural direction, not the
+  current orientation. They are absolute values.
+- The natural direction for models is, as per instructions for the
+  artists, Ogre::Vector3::UNIT_X, i.e. positive X axis.
+- The natural direction for Ogre cameras is always
+  -Ogre::Vector3::UNIT_Z, i.e. negative Z axis.
