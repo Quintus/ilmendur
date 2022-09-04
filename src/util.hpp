@@ -27,7 +27,7 @@ public:
     T x;
     T y;
 
-    Vector2<T>() { x = 0; y = 0; }
+    Vector2<T>() { x = 0; y = 0; } ///< Default constructor creates a zero-length vector.
     Vector2<T>(const Vector2<T>& other) { x = other.x; y = other.y; }
     Vector2<T>(Vector2<T>&& other) { x = other.x; y = other.y; other.clear(); }
     Vector2<T>(T other_x, T other_y) { x = other_x; y = other_y; }
