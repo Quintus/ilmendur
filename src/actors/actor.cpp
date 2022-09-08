@@ -25,6 +25,7 @@ Actor::Actor(int id, const string& graphic)
       m_lookdir(direction::none),
       m_ani_ticks(0),
       m_id(id),
+      mp_map(nullptr),
       m_move_start(0),
       m_passed_distance(0.0f),
       m_total_distance(0.0f)

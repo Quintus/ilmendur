@@ -51,7 +51,8 @@ private:
     int m_ani_ticks;
 
 protected:
-    int m_id;
+    int m_id; ///< Map-wide unique ID of this actor.
+    Map* mp_map; ///< Map the actor is on. May be nullptr.
     Vector2f m_pos;
     Vector2f m_targetpos;
     Vector2f m_movedir;
@@ -60,7 +61,7 @@ protected:
     float m_total_distance;
     std::function<float(uint64_t)> m_velfunc;
 
-    // For collision checks Map needs access
+    // For collision checks and mp_map assocation Map needs access
     friend class Map;
 };
 

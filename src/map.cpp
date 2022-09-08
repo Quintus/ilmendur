@@ -589,11 +589,13 @@ void Map::addActor(Actor* p_actor, const string& layername)
             for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
                 if ((*iter)->id() > p_actor->id()) {
                     layer.data.p_obj_layer->actors.insert(iter, p_actor);
+                    p_actor->mp_map = this;
                     return;
                 }
             }
             // If this is reached, the actor has a higher ID than all existing actors.
             layer.data.p_obj_layer->actors.push_back(p_actor);
+            p_actor->mp_map = this;
             return;
         }
     }
