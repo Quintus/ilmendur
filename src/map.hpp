@@ -48,6 +48,7 @@ public:
 
     void addActor(Actor* p_actor, const std::string& layername);
     bool findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer);
+    void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
 
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.
@@ -65,7 +66,7 @@ private:
     void checkCollisions();
     void checkCollideMapBoundary(Actor* p_actor);
     void checkCollideActors(Actor* p_actor, TmxObjLayer& layer);
-    void actorAntiCollide(Actor& actor, SDL_Rect& collrect1, SDL_Rect& collrect2, SDL_Rect& intersect);
+
     std::string m_name;
     std::map<int,Tileset*> m_tilesets;
     std::vector<Layer> m_layers;

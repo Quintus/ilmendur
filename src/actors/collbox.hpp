@@ -10,6 +10,7 @@ public:
 
     virtual void update();
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
+    virtual void handleEvent(const Event& event);
 
     virtual SDL_Rect collisionBox() const;
 private:

@@ -312,8 +312,85 @@ void Actor::move()
 
 TmxObjLayer* Actor::mapLayer()
 {
-    assert(mp_map);
+    assert(mp_map); // Cannot query the layer if the actor is not on a map.
     TmxObjLayer* p_result = nullptr;
-    mp_map->findActor(m_id, nullptr, &p_result);
+    assert(mp_map->findActor(m_id, nullptr, &p_result)); // If this assert triggers, map and actor have gone out of sync.
     return p_result;
+}
+
+/**
+ * Handle an event. The default implementation does nothing; override
+ * in subclasses. When handling collision events, be sure to check
+ * if the antiCollide() method is useful to you.
+ */
+void Actor::handleEvent(const Event&)
+{
+}
+
+/**
+ * Moves p_actor out of p_other. p_actor will not move anymore after
+ * this method returns. p_other will not be moved. The two actors
+ * will be exactly adjascent after the return from this method.
+ * `intersect' takes the intersection rectangle of the collision
+ * boxes of the two.
+ */
+void Actor::antiCollide(Actor* p_actor, const Actor* p_other, const SDL_Rect& intersect)
+{
+    // First, the easy cases: four cardinal directions.
+    if (p_actor->m_movedir.x == 0.0f && p_actor->m_movedir.y < 0.0f) { // North
+        p_actor->stopMoving();
+        p_actor->m_pos.y += intersect.h;
+    } else if (p_actor->m_movedir.x > 0.0f && p_actor->m_movedir.y == 0.0f) { // East
+        p_actor->stopMoving();
+        p_actor->m_pos.x -= intersect.w;
+    } else if (p_actor->m_movedir.x == 0.0f && p_actor->m_movedir.y > 0.0f) { // South
+        p_actor->stopMoving();
+        p_actor->m_pos.y -= intersect.h;
+    } else if (p_actor->m_movedir.x < 0.0f && p_actor->m_movedir.y == 0.0f) { // West
+        p_actor->stopMoving();
+        p_actor->m_pos.x += intersect.w;
+    } else { // Something in between. Complicated. (Note: both actors might not be moving at all!)
+        /* The below seems to work fairly well. A clean solution would
+         * probably generalise into a proper vector-movement based
+         * approach. */
+        SDL_Rect collrect1 = p_actor->collisionBox();
+        SDL_Rect collrect2 = p_other->collisionBox();
+
+        if (intersect.h > intersect.w) {
+            if (collrect1.x <= collrect2.x) {
+                p_actor->m_pos.x -= intersect.w;
+            } else {
+                p_actor->m_pos.x += intersect.w;
+            }
+        } else {
+            if (collrect1.y <= collrect2.y) {
+                p_actor->m_pos.y -= intersect.h;
+            } else {
+                p_actor->m_pos.y += intersect.h;
+            }
+        }
+        p_actor->stopMoving();
+
+        // My prior attempt to do this properly follows:
+        ///* Der kollidierende Aktor wird zunächst horizontal verschoben, bis
+        // * er aus dem kollidierten Aktor entfernt wurde. Anschließend
+        // * wird der Sinussatz angewandt, um die noch fehlende korrekte
+        // * Y-Position des kollidierenden Aktors zu berechnen. Dabei darf
+        // * die Einbeziehung des zweiten Winkels wegfallen, da er 90°
+        // * beträgt und sin(90°)=1 gilt. Bewegt der Aktor sich auf der X-Achse,
+        // * kann die Berechnung ganz entfallen. */
+        //float angle = M_PI - p_actor->m_movedir.angleWith(Vector2f(0,1));
+        //p_actor->stopMoving();
+        //if (collrect1.x <= collrect2.x) { // Kollidierer kommt von links
+        //    p_actor->m_pos.x -= intersect.w;
+        //} else { // Kollidierer kommt von rechts
+        //    p_actor->m_pos.x += intersect.w;
+        //}
+        //if (!float_equal(0.5*M_PI - angle, 0.0f)) { // 0.5π rad = 90°
+        //    p_actor->m_pos.y += intersect.w / sinf(0.5*M_PI - angle);
+        //}
+        //
+        //cout << "This gives an angle of " << (180.0f*angle)/M_PI << "° with the Y axis" << endl;
+        //cout << "ID " << p_actor->m_id << " is now at (" << p_actor->m_pos.x << "|" << p_actor->m_pos.y << ")" << endl;        }
+    }
 }

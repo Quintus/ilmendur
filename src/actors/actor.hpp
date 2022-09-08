@@ -10,6 +10,7 @@ struct TextureInfo;
 class Scene;
 class Map;
 struct TmxObjLayer;
+struct Event;
 
 class Actor
 {
@@ -22,6 +23,8 @@ public:
 
     virtual void update();
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
+    virtual void handleEvent(const Event& event);
+
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
 
@@ -64,6 +67,8 @@ protected:
     float m_passed_distance;
     float m_total_distance;
     std::function<float(uint64_t)> m_velfunc;
+
+    static void antiCollide(Actor* p_actor, const Actor* p_other, const SDL_Rect& intersect);
 
     // For collision checks and mp_map assocation Map needs access
     friend class Map;

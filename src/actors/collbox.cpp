@@ -1,4 +1,5 @@
 #include "collbox.hpp"
+#include "../event.hpp"
 #include <cassert>
 
 using namespace std;
@@ -27,4 +28,11 @@ void CollisionBox::draw(SDL_Renderer*, const SDL_Rect*)
 SDL_Rect CollisionBox::collisionBox() const
 {
     return m_collbox;
+}
+
+void CollisionBox::handleEvent(const Event& event)
+{
+    if (event.type == Event::Type::collision) {
+        antiCollide(event.data.coll.p_other, this, event.data.coll.intersect);
+    }
 }

@@ -14,6 +14,8 @@ public:
     Passage(int id, SDL_Rect area, pass_direction dir, const std::string& targetlayer);
     virtual ~Passage();
 
+    virtual void handleEvent(const Event& event);
+
     virtual SDL_Rect collisionBox() const;
 private:
     Vector2f m_size;

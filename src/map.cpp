@@ -3,6 +3,7 @@
 #include "actors/actor.hpp"
 #include "actors/collbox.hpp"
 #include "actors/passage.hpp"
+#include "event.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
 #include <fstream>
@@ -179,6 +180,7 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
         layer.data.p_obj_layer->name   = node.attribute("name").value();
         layer.data.p_obj_layer->props  = readProperties(node);
         layer.data.p_obj_layer->actors = readTmxObjects(node);
+
     // TODO: Remaining TMX layer types
     } else {
         throw(runtime_error(string("Unsupported <map> child type `") + node.name() + "' in map `" + mapname + "'!"));
@@ -230,6 +232,13 @@ Map::Map(const std::string& name)
             m_tilesets[firstgid] = new Tileset(source);
         } else {
             m_layers.push_back(readLayer(node, m_name));
+
+            Layer& layer = m_layers[m_layers.size() - 1];
+            if (layer.type == LayerType::Object) {
+                for(Actor* p_actor: layer.data.p_obj_layer->actors) {
+                    p_actor->mp_map = this;
+                }
+            }
         }
     }
 }
@@ -462,118 +471,20 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
             continue;
         }
 
-        if (coll.first->isMoving() && !coll.second->isMoving()) {
-            actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
-        } else if (!coll.first->isMoving() && coll.second->isMoving()) {
-            actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
-        } else if (coll.first->isMoving() && coll.second->isMoving()) {
-            // If both are moving, move them both apart by half.
-            intersect.w /= 2.0f;
-            intersect.h /= 2.0f;
-            actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
-            actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
-        } else {
-            // If none is moving, move the smaller one out of the larger one.
-            if (collrect1.w * collrect1.h < collrect2.w * collrect2.h) {
-                actorAntiCollide(*coll.first, collrect1, collrect2, intersect);
-            } else {
-                actorAntiCollide(*coll.second, collrect2, collrect1, intersect);
-            }
+        Event collev;
+        collev.type = Event::Type::collision;
+        collev.data.coll.intersect = intersect;
+        collev.data.coll.p_other = coll.second;
+        coll.first->handleEvent(collev);
+
+        /* It may happen that the collision handler of `coll.first'
+         * displaces the actors so that no intersection remains. Skip
+         * the second event in that case. */
+        if (SDL_IntersectRect(&collrect1, &collrect2, &intersect) == SDL_TRUE) {
+            collev.data.coll.intersect = intersect;
+            collev.data.coll.p_other = coll.first;
+            coll.second->handleEvent(collev);
         }
-
-        // TODO: Move this into event handler code
-        Passage* p_passage = nullptr;
-        Actor* p_other = nullptr;
-        if ((p_passage = dynamic_cast<Passage*>(coll.first))) {
-            p_other = coll.second;
-        } else {
-            p_passage = dynamic_cast<Passage*>(coll.second);
-            p_other = coll.first;
-        }
-        if (p_passage) {
-            // Find the layer the moving object is on, remove it from there,
-            // and move it to the target layer.
-            TmxObjLayer* p_layer = nullptr;
-            assert(findActor(p_other->m_id, nullptr, &p_layer));
-            assert(p_layer);
-            for(auto iter=p_layer->actors.begin(); iter != p_layer->actors.end(); iter++) {
-                if ((*iter)->m_id == p_other->m_id) {
-                    p_layer->actors.erase(iter);
-                    break;
-                }
-            }
-
-            for(auto iter=m_layers.begin(); iter != m_layers.end(); iter++) {
-                if (iter->type == LayerType::Object && iter->data.p_obj_layer->name == p_passage->m_targetlayer) {
-                    iter->data.p_obj_layer->actors.push_back(p_other);
-
-                    sort(iter->data.p_obj_layer->actors.begin(),
-                         iter->data.p_obj_layer->actors.end(),
-                         [](Actor* p_a, Actor* p_b){return p_a->m_id < p_b->m_id;});
-                    break;
-                }
-            }
-        }
-
-        // TODO: Fire some event. TODO2: On which of the two?
-    }
-}
-
-void Map::actorAntiCollide(Actor& actor, SDL_Rect& collrect1, SDL_Rect& collrect2, SDL_Rect& intersect)
-{
-    // First, the easy cases: four cardinal directions.
-    if (actor.m_movedir.x == 0.0f && actor.m_movedir.y < 0.0f) { // North
-        actor.stopMoving();
-        actor.m_pos.y += intersect.h;
-    } else if (actor.m_movedir.x > 0.0f && actor.m_movedir.y == 0.0f) { // East
-        actor.stopMoving();
-        actor.m_pos.x -= intersect.w;
-    } else if (actor.m_movedir.x == 0.0f && actor.m_movedir.y > 0.0f) { // South
-        actor.stopMoving();
-        actor.m_pos.y -= intersect.h;
-    } else if (actor.m_movedir.x < 0.0f && actor.m_movedir.y == 0.0f) { // West
-        actor.stopMoving();
-        actor.m_pos.x += intersect.w;
-    } else { // Something in between. Complicated. (Note: both actors might not be moving at all!)
-        /* The below seems to work fairly well. A clean solution would
-         * probably generalise into a proper vector-movement based
-         * approach. */
-        if (intersect.h > intersect.w) {
-            if (collrect1.x <= collrect2.x) {
-                actor.m_pos.x -= intersect.w;
-            } else {
-                actor.m_pos.x += intersect.w;
-            }
-        } else {
-            if (collrect1.y <= collrect2.y) {
-                actor.m_pos.y -= intersect.h;
-            } else {
-                actor.m_pos.y += intersect.h;
-            }
-        }
-        actor.stopMoving();
-
-        // My prior attempt to do this properly follows:
-        ///* Der kollidierende Aktor wird zunächst horizontal verschoben, bis
-        // * er aus dem kollidierten Aktor entfernt wurde. Anschließend
-        // * wird der Sinussatz angewandt, um die noch fehlende korrekte
-        // * Y-Position des kollidierenden Aktors zu berechnen. Dabei darf
-        // * die Einbeziehung des zweiten Winkels wegfallen, da er 90°
-        // * beträgt und sin(90°)=1 gilt. Bewegt der Aktor sich auf der X-Achse,
-        // * kann die Berechnung ganz entfallen. */
-        //float angle = M_PI - actor.m_movedir.angleWith(Vector2f(0,1));
-        //actor.stopMoving();
-        //if (collrect1.x <= collrect2.x) { // Kollidierer kommt von links
-        //    actor.m_pos.x -= intersect.w;
-        //} else { // Kollidierer kommt von rechts
-        //    actor.m_pos.x += intersect.w;
-        //}
-        //if (!float_equal(0.5*M_PI - angle, 0.0f)) { // 0.5π rad = 90°
-        //    actor.m_pos.y += intersect.w / sinf(0.5*M_PI - angle);
-        //}
-        //
-        //cout << "This gives an angle of " << (180.0f*angle)/M_PI << "° with the Y axis" << endl;
-        //cout << "ID " << actor.m_id << " is now at (" << actor.m_pos.x << "|" << actor.m_pos.y << ")" << endl;        }
     }
 }
 
@@ -628,4 +539,37 @@ bool Map::findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer)
     }
 
     return false;
+}
+
+/**
+ * Changes the layer `p_actor' is on to the layer with the given name.
+ * The method will crash with an assertion failure if `p_actor' is not
+ * on this map or the requested target layer does not exist.
+ */
+void Map::changeActorLayer(Actor* p_actor, const string& target_layer_name)
+{
+    assert(p_actor->map() == this);
+
+    // Find the layer the actor is on, remove it from there,
+    // and move it to the target layer.
+    TmxObjLayer* p_layer = p_actor->mapLayer();
+    for(auto iter=p_layer->actors.begin(); iter != p_layer->actors.end(); iter++) {
+        if ((*iter)->m_id == p_actor->m_id) {
+            p_layer->actors.erase(iter);
+            break;
+        }
+    }
+
+    for(auto iter=m_layers.begin(); iter != m_layers.end(); iter++) {
+        if (iter->type == LayerType::Object && iter->data.p_obj_layer->name == target_layer_name) {
+            iter->data.p_obj_layer->actors.push_back(p_actor);
+
+            sort(iter->data.p_obj_layer->actors.begin(),
+                 iter->data.p_obj_layer->actors.end(),
+                 [](Actor* p_a, Actor* p_b){return p_a->m_id < p_b->m_id;});
+            return;
+        }
+    }
+
+    assert(false); // Invalid target layer requested
 }

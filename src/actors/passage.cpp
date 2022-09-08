@@ -1,4 +1,6 @@
 #include "passage.hpp"
+#include "../event.hpp"
+#include "../map.hpp"
 #include <cassert>
 
 using namespace std;
@@ -35,4 +37,13 @@ SDL_Rect Passage::collisionBox() const
     box.h = m_size.y;
 
     return box;
+}
+
+void Passage::handleEvent(const Event& event)
+{
+    if (event.type != Event::Type::collision) {
+        return;
+    }
+
+    mp_map->changeActorLayer(event.data.coll.p_other, m_targetlayer);
 }
