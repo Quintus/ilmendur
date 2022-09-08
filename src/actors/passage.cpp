@@ -5,7 +5,7 @@
 
 using namespace std;
 
-Passage::Passage(int id, SDL_Rect area, unsigned short dir, const string& targetlayer)
+Passage::Passage(int id, SDL_Rect area, pass_direction dir, const string& targetlayer)
     : Actor(id),
       m_size(area.w, area.h),
       m_passdir(dir),
@@ -45,5 +45,12 @@ void Passage::handleEvent(const Event& event)
         return;
     }
 
-    mp_map->changeActorLayer(event.data.coll.p_other, m_targetlayer);
+    // Activate passage if the move direction contains the target direction.
+    const Vector2f movedir = event.data.coll.p_other->moveDirection();
+    if ((movedir.y < 0.0f && m_passdir & Passage::up) ||
+        (movedir.y > 0.0f && m_passdir & Passage::down) ||
+        (movedir.x < 0.0f && m_passdir & Passage::left) ||
+        (movedir.x > 0.0f && m_passdir & Passage::up)) {
+        mp_map->changeActorLayer(event.data.coll.p_other, m_targetlayer);
+    }
 }

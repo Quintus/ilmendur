@@ -19,7 +19,7 @@ public:
     virtual SDL_Rect collisionBox() const;
 private:
     Vector2f m_size;
-    unsigned short m_passdir;
+    pass_direction m_passdir;
     std::string m_targetlayer;
 
     friend class Map;
