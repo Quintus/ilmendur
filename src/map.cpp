@@ -63,7 +63,7 @@ static vector<int> parseGidCsv(const std::string& csv)
     return result;
 }
 
-vector<Actor*> readTmxObjects(const pugi::xml_node& node)
+static vector<Actor*> readTmxObjects(const pugi::xml_node& node)
 {
     vector<Actor*> result;
 
