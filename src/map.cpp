@@ -1,8 +1,8 @@
 #include "map.hpp"
 #include "os.hpp"
-#include "actor.hpp"
-#include "collbox.hpp"
-#include "passage.hpp"
+#include "actors/actor.hpp"
+#include "actors/collbox.hpp"
+#include "actors/passage.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
 #include <fstream>

@@ -1,6 +1,6 @@
 #ifndef ILMENDUR_ACTOR_HPP
 #define ILMENDUR_ACTOR_HPP
-#include "util.hpp"
+#include "../util.hpp"
 #include <cstdint>
 #include <functional>
 #include <string>

@@ -1,8 +1,8 @@
 #include "actor.hpp"
-#include "ilmendur.hpp"
-#include "texture_pool.hpp"
-#include "scene.hpp"
-#include "map.hpp"
+#include "../ilmendur.hpp"
+#include "../texture_pool.hpp"
+#include "../scene.hpp"
+#include "../map.hpp"
 #include <SDL2/SDL.h>
 #include <cassert>
 

@@ -1,8 +1,8 @@
 #include "scene.hpp"
 #include "camera.hpp"
-#include "actor.hpp"
+#include "actors/actor.hpp"
 #include "map.hpp"
-#include "player.hpp"
+#include "actors/player.hpp"
 #include "ilmendur.hpp"
 
 using namespace std;
