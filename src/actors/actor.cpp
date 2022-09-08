@@ -309,3 +309,11 @@ void Actor::move()
 
     // Note: Collision checks happen in Map::update().
 }
+
+TmxObjLayer* Actor::mapLayer()
+{
+    assert(mp_map);
+    TmxObjLayer* p_result = nullptr;
+    mp_map->findActor(m_id, nullptr, &p_result);
+    return p_result;
+}

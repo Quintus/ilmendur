@@ -9,6 +9,7 @@
 struct TextureInfo;
 class Scene;
 class Map;
+struct TmxObjLayer;
 
 class Actor
 {
@@ -23,6 +24,9 @@ public:
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
+
+    Map* map() { return mp_map; } ///< Map the player is associated with. May be nullptr.
+    TmxObjLayer* mapLayer();      ///< Layer on the map().
 
     bool isMoving();
     void moveTo(const Vector2f& targetpos, float velocity);
