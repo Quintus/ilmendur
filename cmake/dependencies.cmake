@@ -142,28 +142,15 @@ else() # That is, Linux or another good Unix
 
   find_package(Threads REQUIRED)
   find_package(OpenGL REQUIRED COMPONENTS OpenGL)
-  find_package(DBus1 REQUIRED)
-  find_package(Unwind REQUIRED)
+
+  # SDL dependencies
   find_package(Wayland)
   find_package(X11 COMPONENTS Xrandr Xinerama Xkb Xfixes Xcursor Xi Xxf86vm)
-  find_package(Pulse REQUIRED)
-
-  if (X11_FOUND)
-    target_link_libraries(ilmendur
-      X11::Xrandr X11::Xinerama X11::Xfixes X11::Xcursor
-      X11::Xi X11::Xss X11::Xxf86vm X11::Xkb X11::X11)
-  endif()
-  if (Wayland_FOUND)
-    target_link_libraries(ilmendur ${Wayland_LIBRARIES})
-  endif()
   if ((NOT X11_FOUND) AND (NOT Wayland_FOUND))
     message(SEND_ERROR "Either X11 or Wayland is required on non-Apple Unix.")
   endif()
 
   target_link_libraries(ilmendur
-    ${Unwind_LIBRARIES}
-    ${DBus1_LIBRARIES}
-    ${Pulse_LIBRARIES}
     Threads::Threads
     ${CMAKE_DL_LIBS} rt)
 endif()

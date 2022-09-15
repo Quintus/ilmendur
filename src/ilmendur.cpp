@@ -41,10 +41,10 @@ Ilmendur::Ilmendur()
     sp_ilmendur = this;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        throw(runtime_error("SDL_Init() failed!"));
+        throw(runtime_error(string("SDL_Init() failed: ") + SDL_GetError()));
     }
     if (IMG_Init(IMG_INIT_PNG) < 0) {
-        throw(runtime_error("IMG_Init() failed!"));
+        throw(runtime_error(string("IMG_Init() failed: ") + SDL_GetError()));
     }
 
     // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
