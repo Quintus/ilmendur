@@ -137,19 +137,40 @@ elseif (APPLE)
   target_link_libraries(ilmendur OpenGL::GLX OpenGL::GL Threads::Threads ${CMAKE_DL_LIBS})
   message(WARNING "Apple support is experimental")
 else() # That is, Linux or another good Unix
-  set(THREADS_PREFER_PTHREAD_FLAG ON)
-  set(OpenGL_GL_PREFERENCE GLVND)
+  # As it turns out, SDL on Linux uses dlopen(3) to load all of its
+  # dependencies, so do not link them in here. SDL can be persuaded to
+  # not do that by passing -DSDL_LOADSO=OFF during the build
+  # configuration, but SDL will then crash at runtime on Wayland with
+  # the error "Could not initialize OpenGL / GLES library". It does
+  # work on X11, though.
 
-  find_package(Threads REQUIRED)
-  find_package(OpenGL REQUIRED COMPONENTS OpenGL)
-
-  # SDL dependencies
+  # 1. Display server
   find_package(Wayland)
   find_package(X11 COMPONENTS Xrandr Xinerama Xkb Xfixes Xcursor Xi Xxf86vm)
+#  if (X11_FOUND)
+#    target_link_libraries(ilmendur
+#      X11::Xrandr X11::Xinerama X11::Xfixes X11::Xcursor
+#      X11::Xi X11::Xss X11::Xxf86vm X11::Xkb ${X11_xkbcommon_LIB} X11::X11)
+#  endif()
+#  if (Wayland_FOUND)
+#    target_link_libraries(ilmendur ${Wayland_LIBRARIES})
+#  endif()
   if ((NOT X11_FOUND) AND (NOT Wayland_FOUND))
     message(SEND_ERROR "Either X11 or Wayland is required on non-Apple Unix.")
   endif()
 
+  # 2. Audio system
+  # There are other sound systems on Linux which SDL supports (OSS,
+  # ALSA, Pipewire), but PulseAudio seems to be the current least
+  # common denominator, so for now only require that one.
+  find_package(Pulse REQUIRED)
+  #target_link_libraries(ilmendur ${Pulse_LIBRARIES})
+
+  # 3. Core system libraries
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  set(OpenGL_GL_PREFERENCE GLVND)
+  find_package(Threads REQUIRED)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL EGL)
   target_link_libraries(ilmendur
     Threads::Threads
     ${CMAKE_DL_LIBS} rt)

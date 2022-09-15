@@ -49,7 +49,7 @@ Ilmendur::Ilmendur()
 
     // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
     if (SDL_CreateWindowAndRenderer(NORMAL_WINDOW_WIDTH, NORMAL_WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
-        throw(runtime_error("SDL_CreateWindowAndRenderer() failed!"));
+        throw(runtime_error(string("SDL_CreateWindowAndRenderer() failed: ") + SDL_GetError()));
     }
 
     assert(mp_window);
