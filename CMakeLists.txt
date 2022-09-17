@@ -79,7 +79,6 @@ find_package(PkgConfig REQUIRED)
 include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include)
 
 include(cmake/dependencies.cmake)
-target_link_libraries(ilmendur stdc++fs)
 
 ########################################
 # Installation configuration

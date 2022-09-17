@@ -51,8 +51,6 @@ ExternalProject_Add(libpng
                      --disable-shared
   BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
-list(APPEND ILMENDUR_DEPENDENCIES
-  ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libpng16.a)
 
 ExternalProject_Add(sdl
   DEPENDS zlib
