@@ -1,0 +1,25 @@
+app-id: eu.guelker.ilmendur
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
+platform-extensions:
+  - org.freedesktop.Platform.GL.default
+command: ilmendur
+modules:
+  - name: ilmendur
+    buildsystem: cmake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Debug
+    sources:
+      - type: dir
+        path: .
+      - type: shell
+        commands:
+          - "cd build && for file in *-prefix/src/*.tar.gz; do mkdir -p ../$(dirname $file); done"
+          - "cd build && for file in *-prefix/src/*.tar.gz; do cp $file ../$(dirname $file); done"
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=dri
