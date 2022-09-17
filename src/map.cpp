@@ -195,7 +195,7 @@ Map::Map(const std::string& name)
       m_height(0)
 {
     fs::path abs_path(OS::gameDataDir() / fs::u8path("maps") / fs::u8path(m_name + ".tmx"));
-    fstream file(abs_path);
+    ifstream file(abs_path);
     assert(fs::exists(abs_path));
 
     pugi::xml_document doc;
