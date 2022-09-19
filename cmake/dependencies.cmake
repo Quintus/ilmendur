@@ -41,7 +41,7 @@ ExternalProject_Add(zlib
 
 ExternalProject_Add(libpng
   DEPENDS zlib
-  URL "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz?download"
+  URL "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz"
   URL_HASH SHA256=daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4
   SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/libpng
   INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
