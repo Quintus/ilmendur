@@ -52,6 +52,32 @@ ExternalProject_Add(libpng
   BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
   INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
 
+ExternalProject_Add(libogg
+  DEPENDS zlib
+  URL "https://downloads.xiph.org/releases/ogg/libogg-1.3.5.tar.gz"
+  URL_HASH SHA256=0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/libogg
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CPPFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/libogg/configure
+                     --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
+                     --enable-static
+                     --disable-shared
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
+
+ExternalProject_Add(libvorbis
+  DEPENDS zlib libogg
+  URL "https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.gz"
+  URL_HASH SHA256=0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/libvorbis
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CPPFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include ${ILMENDUR_DEPS_SRC_DIR}/libvorbis/configure
+                     --prefix=${ILMENDUR_DEPS_INSTALL_DIR}
+                     --enable-static
+                     --disable-shared
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_LIBDIR=${ILMENDUR_DEPS_INSTALL_DIR}/lib/pkgconfig LDFLAGS=-L${ILMENDUR_DEPS_INSTALL_DIR}/lib CFLAGS=-I${ILMENDUR_DEPS_INSTALL_DIR}/include $(MAKE)
+  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install)
+
 ExternalProject_Add(sdl
   DEPENDS zlib
   URL "https://libsdl.org/release/SDL2-2.0.22.tar.gz"
@@ -109,12 +135,35 @@ ExternalProject_Add(sdl_image
              -DSDL2IMAGE_XPM=OFF
              -DSDL2IMAGE_XV=OFF)
 
+ExternalProject_Add(sdl_mixer
+  DEPENDS sdl libogg libvorbis
+  URL "https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.2/SDL2_mixer-2.6.2.tar.gz"
+  URL_HASH SHA256=8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/sdl_mixer
+  INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DCMAKE_PREFIX_PATH=${ILMENDUR_DEPS_INSTALL_DIR}
+             -DBUILD_SHARED_LIBS=OFF
+             -DSDL2MIXER_DEPS_SHARED=OFF
+             -DSDL2MIXER_VENDORED=OFF
+             -DSDL2MIXER_SAMPLES=OFF
+             -DSDL2MIXER_CMD=OFF
+             -DSDL2MIXER_FLAC=OFF
+             -DSDL2MIXER_MOD=OFF
+             -DSDL2MIXER_MP3=OFF
+             -DSDL2MIXER_MIDI=OFF
+             -DSDL2MIXER_OPUS=OFF
+             -DSDL2MIXER_OGG=ON
+             -DSDL2MIXER_WAVE=OFF)
+
 ########################################
 # Get linking order right
 # The most basic libraries must come last in the linking list.
 
-add_dependencies(ilmendur sdl sdl_image pugixml)
-target_link_libraries(ilmendur ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2_image.a
+add_dependencies(ilmendur sdl sdl_mixer sdl_image pugixml)
+target_link_libraries(ilmendur ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2_mixer.a
+                               ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2_image.a
                                ${ILMENDUR_DEPS_INSTALL_DIR}/lib/libSDL2.a)
 
 # Determine SDL's remaining dynamic dependencies, i.e. system basic libraries.

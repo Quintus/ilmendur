@@ -27,6 +27,7 @@ public:
     SDL_Rect viewportPlayer2() const;
 
 private:
+    void playAudio();
     SDL_Window*   mp_window;
     SDL_Renderer* mp_renderer;
     TexturePool*  mp_texture_pool;
