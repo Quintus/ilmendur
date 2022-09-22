@@ -65,8 +65,8 @@ ExternalProject_Add(sdl
              -DSDL_STATIC=ON)
 
 ExternalProject_Add(pugixml
-  URL "https://github.com/zeux/pugixml/releases/download/v1.11.4/pugixml-1.11.4.tar.gz"
-  URL_HASH SHA256=8ddf57b65fb860416979a3f0640c2ad45ddddbbafa82508ef0a0af3ce7061716
+  URL "https://github.com/zeux/pugixml/releases/download/v1.12.1/pugixml-1.12.1.tar.gz"
+  URL_HASH SHA256=dcf671a919cc4051210f08ffd3edf9e4247f79ad583c61577a13ee93af33afc7
   SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/pugixml
   INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
