@@ -80,7 +80,7 @@ ExternalProject_Add(sdl_image
   DEPENDS sdl libpng
   URL "https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.0/SDL2_image-2.6.0.tar.gz"
   URL_HASH SHA256=611c862f40de3b883393aabaa8d6df350aa3ae4814d65030972e402edae85aaa
-  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/sdl
+  SOURCE_DIR ${ILMENDUR_DEPS_SRC_DIR}/sdl_image
   INSTALL_DIR ${ILMENDUR_DEPS_INSTALL_DIR}
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
              -DCMAKE_INSTALL_PREFIX=${ILMENDUR_DEPS_INSTALL_DIR}
