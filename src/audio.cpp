@@ -37,3 +37,8 @@ void AudioSystem::playBackgroundMusic(const std::string& name)
     Mix_Music* p_music = Mix_LoadMUS_RW(p_rwops, SDL_TRUE);
     assert(Mix_PlayMusic(p_music, -1) == 0);
 }
+
+void AudioSystem::stopBackgroundMusic()
+{
+    assert(Mix_HaltMusic() == 0);
+}

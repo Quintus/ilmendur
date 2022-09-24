@@ -10,6 +10,7 @@ public:
     ~AudioSystem();
 
     void playBackgroundMusic(const std::string& name);
+    void stopBackgroundMusic();
 
 private:
     std::map<std::string, std::string> m_music_table;
