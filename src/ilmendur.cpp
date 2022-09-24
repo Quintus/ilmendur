@@ -6,6 +6,9 @@
 #include "scene.hpp"
 #include "audio.hpp"
 #include "os.hpp"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdlrenderer.h"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -65,6 +68,10 @@ Ilmendur::Ilmendur()
     assert(mp_window);
     assert(mp_renderer);
 
+    ImGui::CreateContext();
+    ImGui_ImplSDL2_InitForSDLRenderer(mp_window, mp_renderer);
+    ImGui_ImplSDLRenderer_Init(mp_renderer);
+
 #ifdef ILMENDUR_DEBUG_BUILD
     SDL_RendererInfo ri;
     SDL_GetRendererInfo(mp_renderer, &ri);
@@ -78,6 +85,10 @@ Ilmendur::Ilmendur()
 Ilmendur::~Ilmendur()
 {
     delete mp_testscene;
+
+    ImGui_ImplSDLRenderer_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     if (mp_audio_system) {
         delete mp_audio_system;
@@ -139,6 +150,7 @@ int Ilmendur::run()
     mp_testscene->map().addActor(p, "chars");
     mp_testscene->setPlayer(p);
 
+    ImGuiIO& io = ImGui::GetIO();
     bool run = true;
 
     high_resolution_clock::time_point start_time;
@@ -148,11 +160,18 @@ int Ilmendur::run()
 
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
+            ImGui_ImplSDL2_ProcessEvent(&ev);
+
             switch (ev.type) {
             case SDL_QUIT:
                 run = false;
                 break;
             case SDL_KEYDOWN:
+                // Ignore event if ImGui has focus
+                if (io.WantCaptureKeyboard) {
+                    continue;
+                }
+
                 switch (ev.key.keysym.sym) {
                 case SDLK_UP:
                 case SDLK_RIGHT: // fall-through
@@ -191,13 +210,20 @@ int Ilmendur::run()
             }
         }
 
+        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDLRenderer_NewFrame();
+        ImGui::NewFrame();
+
         mp_testscene->update();
+        ImGui::Text("Hello, world!");
 
         SDL_RenderSetViewport(mp_renderer, nullptr);
         SDL_RenderSetClipRect(mp_renderer, nullptr);
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
         mp_testscene->draw(mp_renderer);
+        ImGui::Render();
+        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(mp_renderer);
 
         // Throttle framerate to a fixed one (fixed frame rate)
