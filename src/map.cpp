@@ -225,7 +225,8 @@ Map::Map(const std::string& name)
 
     for (const pugi::xml_node& node: doc.child("map").children()) {
         if (node.name() == string("properties")) {
-            m_props = readProperties(doc.child("map"));
+            TmxProperties props = readProperties(doc.child("map"));
+            m_bg_music = props.get("background_music");
         } else if (node.name() == string("tileset")) {
             int firstgid    = node.attribute("firstgid").as_int();
             fs::path source = fs::u8path(node.attribute("source").value()).filename(); // Discard directory information as it's irrelevant
@@ -574,9 +575,4 @@ void Map::changeActorLayer(Actor* p_actor, const string& target_layer_name)
     }
 
     assert(false); // Invalid target layer requested
-}
-
-std::string Map::backgroundMusic()
-{
-    return m_props.get("background_music");
 }
