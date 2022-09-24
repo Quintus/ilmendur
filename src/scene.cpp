@@ -2,6 +2,7 @@
 #include "camera.hpp"
 #include "actors/actor.hpp"
 #include "map.hpp"
+#include "audio.hpp"
 #include "actors/player.hpp"
 #include "ilmendur.hpp"
 
@@ -18,6 +19,8 @@ Scene::Scene()
     mp_cam2->setBounds(mp_map->drawRect());
     mp_cam1->setViewport(Ilmendur::instance().viewportPlayer1());
     mp_cam2->setViewport(Ilmendur::instance().viewportPlayer2());
+
+    Ilmendur::instance().audioSystem().playBackgroundMusic("Slow Ballad.ogg");
 }
 
 Scene::~Scene()

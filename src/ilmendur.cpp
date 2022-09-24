@@ -4,6 +4,7 @@
 #include "map.hpp"
 #include "actors/player.hpp"
 #include "scene.hpp"
+#include "audio.hpp"
 #include "os.hpp"
 #include <chrono>
 #include <thread>
@@ -37,6 +38,7 @@ Ilmendur::Ilmendur()
     : mp_window(nullptr),
       mp_renderer(nullptr),
       mp_texture_pool(nullptr),
+      mp_audio_system(nullptr),
       mp_testscene(nullptr)
 {
     if (sp_ilmendur) {
@@ -53,6 +55,7 @@ Ilmendur::Ilmendur()
     if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
         throw(runtime_error(string("Mix_Init() failed: ") + SDL_GetError()));
     }
+    assert(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096) == 0);
 
     // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
     if (SDL_CreateWindowAndRenderer(NORMAL_WINDOW_WIDTH, NORMAL_WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
@@ -75,6 +78,10 @@ Ilmendur::Ilmendur()
 Ilmendur::~Ilmendur()
 {
     delete mp_testscene;
+
+    if (mp_audio_system) {
+        delete mp_audio_system;
+    }
 
     if (mp_texture_pool) {
         delete mp_texture_pool;
@@ -120,11 +127,8 @@ int Ilmendur::run()
 {
     using namespace std::chrono;
 
-    // This loads all textures from the disk and uploads them to the
-    // graphics card.
     mp_texture_pool = new TexturePool();
-
-    playAudio();
+    mp_audio_system = new AudioSystem();
 
     // TODO: Implement a proper scene stack.
     mp_testscene = new Scene();
@@ -209,24 +213,6 @@ int Ilmendur::run()
     }
 
     return 0;
-}
-
-static string s_audiobinary;
-void Ilmendur::playAudio()
-{
-    namespace fs = std::filesystem;
-
-    // TODO: For now simply play some audio in the background...
-    assert(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096) == 0);
-
-    fs::path abs_path(OS::gameDataDir() / fs::u8path("audio") / fs::u8path("bg") / fs::u8path("Slow Ballad.ogg"));
-    ifstream file(abs_path, ifstream::in | ifstream::binary);
-    s_audiobinary = string(READ_FILE(file));
-    assert(s_audiobinary.size() > 1);
-
-    SDL_RWops* rwops = SDL_RWFromMem(s_audiobinary.data(), s_audiobinary.size());
-    Mix_Music* music = Mix_LoadMUS_RW(rwops, SDL_TRUE);
-    assert(Mix_PlayMusic(music, 100) == 0);
 }
 
 Scene& Ilmendur::currentScene()
