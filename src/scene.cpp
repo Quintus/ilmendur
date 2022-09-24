@@ -20,7 +20,11 @@ Scene::Scene()
     mp_cam1->setViewport(Ilmendur::instance().viewportPlayer1());
     mp_cam2->setViewport(Ilmendur::instance().viewportPlayer2());
 
-    Ilmendur::instance().audioSystem().playBackgroundMusic("Slow Ballad.ogg");
+    if (mp_map->backgroundMusic().empty()) {
+        Ilmendur::instance().audioSystem().stopBackgroundMusic();
+    } else {
+        Ilmendur::instance().audioSystem().playBackgroundMusic(mp_map->backgroundMusic());
+    }
 }
 
 Scene::~Scene()

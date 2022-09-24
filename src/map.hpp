@@ -50,6 +50,8 @@ public:
     bool findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer);
     void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
 
+    std::string backgroundMusic();
+
     // Helper types for dealing with Tiled layers. Actually, only
     // Tile and Object are supported by the Layer struct.
     enum class LayerType { Tile, Object, Image, Group };
@@ -72,6 +74,7 @@ private:
     std::vector<Layer> m_layers;
     int m_width;
     int m_height;
+    TmxProperties m_props;
 };
 
 #endif /* ILMENDUR_MAP_HPP */
