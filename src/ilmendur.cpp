@@ -134,6 +134,19 @@ SDL_Rect Ilmendur::viewportPlayer2() const
     return SDL_Rect{width/2+1,0,width/2-1,height};
 }
 
+static void loadFont(ImGuiIO& io)
+{
+    namespace fs = std::filesystem;
+    fs::path fontpath(OS::gameDataDir() / fs::u8path("fonts") / fs::u8path("LinLibertine_R.otf"));
+    ifstream file(fontpath, ifstream::in | ifstream::binary);
+    string binary(READ_FILE(file));
+
+    // Hand over to ImGui, which takes ownership of `buf'.
+    char* buf = new char[binary.size()];
+    memcpy(buf, binary.data(), binary.size());
+    assert(io.Fonts->AddFontFromMemoryTTF(buf, binary.size(), 22.0f));
+}
+
 int Ilmendur::run()
 {
     using namespace std::chrono;
@@ -152,6 +165,8 @@ int Ilmendur::run()
 
     ImGuiIO& io = ImGui::GetIO();
     bool run = true;
+
+    loadFont(io);
 
     high_resolution_clock::time_point start_time;
     milliseconds passed_time;
