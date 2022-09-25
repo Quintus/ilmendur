@@ -1,20 +1,17 @@
-#include "scene.hpp"
-#include "camera.hpp"
-#include "actors/actor.hpp"
-#include "map.hpp"
-#include "audio.hpp"
-#include "actors/player.hpp"
-#include "ilmendur.hpp"
+#include "debug_map_scene.hpp"
+#include "../camera.hpp"
+#include "../actors/actor.hpp"
+#include "../map.hpp"
+#include "../audio.hpp"
+#include "../actors/player.hpp"
+#include "../ilmendur.hpp"
 
-using namespace std;
-
-Scene::Scene()
+DebugMapScene::DebugMapScene(const std::string& map)
     : mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
       mp_cam2(new Camera(*this, Ilmendur::instance().viewportPlayer2())),
       mp_player(nullptr)
 {
-    // DEBUG: This should only be in a subclass probably
-    mp_map = new Map("Oak Fortress");
+    mp_map = new Map(map);
     mp_cam1->setBounds(mp_map->drawRect());
     mp_cam2->setBounds(mp_map->drawRect());
     mp_cam1->setViewport(Ilmendur::instance().viewportPlayer1());
@@ -27,7 +24,7 @@ Scene::Scene()
     }
 }
 
-Scene::~Scene()
+DebugMapScene::~DebugMapScene()
 {
     delete mp_map;
 
@@ -39,7 +36,7 @@ Scene::~Scene()
     }
 }
 
-void Scene::update()
+void DebugMapScene::update()
 {
     // Update all actors
     mp_map->update();
@@ -51,7 +48,7 @@ void Scene::update()
     mp_cam2->setPosition(Vector2f(1600, 2600));
 }
 
-void Scene::draw(SDL_Renderer* p_stage)
+void DebugMapScene::draw(SDL_Renderer* p_stage)
 {
     // Camera 1
     SDL_Rect camview = mp_cam1->view();

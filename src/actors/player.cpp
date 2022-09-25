@@ -1,5 +1,5 @@
 #include "player.hpp"
-#include "../scene.hpp"
+#include "../scenes/scene.hpp"
 
 #define PLAYER_ID 999999
 #define PLAYER_VELOCITY 80

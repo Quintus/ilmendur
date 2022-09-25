@@ -3,7 +3,8 @@
 #include "texture_pool.hpp"
 #include "map.hpp"
 #include "actors/player.hpp"
-#include "scene.hpp"
+#include "scenes/scene.hpp"
+#include "scenes/debug_map_scene.hpp"
 #include "audio.hpp"
 #include "os.hpp"
 #include "imgui/imgui.h"
@@ -155,7 +156,7 @@ int Ilmendur::run()
     mp_audio_system = new AudioSystem();
 
     // TODO: Implement a proper scene stack.
-    mp_testscene = new Scene();
+    mp_testscene = new DebugMapScene("Oak Fortress");
 
     Player* p = new Player();
     p->warp(Vector2f(1600, 2600));

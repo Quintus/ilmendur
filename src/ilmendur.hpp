@@ -8,6 +8,7 @@ const unsigned int ILMENDUR_TARGET_FRAMERATE = 40;
 class TexturePool;
 class AudioSystem;
 class Scene;
+class DebugMapScene;
 
 class Ilmendur
 {
@@ -34,7 +35,7 @@ private:
     SDL_Renderer* mp_renderer;
     TexturePool*  mp_texture_pool;
     AudioSystem*  mp_audio_system;
-    Scene* mp_testscene;
+    DebugMapScene* mp_testscene;
 };
 
 #endif /* ILMENDUR_ILMENDUR_HPP */
