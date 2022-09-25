@@ -7,7 +7,8 @@
 #include "../ilmendur.hpp"
 
 DebugMapScene::DebugMapScene(const std::string& map)
-    : mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
+    : Scene(),
+      mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
       mp_cam2(new Camera(*this, Ilmendur::instance().viewportPlayer2())),
       mp_player(nullptr)
 {

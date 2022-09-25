@@ -1,6 +1,7 @@
 #ifndef ILMENDUR_ILMENDUR_HPP
 #define ILMENDUR_ILMENDUR_HPP
 #include <SDL2/SDL.h>
+#include <stack>
 
 /// Target framerate in frames per second (fps).
 const unsigned int ILMENDUR_TARGET_FRAMERATE = 40;
@@ -24,10 +25,13 @@ public:
     inline SDL_Renderer* sdlRenderer() { return mp_renderer; }
     inline TexturePool&  texturePool() { return *mp_texture_pool; }
     inline AudioSystem&  audioSystem() { return *mp_audio_system; }
-           Scene&        currentScene();
 
     SDL_Rect viewportPlayer1() const;
     SDL_Rect viewportPlayer2() const;
+
+    void   pushScene(Scene* p_scene, bool pop_current = true);
+    Scene& currentScene();
+    void   quit();
 
 private:
     void playAudio();
@@ -35,7 +39,11 @@ private:
     SDL_Renderer* mp_renderer;
     TexturePool*  mp_texture_pool;
     AudioSystem*  mp_audio_system;
-    DebugMapScene* mp_testscene;
+
+    std::stack<Scene*> m_scene_stack;
+    Scene* mp_next_scene;
+    bool m_pop_scene;
+    bool m_run;
 };
 
 #endif /* ILMENDUR_ILMENDUR_HPP */

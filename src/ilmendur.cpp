@@ -43,7 +43,9 @@ Ilmendur::Ilmendur()
       mp_renderer(nullptr),
       mp_texture_pool(nullptr),
       mp_audio_system(nullptr),
-      mp_testscene(nullptr)
+      mp_next_scene(nullptr),
+      m_pop_scene(true),
+      m_run(true)
 {
     if (sp_ilmendur) {
         throw(runtime_error("Ilmendur is a singleton!"));
@@ -85,7 +87,11 @@ Ilmendur::Ilmendur()
 
 Ilmendur::~Ilmendur()
 {
-    delete mp_testscene;
+    while (!m_scene_stack.empty()) {
+        Scene* p_scene = m_scene_stack.top();
+        delete p_scene;
+        m_scene_stack.pop();
+    }
 
     ImGui_ImplSDLRenderer_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -155,23 +161,20 @@ int Ilmendur::run()
     mp_texture_pool = new TexturePool();
     mp_audio_system = new AudioSystem();
 
-    // TODO: Implement a proper scene stack.
-    mp_testscene = new DebugMapScene("Oak Fortress");
-
+    DebugMapScene* p_testscene = new DebugMapScene("Oak Fortress");
     Player* p = new Player();
     p->warp(Vector2f(1600, 2600));
     p->turn(Actor::direction::left);
-    mp_testscene->map().addActor(p, "chars");
-    mp_testscene->setPlayer(p);
+    p_testscene->map().addActor(p, "chars");
+    p_testscene->setPlayer(p);
+    m_scene_stack.push(p_testscene);
 
     ImGuiIO& io = ImGui::GetIO();
-    bool run = true;
-
     loadFont(io);
 
     high_resolution_clock::time_point start_time;
     milliseconds passed_time;
-    while (run) {
+    while (m_run) {
         start_time = high_resolution_clock::now();
 
         SDL_Event ev;
@@ -180,7 +183,7 @@ int Ilmendur::run()
 
             switch (ev.type) {
             case SDL_QUIT:
-                run = false;
+                quit();
                 break;
             case SDL_KEYDOWN:
                 // Ignore event if ImGui has focus
@@ -209,7 +212,7 @@ int Ilmendur::run()
                     p->checkInput();
                     break;
                 case SDLK_ESCAPE:
-                    run = false;
+                    quit();
                     break;
                 default:
                     // Ignore
@@ -220,27 +223,30 @@ int Ilmendur::run()
                 // Ignore
                 break;
             }
-
-            if (ev.type == SDL_QUIT) {
-                run = false;
-            }
         }
 
         ImGui_ImplSDL2_NewFrame();
         ImGui_ImplSDLRenderer_NewFrame();
         ImGui::NewFrame();
 
-        mp_testscene->update();
-        ImGui::Text("Hello, world!");
+        m_scene_stack.top()->update();
 
         SDL_RenderSetViewport(mp_renderer, nullptr);
         SDL_RenderSetClipRect(mp_renderer, nullptr);
         SDL_SetRenderDrawColor(mp_renderer, 0, 0, 0, 255);
         SDL_RenderClear(mp_renderer);
-        mp_testscene->draw(mp_renderer);
+        m_scene_stack.top()->draw(mp_renderer);
         ImGui::Render();
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(mp_renderer);
+
+        if (mp_next_scene) {
+            if (m_pop_scene) {
+                m_scene_stack.pop();
+            }
+            m_scene_stack.push(mp_next_scene);
+            mp_next_scene = nullptr;
+        }
 
         // Throttle framerate to a fixed one (fixed frame rate)
         passed_time = duration_cast<milliseconds>(high_resolution_clock::now() - start_time);
@@ -259,5 +265,24 @@ int Ilmendur::run()
 
 Scene& Ilmendur::currentScene()
 {
-    return *mp_testscene;
+    return *m_scene_stack.top();
+}
+
+/**
+ * Push a new scene onto the scene stack at the end of the frame.
+ * If `pop_current` is set (default yes), pop the current scene
+ * from the stack before pushing the new one.
+ */
+void Ilmendur::pushScene(Scene* p_scene, bool pop_current)
+{
+    mp_next_scene = p_scene;
+    m_pop_scene = pop_current;
+}
+
+/**
+ * Terminates the game at the beginning of the next frame.
+ */
+void Ilmendur::quit()
+{
+    m_run = false;
 }
