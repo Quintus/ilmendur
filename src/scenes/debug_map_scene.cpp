@@ -61,3 +61,44 @@ void DebugMapScene::draw(SDL_Renderer* p_stage)
     mp_cam2->draw(p_stage);
     mp_map->draw(p_stage, &camview);
 }
+
+void DebugMapScene::handleKeyDown(const SDL_Event& event)
+{
+    Scene::handleKeyDown(event);
+
+    switch (event.key.keysym.sym) {
+    case SDLK_UP:
+    case SDLK_RIGHT: // fall-through
+    case SDLK_DOWN:  // fall-through
+    case SDLK_LEFT:  // fall-through
+        if (mp_player) {
+            mp_player->checkInput();
+        }
+        break;
+    default:
+        // Ignore
+        break;
+    }
+}
+
+void DebugMapScene::handleKeyUp(const SDL_Event& event)
+{
+    Scene::handleKeyUp(event);
+
+    switch (event.key.keysym.sym) {
+    case SDLK_UP:
+    case SDLK_RIGHT: // fall-through
+    case SDLK_DOWN:  // fall-through
+    case SDLK_LEFT:  // fall-through
+        if (mp_player) {
+            mp_player->checkInput();
+        }
+        break;
+    case SDLK_ESCAPE:
+        Ilmendur::instance().popScene();
+        break;
+    default:
+        // Ignore
+        break;
+    }
+}

@@ -4,7 +4,7 @@
 #include "map.hpp"
 #include "actors/player.hpp"
 #include "scenes/scene.hpp"
-#include "scenes/debug_map_scene.hpp"
+#include "scenes/title_scene.hpp"
 #include "audio.hpp"
 #include "os.hpp"
 #include "imgui/imgui.h"
@@ -160,13 +160,7 @@ int Ilmendur::run()
     mp_texture_pool = new TexturePool();
     mp_audio_system = new AudioSystem();
 
-    DebugMapScene* p_testscene = new DebugMapScene("Oak Fortress");
-    Player* p = new Player();
-    p->warp(Vector2f(1600, 2600));
-    p->turn(Actor::direction::left);
-    p_testscene->map().addActor(p, "chars");
-    p_testscene->setPlayer(p);
-    m_scene_stack.push(p_testscene);
+    m_scene_stack.push(new TitleScene());
 
     ImGuiIO& io = ImGui::GetIO();
     loadFont(io);
@@ -187,36 +181,14 @@ int Ilmendur::run()
                 break;
             case SDL_KEYDOWN:
                 // Ignore event if ImGui has focus
-                if (io.WantCaptureKeyboard) {
-                    continue;
-                }
-
-                switch (ev.key.keysym.sym) {
-                case SDLK_UP:
-                case SDLK_RIGHT: // fall-through
-                case SDLK_DOWN:  // fall-through
-                case SDLK_LEFT:  // fall-through
-                    p->checkInput();
-                    break;
-                default:
-                    // Ignore
-                    break;
+                if (!io.WantCaptureKeyboard) {
+                    m_scene_stack.top()->handleKeyDown(ev);
                 }
                 break;
             case SDL_KEYUP:
-                switch (ev.key.keysym.sym) {
-                case SDLK_UP:
-                case SDLK_RIGHT: // fall-through
-                case SDLK_DOWN:  // fall-through
-                case SDLK_LEFT:  // fall-through
-                    p->checkInput();
-                    break;
-                case SDLK_ESCAPE:
-                    run = false;
-                    break;
-                default:
-                    // Ignore
-                    break;
+                // Ignore event if ImGui has focus
+                if (!io.WantCaptureKeyboard) {
+                    m_scene_stack.top()->handleKeyUp(ev);
                 }
                 break;
             default:
