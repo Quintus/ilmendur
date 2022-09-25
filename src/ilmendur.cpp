@@ -44,8 +44,7 @@ Ilmendur::Ilmendur()
       mp_texture_pool(nullptr),
       mp_audio_system(nullptr),
       mp_next_scene(nullptr),
-      m_pop_scene(true),
-      m_run(true)
+      m_pop_scene(false)
 {
     if (sp_ilmendur) {
         throw(runtime_error("Ilmendur is a singleton!"));
@@ -174,7 +173,8 @@ int Ilmendur::run()
 
     high_resolution_clock::time_point start_time;
     milliseconds passed_time;
-    while (m_run) {
+    bool run = true;
+    while (run) {
         start_time = high_resolution_clock::now();
 
         SDL_Event ev;
@@ -183,7 +183,7 @@ int Ilmendur::run()
 
             switch (ev.type) {
             case SDL_QUIT:
-                quit();
+                run = false;
                 break;
             case SDL_KEYDOWN:
                 // Ignore event if ImGui has focus
@@ -212,7 +212,7 @@ int Ilmendur::run()
                     p->checkInput();
                     break;
                 case SDLK_ESCAPE:
-                    quit();
+                    run = false;
                     break;
                 default:
                     // Ignore
@@ -240,10 +240,17 @@ int Ilmendur::run()
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
         SDL_RenderPresent(mp_renderer);
 
-        if (mp_next_scene) {
-            if (m_pop_scene) {
-                m_scene_stack.pop();
+        if (m_pop_scene) {
+            Scene* p_scene = m_scene_stack.top();
+            m_scene_stack.pop();
+            m_pop_scene = false;
+            delete p_scene;
+
+            if (m_scene_stack.empty() && !mp_next_scene) {
+                run = false;
             }
+        }
+        if (mp_next_scene) {
             m_scene_stack.push(mp_next_scene);
             mp_next_scene = nullptr;
         }
@@ -269,20 +276,23 @@ Scene& Ilmendur::currentScene()
 }
 
 /**
- * Push a new scene onto the scene stack at the end of the frame.
- * If `pop_current` is set (default yes), pop the current scene
- * from the stack before pushing the new one.
+ * At the end of the frame, pop the current topmost scene
+ * from the stack. To have a new one there, call pushScene()
+ * after calling this. Otherwise the scene below the current
+ * topmost scene will become active again (which might be intended).
+ * Popping the last scene from the stack initiates game termination.
  */
-void Ilmendur::pushScene(Scene* p_scene, bool pop_current)
+void Ilmendur::popScene()
 {
-    mp_next_scene = p_scene;
-    m_pop_scene = pop_current;
+    m_pop_scene = true;
 }
 
 /**
- * Terminates the game at the beginning of the next frame.
+ * Push a new scene onto the scene stack at the end of the frame.
+ * In order to remove the current scene, be sure to call popScene()
+ * before this. Otherwise the scenes will stack (which might be intended).
  */
-void Ilmendur::quit()
+void Ilmendur::pushScene(Scene* p_scene)
 {
-    m_run = false;
+    mp_next_scene = p_scene;
 }

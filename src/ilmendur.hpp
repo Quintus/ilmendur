@@ -29,9 +29,9 @@ public:
     SDL_Rect viewportPlayer1() const;
     SDL_Rect viewportPlayer2() const;
 
-    void   pushScene(Scene* p_scene, bool pop_current = true);
+    void   popScene();
+    void   pushScene(Scene* p_scene);
     Scene& currentScene();
-    void   quit();
 
 private:
     void playAudio();
@@ -43,7 +43,6 @@ private:
     std::stack<Scene*> m_scene_stack;
     Scene* mp_next_scene;
     bool m_pop_scene;
-    bool m_run;
 };
 
 #endif /* ILMENDUR_ILMENDUR_HPP */
