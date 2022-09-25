@@ -1,5 +1,6 @@
 #include "os.hpp"
 #include "buildconfig.hpp"
+#include <stdexcept>
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -27,6 +28,27 @@ fs::path OS::gameDataDir()
     }
 #endif
     return fs::path(ILMENDUR_DATADIR);
+}
+
+fs::path OS::userDataDir()
+{
+#if defined(__linux__)
+    // See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+    // This will also work inside a flatpak, because Flatpak sets $XDG_DATA_HOME explicitely.
+    string xdg_data_home(getenv("XDG_DATA_HOME"));
+    if (xdg_data_home.empty()) {
+        string homedir(getenv("HOME"));
+        if (homedir.empty()) {
+            throw(std::runtime_error("Neither $XDG_DATA_HOME nor $HOME is set in the environment"));
+        }
+        xdg_data_home = homedir + "/.local/share";
+    }
+
+    return fs::path(xdg_data_home) /* getenv() returns native encoding, not necessaryly UTF-8 */
+        / fs::u8path("ilmendur");
+#else
+#error Unsupported system
+#endif
 }
 
 fs::path OS::exePath()
