@@ -16,7 +16,16 @@ TitleScene::~TitleScene()
 
 void TitleScene::update()
 {
-    ImGui::Text("Hello, world!");
+    ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f));
+    ImGui::SetNextWindowSize(ImVec2(1870.0f, 980.0f));
+    ImGui::Begin("Title Menu", nullptr, ImGuiWindowFlags_NoDecoration);
+    if (ImGui::Button("START", ImVec2(1000.0f, 100.0f))) {
+        startGame();
+    }
+    if (ImGui::Button("Quit", ImVec2(1000.0f, 100.0f))) {
+        quitGame();
+    }
+    ImGui::End();
 }
 
 void TitleScene::draw(SDL_Renderer*)

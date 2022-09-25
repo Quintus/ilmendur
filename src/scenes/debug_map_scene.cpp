@@ -27,6 +27,7 @@ DebugMapScene::DebugMapScene(const std::string& map)
 
 DebugMapScene::~DebugMapScene()
 {
+    Ilmendur::instance().audioSystem().stopBackgroundMusic();
     delete mp_map;
 
     if (mp_cam1) {
