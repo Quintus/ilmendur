@@ -3,6 +3,8 @@
 #include "actors/actor.hpp"
 #include "actors/collbox.hpp"
 #include "actors/passage.hpp"
+#include "actors/startpos.hpp"
+#include "actors/player.hpp"
 #include "event.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
@@ -101,6 +103,8 @@ static vector<Actor*> readTmxObjects(const pugi::xml_node& node)
             }
 
             result.push_back(p_actor);
+        } else if (type == "startpos") {
+            result.push_back(new StartPosition(id, Vector2f(x, y), atoi(props.get("startpos").c_str())));
         } else if (type == string("npc")) {
             cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
         } else if (type == string("collbox")) {
@@ -494,6 +498,39 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
             coll.second->handleEvent(collev);
         }
     }
+}
+
+void Map::addHero(Player* p_player, int herono)
+{
+    for(Layer& layer: m_layers) {
+        if (layer.type == LayerType::Object) {
+            for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
+                StartPosition* p_startpos = dynamic_cast<StartPosition*>(*iter);
+                if (p_startpos && p_startpos->herono == herono) {
+                    p_player->warp(p_startpos->startpos);
+                    p_player->turn(Actor::direction::up);
+
+                    // Insert the player at the position corresponding to its ID.
+                    for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
+                        if ((*iter)->id() > p_player->id()) {
+                            layer.data.p_obj_layer->actors.insert(iter, p_player);
+                            p_player->mp_map = this;
+                            return;
+                        }
+                    }
+                    // If this is reached, the player has a higher ID than all existing actors.
+                    layer.data.p_obj_layer->actors.push_back(p_player);
+                    p_player->mp_map = this;
+                    return;
+                }
+            }
+        }
+    }
+
+    // No player start position found, spawn at "chars" layer at (100|100)
+    p_player->warp(Vector2f(100.0f, 100.0f));
+    p_player->turn(Actor::direction::up);
+    addActor(p_player, "chars");
 }
 
 /**

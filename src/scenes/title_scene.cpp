@@ -82,9 +82,7 @@ void TitleScene::startGame(const std::string& mapname)
 {
     DebugMapScene* p_testscene = new DebugMapScene(mapname);
     Player* p = new Player();
-    p->warp(Vector2f(1600, 2600));
-    p->turn(Actor::direction::left);
-    p_testscene->map().addActor(p, "chars");
+    p_testscene->map().addHero(p, 1);
     p_testscene->setPlayer(p);
 
     // No popping, so that terminating the main game scene returns to the title scene.

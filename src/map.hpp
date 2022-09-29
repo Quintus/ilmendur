@@ -18,6 +18,7 @@ struct TmxProperties {
 };
 
 class Actor;
+class Player;
 struct TmxObjLayer
 {
     std::string name;
@@ -46,6 +47,7 @@ public:
     void update();
     SDL_Rect drawRect() const;
 
+    void addHero(Player* p_player, int herono);
     void addActor(Actor* p_actor, const std::string& layername);
     bool findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer);
     void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
