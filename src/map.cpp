@@ -194,7 +194,12 @@ Map::Map(const std::string& name)
       m_width(0),
       m_height(0)
 {
-    fs::path abs_path(OS::gameDataDir() / fs::u8path("maps") / fs::u8path(m_name + ".tmx"));
+    // DEBUG: Try user-provided map of the name first, and only if it
+    // does not exist try shipped map. This is only for debugging!
+    fs::path abs_path(OS::userDataDir() / fs::u8path("maps") / fs::u8path(m_name + ".tmx"));
+    if (!fs::exists(abs_path)) {
+        abs_path = OS::gameDataDir() / fs::u8path("maps") / fs::u8path(m_name + ".tmx");
+    }
     ifstream file(abs_path);
     assert(fs::exists(abs_path));
 
