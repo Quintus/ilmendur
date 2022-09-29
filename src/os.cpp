@@ -35,13 +35,17 @@ fs::path OS::userDataDir()
 #if defined(__linux__)
     // See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
     // This will also work inside a flatpak, because Flatpak sets $XDG_DATA_HOME explicitely.
-    string xdg_data_home(getenv("XDG_DATA_HOME"));
-    if (xdg_data_home.empty()) {
-        string homedir(getenv("HOME"));
-        if (homedir.empty()) {
+    const char* xdg_data_home_c = getenv("XDG_DATA_HOME");
+    string xdg_data_home;
+    if (xdg_data_home_c) {
+        xdg_data_home = string(xdg_data_home_c);
+    } else {
+        char* homedir = getenv("HOME");
+        if (homedir) {
+            xdg_data_home = string(homedir) + "/.local/share";
+        } else {
             throw(std::runtime_error("Neither $XDG_DATA_HOME nor $HOME is set in the environment"));
         }
-        xdg_data_home = homedir + "/.local/share";
     }
 
     return fs::path(xdg_data_home) /* getenv() returns native encoding, not necessaryly UTF-8 */
