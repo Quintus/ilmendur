@@ -1,62 +1,90 @@
 #+TITLE: Instructions for use of Tiled
 #+LANGUAGE: en
 #+AUTHOR: Quintus
+#+STARTUP: shrink
+#+OPTIONS: ^:nil h:99 num:99
+#+HTML_HEAD: <style type="text/css">table { margin: 4px auto; } th { border-bottom: 1px solid black; } td.org-left,th.org-left { text-align: left; padding: 0px 8px; } </style>
 
 * Overview
 
-Ilmendur loads maps from the TMX file format which is used by the open-source programme [[https://www.mapeditor.org/][Tiled]]. Details of this file format can be found in Tiled’s [[https://doc.mapeditor.org/en/stable/reference/tmx-map-format/][documentation]]. This document only describes the specialities added on top of TMX specific to Ilmendur, which make use of Tiled’s ability to add arbitrary key/value pairs to both layers and objects. The allowed values for these key/value pairs, or “properties” in TMX terms, are outlined below.
+Ilmendur loads maps from the TMX file format which is used by the open-source programme [[https://www.mapeditor.org/][Tiled]]. Details of this file format can be found in Tiled’s [[https://doc.mapeditor.org/en/stable/reference/tmx-map-format/][documentation]]. This document only describes the specialities added on top of TMX specific to Ilmendur, which make use of Tiled’s ability to add arbitrary key/value pairs to maps, layers, and objects. The allowed values for these key/value pairs, or “properties” in TMX terms, are outlined below.
 
-** TODO Layers
+** Common notation
 
-TODO: Write this section.
+This document refers to some terms which are defined here once and for all:
+
+- $GDD :: This is a short form for “the path to the game data directory (GDD)”. This is the directory containing the data which is shipped with Ilmendur. On a typical Linux system, this is =/usr/local/share/ilmendur=.
+- $UDD :: This is a short form for “the path to the user data directory (UDD)”. This is the directory containing data created by the user. On a typical Linux system, this is =~/.local/share/ilmendur=. If Ilmendur is run from a Flatpak, this will be =~/.var/app/eu.guelker.ilmendur/data/ilmendur=.
+
+** Map properties
+
+Ilmendur reads the following properties from the map object:
+
+| *Property*       | *Type* | *Possible values*                   | *Meaning*                              |
+|------------------+--------+-------------------------------------+----------------------------------------|
+| <l>              | <l>    | <l20>                               | <l20>                                  |
+| background_music | string | Path relative to =$GDD/audio/music= | Background music to loop for this map. |
+
+** Layers
+
+TMX maps consist of layers. Ilmendur renders the layers contained in a TMX file from top to bottom, which means that they will be represented in the game exactly in the order you see them listed in the layers list in Tiled. So, if the layers list in Tiled contains the following layers:
+
+| *Name*           | *Type* |
+|------------------+--------|
+| Char Layer 2     | object |
+| Bridges          | tile   |
+| Char Layer 1     | object |
+| Additional Layer | tile   |
+| Floor            | tile   |
+
+Then Ilmendur will render =Char Layer 2= topmost. Any characters moving on =Char Layer 2= will appear to be above those on =Char Layer 1=. Likewise, if a character is moving on =Char Layer 1=, it will pass below and of the bridge tiles supposedely contained in the layer called =Bridges=. Please always use sensible names for your layers.
+
+Ilmendur does not read layers of type =image= currently.
+
+Each of these layers may have properties. Ilmendur reads no properties from layers.
 
 ** Objects
 
-*** Overview and =type= property
+Layers of type =object= contain what Ilmendur calls /actors/. Actors are differenciated by their =type= property. The supported values of =type= are listed below in the section [[Supported Types]]. Before that, the section [[Properties Applying to All Types]] lists properties applying to all types.
 
-Each object is required to have a property called =type= that denotes to which kind of actor it belongs in the game. Currently the following values for =type= are supported:
+*** Properties Applying to All Types
 
-- static :: This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
-- npc :: This is a non-playable character (NPC). Ignored currently.
-- collbox :: This is a collision box element. Use this for making e.g. walls impassible.
-- passage :: This actor allows players and NPCs to switch their current layer.
+Currently, there are no properties used by all types.
 
-It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position.
+*** Supported Types
 
-*** Properties applying to all types
+**** =static=
 
-**** animation_mode
+This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
 
-The =animation_mode= property describes how the actor is meant to be animated. It defaults to =on_move= if not explicitely set. The following values are supported:
+It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position. An actor’s origin is specified by its INI file (see the documentation on INI files).
 
-- never :: This actor is not animated, not even if moving.
-- on_move :: This actor is not animated normally, but it is if it moves.
-- always :: This actor is permanently animated, even if not moving.
+Ilmendur reads the following properties for actors of type =static=:
 
-“Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
+| *Property*     | *Type* | *Possible Values*           | *Default value* | *Meaning*                      |
+|----------------+--------+-----------------------------+-----------------+--------------------------------|
+|                |        | <20>                        | <10>            | <20>                           |
+| animation_mode | string | never, on_move, always      | on_move         | How to animate this actor. (1) |
+| graphic        | string | Path relative to =$GDD/gfx= | —                 | The graphic to show.           |
 
-**** graphic
+Notes:
 
-The =graphic= key gives the filename of the graphic to show for an actor. It is relative to the directory =data/gfx/= in the source tree.[fn:1]
+- (1) :: “Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
 
-*** Type-specific properties
-
-**** =passage= type
+**** =passage=
 
 The =passage= type defines objects which allow the player and NPCs to switch the layer they are currently moving on. This is required to use in-map stairs, bridges over passable ways below, and similar constructions. They have a direction in which they need to be passed in order to activate the layer switch and a target layer.
 
 =passage= actors are one-way by design. If it is intended to allow actors to pass between the connected layers both upwards and downwards, it is required to place a =passage= type actor on each of the two layers. This is because collisions are only possible with actors on the same layer. It might however be useful to only place a single =passage= actor in certain situations, e.g. holes that when passed will pass the player down to the ground layer, but cannot be used inversely to reach an upper layer.
 
-The allowed properties are as follows:
+Ilmendur reads the following properties for actors of type =passage=:
 
-| *Property name* | *Possible values*                               | *Explanation*                        |
-|-----------------+-------------------------------------------------+--------------------------------------|
-| type            | "passage"                                       | as per main text                     |
-| target          | string                                          | Gives the name of the target layer   |
-| direction       | comma-separated list of: up,down,right,left,all | Gives the allowed passing directions |
+| *Property* | *Type* | *Possible Values*                                   | *Default value* | *Meaning*                            |
+|------------+--------+-----------------------------------------------------+-----------------+--------------------------------------|
+|            |        | <20>                                                | <10>            | <20>                                 |
+| target     | string | Name of another layer of type =object=.             | —               | Gives the name of the target layer.  |
+| direction  | string | comma-separated list of: up,down,right,left,all (1) | —               | Gives the allowed passing directions |
 
-=all= as the value for =direction= is a shortcut and equivalent to a value of =up,right,down,left=.
+Notes:
 
-* Footnotes
-
-[fn:1] Actually, the involved logic is a little more complex. Refer to the documentation of the TexturePool class for the exact details.
+- (1) :: =all= as the value for =direction= is a shortcut and equivalent to a value of =up,right,down,left=.
