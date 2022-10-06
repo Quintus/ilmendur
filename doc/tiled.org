@@ -16,6 +16,8 @@ This document refers to some terms which are defined here once and for all:
 - $GDD :: This is a short form for “the path to the game data directory (GDD)”. This is the directory containing the data which is shipped with Ilmendur. On a typical Linux system, this is =/usr/local/share/ilmendur=.
 - $UDD :: This is a short form for “the path to the user data directory (UDD)”. This is the directory containing data created by the user. On a typical Linux system, this is =~/.local/share/ilmendur=. If Ilmendur is run from a Flatpak, this will be =~/.var/app/eu.guelker.ilmendur/data/ilmendur=.
 
+* Property documentation
+
 ** Map properties
 
 Ilmendur reads the following properties from the map object:
@@ -53,23 +55,11 @@ Currently, there are no properties used by all types.
 
 *** Supported Types
 
-**** =static=
+**** =collbox=
 
-This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
+Collision boxes prevent most actors from passing over them, most notably the hero actors. Note that collisions only happen on the same layer, so e.g. a hero can pass over a collision box if the collision box is on a lower layer.
 
-It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position. An actor’s origin is specified by its INI file (see the documentation on INI files).
-
-Ilmendur reads the following properties for actors of type =static=:
-
-| *Property*     | *Type* | *Possible Values*           | *Default value* | *Meaning*                      |
-|----------------+--------+-----------------------------+-----------------+--------------------------------|
-|                |        | <20>                        | <10>            | <20>                           |
-| animation_mode | string | never, on_move, always      | on_move         | How to animate this actor. (1) |
-| graphic        | string | Path relative to =$GDD/gfx= | —                 | The graphic to show.           |
-
-Notes:
-
-- (1) :: “Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
+Ilmendur does not support any properties for actors of type =collbox=.
 
 **** =passage=
 
@@ -88,3 +78,35 @@ Ilmendur reads the following properties for actors of type =passage=:
 Notes:
 
 - (1) :: =all= as the value for =direction= is a shortcut and equivalent to a value of =up,right,down,left=.
+
+
+**** =startpos=
+
+This denotes a starting position. It is used only at a single occasion: the moment when a new game is started.
+
+Ilmendur reads the following properties for actors of type =startpos=:
+
+| *Property* | *Type* | *Possible Values* | *Default value* | *Meaning*                                     |
+|------------+--------+-------------------+-----------------+-----------------------------------------------|
+|            |        | <20>              | <10>            | <20>                                          |
+| startpos   | int    | 1 or 2            |                 | Hero to start here (1 = Benjamin, 2 = Freya). |
+
+
+**** =static=
+
+This is a static actor which does not normally move. It only shows a single graphic, which might be animated.
+
+It is worth noting that =static= actors will have their /origin/ placed exactly at the position given by a Tiled point, because the game manipulates actors always by their origin, and /not/ by their upper-left corner. Thus, always use point objects to place static actors. Using a rectangle or other Tiled object will place the actor at an unexpected position. An actor’s origin is specified by its INI file (see the documentation on INI files).
+
+Ilmendur reads the following properties for actors of type =static=:
+
+| *Property*     | *Type* | *Possible Values*           | *Default value* | *Meaning*                      |
+|----------------+--------+-----------------------------+-----------------+--------------------------------|
+|                |        | <20>                        | <10>            | <20>                           |
+| animation_mode | string | never, on_move, always      | on_move         | How to animate this actor. (1) |
+| graphic        | string | Path relative to =$GDD/gfx= | —                 | The graphic to show.           |
+
+Notes:
+
+- (1) :: “Animating an actor” in this context means iterating its frames over a certain timespan defined in its INI file (see the documentation on INI files). If e.g. =animation_mode= is set to =always=, all frames for the actor’s current direction are shown successively in a loop.
+
