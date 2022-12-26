@@ -1,8 +1,12 @@
 #include "gui.hpp"
+#include "ilmendur.hpp"
 #include "imgui/imgui.h"
 #include <cassert>
 #include <vector>
 #include <memory>
+
+// Message box height in pixels
+#define MSGBOX_HEIGHT 200
 
 using namespace std;
 
@@ -22,8 +26,23 @@ namespace {
         void update() {
             assert(m_current_text < m_texts.size());
 
-            ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f));
-            ImGui::SetNextWindowSize(ImVec2(1870.0f, 980.0f));
+            SDL_Rect boxarea;
+            if (m_playerno == 1) {
+                boxarea = Ilmendur::instance().viewportPlayer1();
+            } else if (m_playerno == 2) {
+                boxarea = Ilmendur::instance().viewportPlayer2();
+            } else { // Full-screen dialog
+                boxarea = Ilmendur::instance().renderArea();
+            }
+
+            // Place the message dialog at the viewport bottom with 20 px margin.
+            boxarea.x += 20;
+            boxarea.w -= 40;
+            boxarea.y = boxarea.h - MSGBOX_HEIGHT - 20;
+            boxarea.h = MSGBOX_HEIGHT;
+
+            ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
+            ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
             ImGui::Text(m_texts[m_current_text].c_str());
             ImGui::End();

@@ -101,7 +101,7 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         Ilmendur::instance().popScene();
         break;
     case SDLK_z:
-        // Z. B. in NPC::activate()
+        // DEBUG: E.g. in NPC::activate()
         if (!test) {
             GUISystem::messageDialog(1, {"First Message", "Second Message"}, [&] {test = false;});
             test = true;
