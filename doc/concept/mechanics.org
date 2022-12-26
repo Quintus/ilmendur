@@ -1,0 +1,32 @@
+#+TITLE: Game mechanics concept
+#+LANGUAGE: en
+#+AUTHOR: Quintus
+
+* Scope of this document
+
+The game tells the story that is outlined by the two documents on the prestory and the main story. This document covers the more technical questions on how the story should be conveyed to the player.
+
+* Time and place presentation
+
+As the story documents outline, the game’s stage is mostly the Fairy World, and to a less significant part the fictive Prussian city of Rübitz on Earth. Drafts of the two world maps are shown below.
+
+TODO: Add drafts
+
+** Expanse of the two worlds
+
+In the Earth world part, the game is constrained to the aforementioned city of Rübitz, which cannot be left. It however is possible to switch between the Earth and the Fairy World at certain points in the game.
+
+The Fairy World covers a larger area comprised of several cities, villages, and open areas. Travelling between these places by the usual way, that is, by foot, is meant to take a long time. As a base for all other distances, the distance between Rosgart and Spear’s Edge (“Spitz” in the German version) is meant to take two weeks to trespass by foot. All other distances should be calculated relative to that. Given that on a good day a human trained in walking can cover around 15 km in a day, this yields a road distance between Rosgart and Spear’s edge of about 200 km. The distance between Spear’s Edge and Ilamar is about equal, so the distance Ilamar – Rosgart should be about 400 km. Since that is about the same distance as Rosgart – Oak Fortress (Eichenburg), the maximum road distance between the Empire’s two outmost cities Ilamar - Oak Fortress is about 800 km, and covering it by foot is an endevour of about 8 weeks.
+
+** Time and travel
+
+When the player starts at the stone circle of Da’ana, Freya and Benjamin can only travel by foot, with the time constraints outlined above. When the two acquire a unicorn, they can travel twice as fast as before (unicorns can carry two people without problems, in constrast to normal horses, which usually cannot do that for a long time).
+
+The passing of time, especially of travel time, is an integral part of the game. Starting from the day Benjamin and Freya meet at the stone circle of Da’ana, the game comprises a total Fairy World time of 1 year. If the two have not beaten Hieronymus within this one year, Hieronymus will win the game, i.e. there is a Game Over. Whenever the player chooses to travel via the world map screen, the appropriate amount of days corresponding to the distance is subtracted from the remaining days. In an overworld place, time elapses constantly, if the day/night dawn is crossed, a short blending screen is shown and the current map switches to day (night) mode. In a dungeon, only a short notice of the dawn appears as there are no day/night differences within a dungeon.
+
+In Rübitz, the time is always equal to the real-world time in an Eastern German city, that is, it has an intentional 1:1 connection to real-world time. The player will have to notice this on himself. In Fairy World, time is passing notably faster.
+
+The world map cannot be freely traversed, instead only a target place can be selected, and after acknowledging the number of days the voyage takes, the player figurine moves there, subtracting the appropriate number of days from the remaining time. It however can happen that the heroes are attacked underway; in that case, a battle map appears, which has either to be left or all enemies be defeated/escaped. Escaping into the direction of arrival costs a penalty of a random number of days. It may also happen to encounter the ghostly fog on such a map; if it is not escaped, a teleport to a random place on the world map happens (with a penalty of always 1 day).
+
+New places on the world map are discovered by encountering references to them in already revealed places, e.g. by finding a treasure map or talking to a person. These places than appear marked with flags on the world map screen and can then be travelled to.
+
