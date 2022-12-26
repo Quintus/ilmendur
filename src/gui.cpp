@@ -44,7 +44,7 @@ namespace {
             ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
             ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
-            ImGui::Text(m_texts[m_current_text].c_str());
+            ImGui::TextWrapped(m_texts[m_current_text].c_str());
             ImGui::End();
         }
 
