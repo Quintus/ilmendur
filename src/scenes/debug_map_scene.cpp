@@ -5,6 +5,7 @@
 #include "../audio.hpp"
 #include "../actors/player.hpp"
 #include "../ilmendur.hpp"
+#include "../gui.hpp"
 
 DebugMapScene::DebugMapScene(const std::string& map)
     : Scene(),
@@ -85,6 +86,7 @@ void DebugMapScene::handleKeyDown(const SDL_Event& event)
 void DebugMapScene::handleKeyUp(const SDL_Event& event)
 {
     Scene::handleKeyUp(event);
+    static bool test = false;
 
     switch (event.key.keysym.sym) {
     case SDLK_UP:
@@ -97,6 +99,13 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         break;
     case SDLK_ESCAPE:
         Ilmendur::instance().popScene();
+        break;
+    case SDLK_z:
+        // Z. B. in NPC::activate()
+        if (!test) {
+            GUISystem::messageDialog(1, {"First Message", "Second Message"}, [&] {test = false;});
+            test = true;
+        }
         break;
     default:
         // Ignore

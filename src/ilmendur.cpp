@@ -6,6 +6,7 @@
 #include "scenes/scene.hpp"
 #include "scenes/title_scene.hpp"
 #include "audio.hpp"
+#include "gui.hpp"
 #include "os.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
@@ -174,6 +175,9 @@ int Ilmendur::run()
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             ImGui_ImplSDL2_ProcessEvent(&ev);
+            if (GUISystem::handleEvent(ev)) {
+                continue;
+            }
 
             switch (ev.type) {
             case SDL_QUIT:
@@ -202,6 +206,7 @@ int Ilmendur::run()
         ImGui::NewFrame();
 
         m_scene_stack.top()->update();
+        GUISystem::update();
 
         SDL_RenderSetViewport(mp_renderer, nullptr);
         SDL_RenderSetClipRect(mp_renderer, nullptr);
