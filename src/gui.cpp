@@ -4,6 +4,7 @@
 #include "os.hpp"
 #include "util.hpp"
 #include "timer.hpp"
+#include "texture_pool.hpp"
 #include <cassert>
 #include <vector>
 #include <map>
@@ -78,6 +79,15 @@ namespace {
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
             ImGui::TextWrapped(m_texts[m_current_text].substr(0, m_displayed_text_range).c_str());
             ImGui::End();
+
+            if (m_displayed_text_range >= m_texts[m_current_text].length()) {
+                const string terminator = m_current_text == m_texts.size() - 1 ? "ui/square.png" : "ui/arrowdown.png";
+                ImGui::SetNextWindowPos(ImVec2(boxarea.x + boxarea.w - 52, boxarea.y + boxarea.h - 28));
+                ImGui::SetNextWindowSize(ImVec2(50, 50));
+                ImGui::Begin("TextDialogIcon", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground);
+                ImGui::Image(Ilmendur::instance().texturePool()[terminator]->p_texture, ImVec2(32, 32));
+                ImGui::End();
+            }
         }
 
         bool next() {
