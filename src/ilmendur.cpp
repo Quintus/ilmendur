@@ -75,13 +75,19 @@ Ilmendur::Ilmendur()
     ImGui_ImplSDL2_InitForSDLRenderer(mp_window, mp_renderer);
     ImGui_ImplSDLRenderer_Init(mp_renderer);
 
+    m_render_area.x = 0;
+    m_render_area.y = 0;
+    SDL_GetRendererOutputSize(mp_renderer, &m_render_area.w, &m_render_area.h);
+
 #ifdef ILMENDUR_DEBUG_BUILD
     SDL_RendererInfo ri;
     SDL_GetRendererInfo(mp_renderer, &ri);
+
     cout << "Renderer information: " << endl
          << "    Name:             " << ri.name << endl
          << "    Supported flags:  " << ri.flags << endl
-         << "    Max texture size: " << ri.max_texture_width << "x" << ri.max_texture_height << endl;
+         << "    Max texture size: " << ri.max_texture_width << "x" << ri.max_texture_height << endl
+         << "    Rendering area:   " << m_render_area.w << "x" << m_render_area.h << endl;
 #endif
 }
 
@@ -119,15 +125,17 @@ Ilmendur& Ilmendur::instance()
     return *sp_ilmendur;
 }
 
+const SDL_Rect& Ilmendur::renderArea() const
+{
+    return m_render_area;
+}
+
 /**
  * The part of the rendering area describing player 1.
  */
 SDL_Rect Ilmendur::viewportPlayer1() const
 {
-    int width = 0;
-    int height = 0;
-    SDL_GetRendererOutputSize(mp_renderer, &width, &height);
-    return SDL_Rect{0,0,width/2-1,height}; // -1 for a small divider space
+    return SDL_Rect{0,0,m_render_area.w/2-1,m_render_area.h}; // -1 for a small divider space
 }
 
 /**
@@ -135,10 +143,7 @@ SDL_Rect Ilmendur::viewportPlayer1() const
  */
 SDL_Rect Ilmendur::viewportPlayer2() const
 {
-    int width = 0;
-    int height = 0;
-    SDL_GetRendererOutputSize(mp_renderer, &width, &height);
-    return SDL_Rect{width/2+1,0,width/2-1,height};
+    return SDL_Rect{m_render_area.w/2+1,0,m_render_area.w/2-1,m_render_area.h};
 }
 
 static void loadFont(ImGuiIO& io)

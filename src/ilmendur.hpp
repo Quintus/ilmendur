@@ -26,6 +26,7 @@ public:
     inline TexturePool&  texturePool() { return *mp_texture_pool; }
     inline AudioSystem&  audioSystem() { return *mp_audio_system; }
 
+    const SDL_Rect& renderArea() const;
     SDL_Rect viewportPlayer1() const;
     SDL_Rect viewportPlayer2() const;
 
@@ -35,6 +36,7 @@ public:
 
 private:
     void playAudio();
+    SDL_Rect m_render_area;
     SDL_Window*   mp_window;
     SDL_Renderer* mp_renderer;
     TexturePool*  mp_texture_pool;
