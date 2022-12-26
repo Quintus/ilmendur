@@ -7,15 +7,12 @@
 #include "scenes/title_scene.hpp"
 #include "audio.hpp"
 #include "gui.hpp"
-#include "os.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
-#include <fstream>
-#include <filesystem>
 #include <cassert>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -146,19 +143,6 @@ SDL_Rect Ilmendur::viewportPlayer2() const
     return SDL_Rect{m_render_area.w/2+1,0,m_render_area.w/2-1,m_render_area.h};
 }
 
-static void loadFont(ImGuiIO& io)
-{
-    namespace fs = std::filesystem;
-    fs::path fontpath(OS::gameDataDir() / fs::u8path("fonts") / fs::u8path("LinLibertine_R.otf"));
-    ifstream file(fontpath, ifstream::in | ifstream::binary);
-    string binary(READ_FILE(file));
-
-    // Hand over to ImGui, which takes ownership of `buf'.
-    char* buf = new char[binary.size()];
-    memcpy(buf, binary.data(), binary.size());
-    assert(io.Fonts->AddFontFromMemoryTTF(buf, binary.size(), 22.0f));
-}
-
 int Ilmendur::run()
 {
     using namespace std::chrono;
@@ -168,9 +152,9 @@ int Ilmendur::run()
 
     m_scene_stack.push(new TitleScene());
 
-    ImGuiIO& io = ImGui::GetIO();
-    loadFont(io);
+    GUISystem::loadFonts();
 
+    ImGuiIO& io = ImGui::GetIO();
     high_resolution_clock::time_point start_time;
     milliseconds passed_time;
     bool run = true;

@@ -20,6 +20,7 @@
  * necessary.
  */
 namespace GUISystem {
+    void loadFonts();
     void update();
     bool handleEvent(const SDL_Event& event);
     void messageDialog(unsigned int playerno, std::initializer_list<std::string> texts, std::function<void()> callback);

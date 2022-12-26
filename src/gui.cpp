@@ -1,9 +1,14 @@
 #include "gui.hpp"
 #include "ilmendur.hpp"
 #include "imgui/imgui.h"
+#include "os.hpp"
+#include "util.hpp"
 #include <cassert>
 #include <vector>
+#include <map>
 #include <memory>
+#include <fstream>
+#include <filesystem>
 
 // Message box height in pixels
 #define MSGBOX_HEIGHT 200
@@ -65,6 +70,7 @@ namespace {
     };
 }
 
+static std::map<string, ImFont*> s_fonts;
 static vector<unique_ptr<MessageDialog>> s_active_elements;
 
 void GUISystem::update()
@@ -95,6 +101,27 @@ bool GUISystem::handleEvent(const SDL_Event& event)
         // Ignore
         return false;
     }
+}
+
+void GUISystem::loadFonts()
+{
+    namespace fs = std::filesystem;
+
+    ImGuiIO& io = ImGui::GetIO();
+    fs::path fontpath(OS::gameDataDir() / fs::u8path("fonts") / fs::u8path("LinLibertine_R.otf"));
+    ifstream file(fontpath, ifstream::in | ifstream::binary);
+    string binary(READ_FILE(file));
+
+    // Hand over to ImGui, which takes ownership of `buf'.
+    char* buf = new char[binary.size()];
+    memcpy(buf, binary.data(), binary.size());
+    s_fonts["Default"] = io.Fonts->AddFontFromMemoryTTF(buf, binary.size(), 30.0f);
+    assert(s_fonts["Default"]);
+
+    buf = new char[binary.size()];
+    memcpy(buf, binary.data(), binary.size());
+    s_fonts["Small"]   = io.Fonts->AddFontFromMemoryTTF(buf, binary.size(), 22.0f);
+    assert(s_fonts["Small"]);
 }
 
 void GUISystem::messageDialog(unsigned int playerno, initializer_list<string> texts, std::function<void()> callback)
