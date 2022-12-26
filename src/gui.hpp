@@ -23,7 +23,14 @@ namespace GUISystem {
     void loadFonts();
     void update();
     bool handleEvent(const SDL_Event& event);
-    void messageDialog(unsigned int playerno, std::initializer_list<std::string> texts, std::function<void()> callback);
+
+    enum class text_velocity {
+        instant = 0, //< Display text immediately, no delay, use for signposts
+        slow,        //< Large delay, as if speaking slowly
+        normal,      //< Normal speech delay
+        fast         //< Minimal delay, as if speaking quickly
+    };
+    void messageDialog(unsigned int playerno, text_velocity vel, std::initializer_list<std::string> texts, std::function<void()> callback);
 }
 
 #endif /* ILMENDUR_GUI_HPP */

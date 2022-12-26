@@ -3,6 +3,7 @@
 #include "imgui/imgui.h"
 #include "os.hpp"
 #include "util.hpp"
+#include "timer.hpp"
 #include <cassert>
 #include <vector>
 #include <map>
@@ -19,10 +20,33 @@ namespace {
     class MessageDialog
     {
     public:
-        MessageDialog(unsigned int playerno, std::initializer_list<std::string> texts)
+        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::initializer_list<std::string> texts)
             : m_playerno(playerno),
+              m_textvel(0),
               m_texts(texts),
-              m_current_text(0) {}
+              m_current_text(0),
+              m_displayed_text_range(0) {
+            switch (vel) {
+            case GUISystem::text_velocity::instant: // Instant text display
+                m_displayed_text_range = string::npos;
+                break;
+            case GUISystem::text_velocity::slow:
+                m_textvel = 100.0f;
+                break;
+            case GUISystem::text_velocity::normal:
+                m_textvel = 20.0f;
+                break;
+            case GUISystem::text_velocity::fast:
+                m_textvel = 5.0f;
+                break;
+            }
+
+            if (m_textvel != 0.0f) {
+                mp_timer = std::unique_ptr<Timer>(new Timer(m_textvel, true, [&]{
+                    m_displayed_text_range++;
+                }));
+            }
+        }
 
         void setCallback(std::function<void()> cb) {
             m_cb = cb;
@@ -30,6 +54,9 @@ namespace {
 
         void update() {
             assert(m_current_text < m_texts.size());
+            if (mp_timer) {
+                mp_timer->update();
+            }
 
             SDL_Rect boxarea;
             if (m_playerno == 1) {
@@ -49,7 +76,7 @@ namespace {
             ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
             ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
-            ImGui::TextWrapped(m_texts[m_current_text].c_str());
+            ImGui::TextWrapped(m_texts[m_current_text].substr(0, m_displayed_text_range).c_str());
             ImGui::End();
         }
 
@@ -57,22 +84,38 @@ namespace {
             if (++m_current_text == m_texts.size()) {
                 m_current_text = 0;
                 m_cb();
+                mp_timer.reset();
                 return false;
             }
+
+            if (m_textvel != 0.0f) {
+                m_displayed_text_range = 0;
+                mp_timer = std::unique_ptr<Timer>(new Timer(m_textvel, true, [&]{
+                    m_displayed_text_range++;
+                }));
+            }
+
             return true;
         }
 
     private:
         unsigned int m_playerno;
+        float m_textvel;
         std::vector<std::string> m_texts;
         size_t m_current_text;
+        size_t m_displayed_text_range;
         std::function<void()> m_cb;
+        unique_ptr<Timer> mp_timer;
     };
 }
 
 static std::map<string, ImFont*> s_fonts;
 static vector<unique_ptr<MessageDialog>> s_active_elements;
 
+/**
+ * Update the GUI system's internal state. Call this once per frame
+ * from the main loop; do not call it from any scene.
+ */
 void GUISystem::update()
 {
     for(unique_ptr<MessageDialog>& p_el: s_active_elements) {
@@ -80,6 +123,13 @@ void GUISystem::update()
     }
 }
 
+/**
+ * Submit an event to the GUI system. Call in the main loop for
+ * any events; do not call it from any scene.
+ *
+ * Returns true if the event was used by the GUI system,
+ * false otherwise.
+ */
 bool GUISystem::handleEvent(const SDL_Event& event)
 {
     if (event.type != SDL_KEYUP) {
@@ -103,6 +153,9 @@ bool GUISystem::handleEvent(const SDL_Event& event)
     }
 }
 
+/**
+ * Load the OTF font files from the file system into the font atlas.
+ */
 void GUISystem::loadFonts()
 {
     namespace fs = std::filesystem;
@@ -124,9 +177,25 @@ void GUISystem::loadFonts()
     assert(s_fonts["Small"]);
 }
 
-void GUISystem::messageDialog(unsigned int playerno, initializer_list<string> texts, std::function<void()> callback)
+/**
+ * Display a message dialog to the user.
+ *
+ * \param[playerno]
+ * Which player's viewport to use. 1 = player 1, 2 = player 2, any other value = fullscreen message box.
+ *
+ * \param[vel]
+ * Text display velocity. See text_velocity for the possible values.
+ *
+ * \param[texts]
+ * List of texts to display. Per message box, one of these texts is displayed. When the player
+ * presses the continue button, the next one is displayed.
+ *
+ * \param[callback]
+ * This callback is executed when all message boxes have been confirmed by the player.
+ */
+void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, initializer_list<string> texts, std::function<void()> callback)
 {
     s_active_elements.emplace(s_active_elements.begin(),
-                              new MessageDialog(playerno, texts));
+                              new MessageDialog(playerno, vel, texts));
     s_active_elements[0]->setCallback(callback);
 }
