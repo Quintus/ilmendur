@@ -85,6 +85,18 @@ Ilmendur::Ilmendur()
          << "    Supported flags:  " << ri.flags << endl
          << "    Max texture size: " << ri.max_texture_width << "x" << ri.max_texture_height << endl
          << "    Rendering area:   " << m_render_area.w << "x" << m_render_area.h << endl;
+
+    int mix_freq;
+    Uint16 mix_format;
+    int mix_chans;
+    if (Mix_QuerySpec(&mix_freq, &mix_format, &mix_chans)) {
+        cout << "Audio device information: " << endl
+             << "    Frequency: " << mix_freq << " Hz" << endl
+             << "    Format: " << mix_format << endl
+             << "    Channels: " << mix_chans << endl;
+    } else {
+        cerr << "Failed to open audio device" << endl;
+    }
 #endif
 }
 
