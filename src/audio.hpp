@@ -15,7 +15,7 @@ public:
 
     enum class channel {
         any = -1,
-        ui = 10 // UI channel should be a high one so it is normally free
+        ui = 3 // UI channel should be a high one so it is normally free
     };
     channel playSound(const std::string& name, channel chan);
     channel playSoundBlocking(const std::string& name, channel chan);

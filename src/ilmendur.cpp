@@ -58,7 +58,7 @@ Ilmendur::Ilmendur()
     if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
         throw(runtime_error(string("Mix_Init() failed: ") + SDL_GetError()));
     }
-    assert(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096) == 0);
+    assert(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 4, 4096) == 0);
 
     // TODO: add flag SDL_WINDOW_ALLOW_HIGHDPI
     if (SDL_CreateWindowAndRenderer(NORMAL_WINDOW_WIDTH, NORMAL_WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &mp_window, &mp_renderer) < 0) {
