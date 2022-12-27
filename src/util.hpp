@@ -163,4 +163,10 @@ inline bool isPointInRect(const Vector2f& point, const SDL_Rect& rect)
         point.y < rect.y + rect.h;
 }
 
+/**
+ * This is a C++ version of sprintf() which will not overflow.
+ * The actual formatting is deferred to vsnprintf(3).
+ */
+std::string format(const char* source, ...);
+
 #endif /* ILMENDUR_UTIL_HPP */
