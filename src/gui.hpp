@@ -30,7 +30,7 @@ namespace GUISystem {
         normal,      //< Normal speech delay
         fast         //< Minimal delay, as if speaking quickly
     };
-    void messageDialog(unsigned int playerno, text_velocity vel, std::initializer_list<std::string> texts, std::function<void()> callback);
+    void messageDialog(unsigned int playerno, text_velocity vel, std::string charname, std::initializer_list<std::string> texts, std::function<void()> callback);
 }
 
 #endif /* ILMENDUR_GUI_HPP */

@@ -22,13 +22,14 @@ namespace {
     class MessageDialog
     {
     public:
-        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::initializer_list<std::string> texts)
+        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::string charname, std::initializer_list<std::string> texts)
             : m_playerno(playerno),
               m_textvel(0),
               m_texts(texts),
               m_current_text(0),
               m_displayed_text_range(0),
-              m_endmark_sound_played(false) {
+              m_endmark_sound_played(false),
+              m_charname(charname) {
             switch (vel) {
             case GUISystem::text_velocity::instant: // Instant text display
                 m_displayed_text_range = string::npos;
@@ -81,6 +82,20 @@ namespace {
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
             ImGui::TextWrapped(m_texts[m_current_text].substr(0, m_displayed_text_range).c_str());
             ImGui::End();
+
+            // Place the name hint on the upper right
+            if (!m_charname.empty()) {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(2, 1));
+                ImVec2 namesize = ImGui::CalcTextSize(m_charname.c_str());
+                namesize.x += 4;
+                ImGui::SetNextWindowPos(ImVec2(boxarea.x + 30, boxarea.y - namesize.y - 2));
+                ImGui::SetNextWindowSize(ImVec2(namesize.x, namesize.y));
+                ImGui::Begin("TextDialogCharName", nullptr, ImGuiWindowFlags_NoDecoration);
+                ImGui::Text(m_charname.c_str());
+                ImGui::End();
+                ImGui::PopStyleVar(2);
+            }
 
             // Display the continuation marker and play the talk ending sound on the last text
             if (m_displayed_text_range >= m_texts[m_current_text].length()) {
@@ -146,6 +161,7 @@ namespace {
         std::function<void()> m_cb;
         unique_ptr<Timer> mp_timer;
         bool m_endmark_sound_played;
+        std::string m_charname;
     };
 }
 
@@ -226,6 +242,9 @@ void GUISystem::loadFonts()
  * \param[vel]
  * Text display velocity. See text_velocity for the possible values.
  *
+ * \param[charname]
+ * Name of the NPC speaking. Use an empty string for no display of a name.
+ *
  * \param[texts]
  * List of texts to display. Per message box, one of these texts is displayed. When the player
  * presses the continue button, the next one is displayed.
@@ -233,9 +252,9 @@ void GUISystem::loadFonts()
  * \param[callback]
  * This callback is executed when all message boxes have been confirmed by the player.
  */
-void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, initializer_list<string> texts, std::function<void()> callback)
+void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, initializer_list<string> texts, std::function<void()> callback)
 {
     s_active_elements.emplace(s_active_elements.begin(),
-                              new MessageDialog(playerno, vel, texts));
+                              new MessageDialog(playerno, vel, charname, texts));
     s_active_elements[0]->setCallback(callback);
 }
