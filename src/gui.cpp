@@ -103,6 +103,12 @@ namespace {
                     Ilmendur::instance().audioSystem().playSound("ui/talkfin1.ogg", AudioSystem::channel::ui);
                 }
                 return false;
+            } else { // Another text to display
+                if (m_playerno == 2) {
+                    Ilmendur::instance().audioSystem().playSound("ui/continue2.ogg", AudioSystem::channel::ui);
+                } else { // Player 1 or full-screen dialogue
+                    Ilmendur::instance().audioSystem().playSound("ui/continue1.ogg", AudioSystem::channel::ui);
+                }
             }
 
             // Set timer for the appearing letters again for the new text
