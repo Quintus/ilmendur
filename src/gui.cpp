@@ -5,6 +5,7 @@
 #include "util.hpp"
 #include "timer.hpp"
 #include "texture_pool.hpp"
+#include "audio.hpp"
 #include <cassert>
 #include <vector>
 #include <map>
@@ -91,13 +92,20 @@ namespace {
         }
 
         bool next() {
-            if (++m_current_text == m_texts.size()) {
+            if (++m_current_text == m_texts.size()) { // Last text done
                 m_current_text = 0;
                 m_cb();
                 mp_timer.reset();
+
+                if (m_playerno == 2) {
+                    Ilmendur::instance().audioSystem().playSound("ui/talkfin2.ogg", AudioSystem::channel::ui);
+                } else { // Player 1 or full-screen dialogue
+                    Ilmendur::instance().audioSystem().playSound("ui/talkfin1.ogg", AudioSystem::channel::ui);
+                }
                 return false;
             }
 
+            // Set timer for the appearing letters again for the new text
             if (m_textvel != 0.0f) {
                 m_displayed_text_range = 0;
                 mp_timer = std::unique_ptr<Timer>(new Timer(m_textvel, true, [&]{
