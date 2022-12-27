@@ -27,7 +27,8 @@ namespace {
               m_textvel(0),
               m_texts(texts),
               m_current_text(0),
-              m_displayed_text_range(0) {
+              m_displayed_text_range(0),
+              m_endmark_sound_played(false) {
             switch (vel) {
             case GUISystem::text_velocity::instant: // Instant text display
                 m_displayed_text_range = string::npos;
@@ -81,8 +82,22 @@ namespace {
             ImGui::TextWrapped(m_texts[m_current_text].substr(0, m_displayed_text_range).c_str());
             ImGui::End();
 
+            // Display the continuation marker and play the talk ending sound on the last text
             if (m_displayed_text_range >= m_texts[m_current_text].length()) {
-                const string terminator = m_current_text == m_texts.size() - 1 ? "ui/square.png" : "ui/arrowdown.png";
+                string terminator;
+                if (m_current_text == m_texts.size() - 1) {
+                    if (!m_endmark_sound_played) {
+                        Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
+                        // TODO: Create a higher-pitch version of talkendmark1 for player 2's dialog boxes and play that one depending on `m_playerno'.
+                        m_endmark_sound_played = true;
+                    }
+
+                    terminator = "ui/square.png";
+                } else {
+                    // No sound for continuing texts.
+                    terminator = "ui/arrowdown.png";
+                }
+
                 ImGui::SetNextWindowPos(ImVec2(boxarea.x + boxarea.w - 52, boxarea.y + boxarea.h - 28));
                 ImGui::SetNextWindowSize(ImVec2(50, 50));
                 ImGui::Begin("TextDialogIcon", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground);
@@ -130,6 +145,7 @@ namespace {
         size_t m_displayed_text_range;
         std::function<void()> m_cb;
         unique_ptr<Timer> mp_timer;
+        bool m_endmark_sound_played;
     };
 }
 
