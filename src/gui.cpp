@@ -87,8 +87,7 @@ namespace {
                 string terminator;
                 if (m_current_text == m_texts.size() - 1) {
                     if (!m_endmark_sound_played) {
-                        Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
-                        // TODO: Create a higher-pitch version of talkendmark1 for player 2's dialog boxes and play that one depending on `m_playerno'.
+                        Ilmendur::instance().audioSystem().playSound(m_playerno == 2 ? "ui/talkfin2.ogg" : "ui/talkfin1.ogg", AudioSystem::channel::ui);
                         m_endmark_sound_played = true;
                     }
 
@@ -113,9 +112,10 @@ namespace {
                 mp_timer.reset();
 
                 if (m_playerno == 2) {
-                    Ilmendur::instance().audioSystem().playSound("ui/talkfin2.ogg", AudioSystem::channel::ui);
+                    // TODO: Create a higher-pitch version of talkendmark1 for player 2 and play that one based on `m_playerno'.
+                    Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
                 } else { // Player 1 or full-screen dialogue
-                    Ilmendur::instance().audioSystem().playSound("ui/talkfin1.ogg", AudioSystem::channel::ui);
+                    Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
                 }
                 return false;
             } else { // Another text to display
