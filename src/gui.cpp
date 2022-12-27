@@ -13,8 +13,8 @@
 #include <fstream>
 #include <filesystem>
 
-// Message box height in pixels
-#define MSGBOX_HEIGHT 200
+// Message box height in lines
+#define MSGBOX_LINES 6
 
 using namespace std;
 
@@ -72,10 +72,11 @@ namespace {
             }
 
             // Place the message dialog at the viewport bottom with 20 px margin.
+            const float msgbox_height = MSGBOX_LINES * ImGui::GetTextLineHeightWithSpacing();
             boxarea.x += 20;
             boxarea.w -= 40;
-            boxarea.y = boxarea.h - MSGBOX_HEIGHT - 20;
-            boxarea.h = MSGBOX_HEIGHT;
+            boxarea.y = boxarea.h - msgbox_height - 20;
+            boxarea.h = msgbox_height;
 
             ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
             ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
