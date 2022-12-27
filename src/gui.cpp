@@ -122,6 +122,13 @@ namespace {
         }
 
         bool next() {
+            // The user wants to click through if this triggers (text
+            // display not finished).
+            if (m_displayed_text_range < m_texts[m_current_text].length()) {
+                m_displayed_text_range = m_texts[m_current_text].length();
+                return true;
+            }
+
             if (++m_current_text == m_texts.size()) { // Last text done
                 m_current_text = 0;
                 m_cb();
