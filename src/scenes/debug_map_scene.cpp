@@ -22,7 +22,7 @@ DebugMapScene::DebugMapScene(const std::string& map)
     if (mp_map->backgroundMusic().empty()) {
         Ilmendur::instance().audioSystem().stopBackgroundMusic();
     } else {
-        Ilmendur::instance().audioSystem().playBackgroundMusic(mp_map->backgroundMusic());
+        //Ilmendur::instance().audioSystem().playBackgroundMusic(mp_map->backgroundMusic());
     }
 }
 
@@ -104,7 +104,7 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         // DEBUG: E.g. in NPC::activate()
         if (!test) {
             GUISystem::messageDialog(1, GUISystem::text_velocity::normal, "John Doe",
-                                     {"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.",
+                                     {"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, <em>sed diam nonumy</em> eirmod tempor <em>invidunt</em> ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.",
                                       "Second Message: Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna.",
                                       format("Third Message: >%s<", "Test format")},
                                      [&] {test = false;});

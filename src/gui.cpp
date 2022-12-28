@@ -12,11 +12,40 @@
 #include <memory>
 #include <fstream>
 #include <filesystem>
+#include <regex>
 
 // Message box height in lines
 #define MSGBOX_LINES 6
 
 using namespace std;
+
+/**
+ * Parses markup out of `str` and returns it as a populated ImTextCustomization
+ * object. `str` is cleaned of all markup syntax so that it is ready to be
+ * passed to ImGui's functions. `tc` is working on the exact pointer stored
+ * in `str`, thus do not modify `str` anymore before passing it to ImGui
+ * along with `tc`.
+ */
+static void parseMarkup(std::string& str, ImTextCustomization& tc)
+{
+    static const ImColor emcolor(255, 0, 0, 255);
+
+    regex re("<em>(.*?)</em>");
+    smatch mresult;
+    vector<pair<size_t, size_t>> ranges; // each pair holds start and length of match
+    while (regex_search(str, mresult, re)) {
+        ranges.push_back(make_pair(mresult.position(0), mresult.length(1)));
+        str.replace(mresult.position(0), mresult.length(0), str.substr(mresult.position(1), mresult.length(1)));
+    }
+
+    // The above modifications may move the string in memory, hence it is not
+    // possible to build up `tc' in the above loop, because ImTextCustomization
+    // works with pointers rather than ranges for whatever reason.
+    for(const pair<size_t, size_t>& range: ranges) {
+        tc.Range(str.data() + range.first, str.data() + range.first + range.second);
+        tc.TextColor(emcolor);
+    }
+}
 
 namespace {
     class MessageDialog
@@ -50,6 +79,16 @@ namespace {
                     m_displayed_text_range++;
                 }));
             }
+
+            // Clean the texts from the markup syntax and store the respective
+            // marking instructions along with them instead.
+            for(string& text: m_texts) {
+                ImTextCustomization tc;
+                parseMarkup(text, tc);
+                m_customs.push_back(move(tc));
+            }
+
+            assert(m_texts.size() == m_customs.size());
         }
 
         void setCallback(std::function<void()> cb) {
@@ -60,6 +99,14 @@ namespace {
             assert(m_current_text < m_texts.size());
             if (mp_timer) {
                 mp_timer->update();
+                if (m_displayed_text_range > m_texts[m_current_text].size()) {
+                    mp_timer->stop();
+                }
+            }
+
+            // Ensure that the pointer arithmetic further below remains in the string's boundaries
+            if (m_displayed_text_range > m_texts[m_current_text].size()) {
+                m_displayed_text_range = m_texts[m_current_text].size();
             }
 
             SDL_Rect boxarea;
@@ -81,7 +128,7 @@ namespace {
             ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
             ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
-            ImGui::TextWrapped(m_texts[m_current_text].substr(0, m_displayed_text_range).c_str());
+            ImGui::TextUnformatted(m_texts[m_current_text].data(), m_texts[m_current_text].data() + m_displayed_text_range, true, false, &m_customs[m_current_text]);
             ImGui::End();
 
             // Place the name hint on the upper right
@@ -150,7 +197,9 @@ namespace {
             }
 
             // Set timer for the appearing letters again for the new text
-            if (m_textvel != 0.0f) {
+            if (m_textvel == 0.0f) {
+                m_displayed_text_range = string::npos; // This is reduced in update() to the previous' text's length, so reset it here
+            } else {
                 m_displayed_text_range = 0;
                 mp_timer = std::unique_ptr<Timer>(new Timer(m_textvel, true, [&]{
                     m_displayed_text_range++;
@@ -164,6 +213,7 @@ namespace {
         unsigned int m_playerno;
         float m_textvel;
         std::vector<std::string> m_texts;
+        std::vector<ImTextCustomization> m_customs;
         size_t m_current_text;
         size_t m_displayed_text_range;
         std::function<void()> m_cb;
