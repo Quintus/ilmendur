@@ -127,6 +127,7 @@ namespace {
 
             ImGui::SetNextWindowPos(ImVec2(boxarea.x, boxarea.y));
             ImGui::SetNextWindowSize(ImVec2(boxarea.w, boxarea.h));
+            ImGui::SetNextWindowBgAlpha(0.75f);
             ImGui::Begin("TextDialog", nullptr, ImGuiWindowFlags_NoDecoration);
             ImGui::TextUnformatted(m_texts[m_current_text].data(), m_texts[m_current_text].data() + m_displayed_text_range, true, false, &m_customs[m_current_text]);
             ImGui::End();
@@ -139,6 +140,7 @@ namespace {
                 namesize.x += 4;
                 ImGui::SetNextWindowPos(ImVec2(boxarea.x + 30, boxarea.y - namesize.y - 2));
                 ImGui::SetNextWindowSize(ImVec2(namesize.x, namesize.y));
+                ImGui::SetNextWindowBgAlpha(0.75f);
                 ImGui::Begin("TextDialogCharName", nullptr, ImGuiWindowFlags_NoDecoration);
                 ImGui::Text(m_charname.c_str());
                 ImGui::End();
