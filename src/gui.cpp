@@ -28,7 +28,7 @@ using namespace std;
  */
 static void parseMarkup(std::string& str, ImTextCustomization& tc)
 {
-    static const ImColor emcolor(255, 0, 0, 255);
+    static const ImColor emcolor(0, 172, 255, 255);
 
     regex re("<em>(.*?)</em>");
     smatch mresult;
