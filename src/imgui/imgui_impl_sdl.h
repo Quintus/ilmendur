@@ -1,4 +1,7 @@
-// dear imgui, v1.88: Platform Backend for SDL2
+// dear imgui, v1.89 patched by ForrestFeng
+// https://github.com/ForrestFeng/imgui/tree/8ddc119c090bdc1e5777f07c65c662d20aff8d34
+
+// dear imgui: Platform Backend for SDL2
 // This needs to be used along with a Renderer (e.g. DirectX11, OpenGL3, Vulkan..)
 // (Info: SDL2 is a cross-platform general purpose library for handling windows, inputs, graphics context creation, etc.)
 

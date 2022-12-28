@@ -1,4 +1,7 @@
-// dear imgui, v1.88: Renderer Backend for SDL_Renderer
+// dear imgui, v1.89 patched by ForrestFeng
+// https://github.com/ForrestFeng/imgui/tree/8ddc119c090bdc1e5777f07c65c662d20aff8d34
+
+// dear imgui: Renderer Backend for SDL_Renderer
 // (Requires: SDL 2.0.17+)
 
 // Important to understand: SDL_Renderer is an _optional_ component of SDL.

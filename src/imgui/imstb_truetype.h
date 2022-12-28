@@ -1,3 +1,6 @@
+// dear imgui, v1.89 patched by ForrestFeng
+// https://github.com/ForrestFeng/imgui/tree/8ddc119c090bdc1e5777f07c65c662d20aff8d34
+
 // [DEAR IMGUI]
 // This is a slightly modified version of stb_truetype.h 1.26.
 // Mostly fixing for compiler and static analyzer warnings.
