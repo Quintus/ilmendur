@@ -22,3 +22,11 @@ std::string format(const char* source, ...)
     va_end(ap);
     return std::string(target.c_str()); // Cut off anything after the terminal NUL of `target'
 }
+
+/**
+ * Checks whether the interval `[a1, a2)` overlaps with `[b1, b2)`.
+ */
+bool hasOverlap(float a1, float a2, float b1, float b2)
+{
+    return (a1 >= b1 && a1 < b2) || (a2 >= b1 && a2 < b2);
+}

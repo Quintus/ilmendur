@@ -169,4 +169,6 @@ inline bool isPointInRect(const Vector2f& point, const SDL_Rect& rect)
  */
 std::string format(const char* source, ...);
 
+bool hasOverlap(float a1, float a2, float b1, float b2);
+
 #endif /* ILMENDUR_UTIL_HPP */
