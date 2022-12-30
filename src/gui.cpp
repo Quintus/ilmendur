@@ -51,7 +51,7 @@ namespace {
     class MessageDialog
     {
     public:
-        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::string charname, std::initializer_list<std::string> texts)
+        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::string charname, std::vector<std::string> texts)
             : m_playerno(playerno),
               m_textvel(0),
               m_texts(texts),
@@ -314,11 +314,20 @@ void GUISystem::loadFonts()
  * \param[callback]
  * This callback is executed when all message boxes have been confirmed by the player.
  */
-void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, initializer_list<string> texts, std::function<void()> callback)
+void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, vector<string> texts, std::function<void()> callback)
 {
     s_active_elements.emplace(s_active_elements.begin(),
                               new MessageDialog(playerno, vel, charname, texts));
     s_active_elements[0]->setCallback(callback);
+}
+
+/**
+ * Like the base function, but without a callback to be executed.
+ */
+void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, vector<string> texts)
+{
+    s_active_elements.emplace(s_active_elements.begin(),
+                              new MessageDialog(playerno, vel, charname, texts));
 }
 
 /**
