@@ -180,8 +180,10 @@ namespace {
 
             if (++m_current_text == m_texts.size()) { // Last text done
                 m_current_text = 0;
-                m_cb();
                 mp_timer.reset();
+                if (m_cb) {
+                    m_cb();
+                }
 
                 if (m_playerno == 2) {
                     // TODO: Create a higher-pitch version of talkendmark1 for player 2 and play that one based on `m_playerno'.
