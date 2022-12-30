@@ -7,6 +7,8 @@
 #include "../ilmendur.hpp"
 #include "../gui.hpp"
 
+using namespace std;
+
 DebugMapScene::DebugMapScene(const std::string& map)
     : Scene(),
       mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
@@ -111,6 +113,18 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
             test = true;
         }
         break;
+    case SDLK_j: {
+        vector<Actor*> adj = mp_map->findAdjascentActors(mp_player, mp_player->lookDirection());
+        string result = "Found ";
+        result += to_string(adj.size());
+        result += " actors\n";
+        for (Actor* p_act: adj) {
+            result += "  ID: ";
+            result += to_string(p_act->id());
+            result += "\n";
+        }
+        GUISystem::systemMessage(result);
+    } break;
     default:
         // Ignore
         break;

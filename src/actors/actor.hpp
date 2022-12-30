@@ -1,6 +1,7 @@
 #ifndef ILMENDUR_ACTOR_HPP
 #define ILMENDUR_ACTOR_HPP
 #include "../util.hpp"
+#include "../globals.hpp"
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -15,7 +16,6 @@ struct Event;
 class Actor
 {
 public:
-    enum class direction { none, up, right, down, left };
     enum class animation_mode { never, on_move, always };
 
     Actor(int id, const std::string& graphic = "");

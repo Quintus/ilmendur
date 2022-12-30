@@ -1,6 +1,7 @@
 #ifndef ILMENDUR_MAP_HPP
 #define ILMENDUR_MAP_HPP
 #include "tileset.hpp"
+#include "globals.hpp"
 #include <vector>
 #include <map>
 
@@ -33,8 +34,8 @@ struct TmxTileLayer {
     TmxProperties props;
     std::vector<int> gids;
 
-    enum class direction { up, down, both };
-    direction dir;
+    enum class layer_direction { up, down, both };
+    layer_direction dir;
 };
 
 class Map
@@ -51,6 +52,7 @@ public:
     void addActor(Actor* p_actor, const std::string& layername);
     bool findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer);
     void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
+    std::vector<Actor*> findAdjascentActors(Actor* p_actor, direction dir);
 
     inline const std::string& backgroundMusic() const { return m_bg_music; }
 

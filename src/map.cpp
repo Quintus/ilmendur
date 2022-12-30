@@ -170,11 +170,11 @@ static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapna
 
         string facedir = layer.data.p_tile_layer->props.get("facedir");
         if (facedir == string("down")) {
-            layer.data.p_tile_layer->dir = TmxTileLayer::direction::down;
+            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::down;
         } else if (facedir == string("both")) {
-            layer.data.p_tile_layer->dir = TmxTileLayer::direction::both;
+            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::both;
         } else {
-            layer.data.p_tile_layer->dir = TmxTileLayer::direction::up;
+            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::up;
         }
 
         layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
@@ -294,7 +294,7 @@ void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
         const Layer& layer = m_layers[li];
         switch (layer.type) {
         case LayerType::Tile:
-            if (layer.data.p_tile_layer->dir == TmxTileLayer::direction::up) {
+            if (layer.data.p_tile_layer->dir == TmxTileLayer::layer_direction::up) {
                 for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
                     int gid = layer.data.p_tile_layer->gids[i];
                     if (readTile(p_tilesettexture, srcrect, gid)) {
@@ -500,6 +500,63 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
     }
 }
 
+vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
+{
+    vector<Actor*> results;
+    TmxObjLayer* p_layer = p_actor->mapLayer();
+    SDL_Rect collbox1 = p_actor->collisionBox();
+    SDL_Rect collbox2;
+    SDL_Rect intersect;
+    for (Actor* p_other: p_layer->actors) {
+        // p_actor may not collide with itself
+        if (p_other->m_id == p_actor->m_id) {
+            continue;
+        }
+
+        if (p_other->m_id == 22) {
+            cout << "Pott gefunden" << endl;
+            cout << "Player: X=" << collbox1.x << " Y=" << collbox1.y << " W=" << collbox1.w << " H=" << collbox1.h << endl;
+            cout << "Pott:   X=" << collbox2.x << " Y=" << collbox2.y << " W=" << collbox2.w << " H=" << collbox2.h << endl;
+        }
+
+        collbox2 = p_other->collisionBox();
+        if (SDL_IntersectRect(&collbox1, &collbox2, &intersect) == SDL_TRUE) {
+            results.push_back(p_other);
+        } else {
+            switch (dir) {
+            case direction::none: // Currently not supported; maybe treat as any direction?
+                assert(false);
+                break;
+            case direction::up:
+                if ((collbox1.y == collbox2.y + collbox2.h) &&
+                    hasOverlap(collbox1.x, collbox1.x + collbox1.w, collbox2.x, collbox2.x + collbox2.w)) {
+                    results.push_back(p_other);
+                }
+                break;
+            case direction::right:
+                if ((collbox1.x + collbox1.w == collbox2.x) &&
+                    hasOverlap(collbox1.y, collbox1.y + collbox1.h, collbox2.y, collbox2.y + collbox2.h)) {
+                    results.push_back(p_other);
+                }
+                break;
+            case direction::down:
+                if ((collbox1.y + collbox1.h == collbox2.y) &&
+                    hasOverlap(collbox1.x, collbox1.x + collbox1.w, collbox2.x, collbox2.x + collbox2.w)) {
+                    results.push_back(p_other);
+                }
+                break;
+            case direction::left:
+                if ((collbox1.x == collbox2.x + collbox2.w) &&
+                    hasOverlap(collbox1.y, collbox1.y + collbox1.h, collbox2.y, collbox2.y + collbox2.h)) {
+                    results.push_back(p_other);
+                }
+                break;
+            } // No default so the compiler can warn about missing values
+        }
+    }
+    return results;
+}
+
 void Map::addHero(Player* p_player, int herono)
 {
     for(Layer& layer: m_layers) {
@@ -508,7 +565,7 @@ void Map::addHero(Player* p_player, int herono)
                 StartPosition* p_startpos = dynamic_cast<StartPosition*>(*iter);
                 if (p_startpos && p_startpos->herono == herono) {
                     p_player->warp(p_startpos->startpos);
-                    p_player->turn(Actor::direction::up);
+                    p_player->turn(direction::up);
 
                     // Insert the player at the position corresponding to its ID.
                     for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
@@ -529,7 +586,7 @@ void Map::addHero(Player* p_player, int herono)
 
     // No player start position found, spawn at "chars" layer at (100|100)
     p_player->warp(Vector2f(100.0f, 100.0f));
-    p_player->turn(Actor::direction::up);
+    p_player->turn(direction::up);
     addActor(p_player, "chars");
 }
 
