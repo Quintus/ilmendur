@@ -24,6 +24,7 @@ public:
     virtual void update();
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     virtual void handleEvent(const Event& event);
+    virtual void interact(Actor* p_other);
 
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);

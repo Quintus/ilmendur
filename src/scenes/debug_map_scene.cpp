@@ -125,6 +125,12 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         }
         GUISystem::systemMessage(result);
     } break;
+    case SDLK_RETURN: {
+        vector<Actor*> adj = mp_map->findAdjascentActors(mp_player, mp_player->lookDirection());
+        if (adj.size() > 0) {
+            adj[0]->interact(mp_player);
+        }
+    } break;
     default:
         // Ignore
         break;

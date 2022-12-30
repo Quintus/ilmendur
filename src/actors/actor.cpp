@@ -328,6 +328,16 @@ void Actor::handleEvent(const Event&)
 }
 
 /**
+ * Called when an actor tries to “interact” with this actor.
+ * Usually, this is one of the heroes trying to “speak to” or
+ * otherwise activate this actor. The default implementation
+ * does nothing.
+ */
+void Actor::interact(Actor*)
+{
+}
+
+/**
  * Moves p_actor out of p_other. p_actor will not move anymore after
  * this method returns. p_other will not be moved. The two actors
  * will be exactly adjascent after the return from this method.

@@ -92,6 +92,16 @@ Ilmendur reads the following properties for actors of type =startpos=:
 | startpos   | int    | 1 or 2            |                 | Hero to start here (1 = Benjamin, 2 = Freya). |
 
 
+**** =signpost=
+
+A sign standing around. Signs cannot be passed, but they can be read.
+
+The =text= property gives the text that is displayed to the user. Note that Ilmendur currently only displays six lines of text in a message dialog box; any exceeding text will be clipped off. In order to show multiple message dialogue boxes in sequence, use the special character sequence =<NM>= to divice your long text accordingly.
+
+| *Property* | *Type* | *Possible Values* | *Default value* | *Meaning*                                |
+|            |        | <20>              | <10>            | <20>                                     |
+| text       | string | Any string        |                 | Text to be displayed on reading the sign |
+
 **** =static=
 
 This is a static actor which does not normally move. It only shows a single graphic, which might be animated.

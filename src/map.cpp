@@ -5,6 +5,7 @@
 #include "actors/passage.hpp"
 #include "actors/startpos.hpp"
 #include "actors/player.hpp"
+#include "actors/signpost.hpp"
 #include "event.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
@@ -107,6 +108,15 @@ static vector<Actor*> readTmxObjects(const pugi::xml_node& node)
             result.push_back(new StartPosition(id, Vector2f(x, y), atoi(props.get("startpos").c_str())));
         } else if (type == string("npc")) {
             cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
+        } else if (type == "signpost") {
+            SDL_Rect rect;
+            rect.x = x;
+            rect.y = y;
+            rect.w = w;
+            rect.h = h;
+
+            vector<string> texts = splitString(props.get("text"), "<NM>");
+            result.push_back(new Signpost(id, rect, texts));
         } else if (type == string("collbox")) {
             SDL_Rect rect;
             rect.x = x;
@@ -511,12 +521,6 @@ vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
         // p_actor may not collide with itself
         if (p_other->m_id == p_actor->m_id) {
             continue;
-        }
-
-        if (p_other->m_id == 22) {
-            cout << "Pott gefunden" << endl;
-            cout << "Player: X=" << collbox1.x << " Y=" << collbox1.y << " W=" << collbox1.w << " H=" << collbox1.h << endl;
-            cout << "Pott:   X=" << collbox2.x << " Y=" << collbox2.y << " W=" << collbox2.w << " H=" << collbox2.h << endl;
         }
 
         collbox2 = p_other->collisionBox();
