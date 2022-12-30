@@ -3,13 +3,15 @@
 #include <cstring>
 #include <cassert>
 
+using namespace std;
+
 /**
  * This is a C++ version of sprintf() which will not overflow.
  * The actual formatting is deferred to vsnprintf(3).
  */
-std::string format(const char* source, ...)
+string format(const char* source, ...)
 {
-    std::string target("\0", strlen(source) + 50); // Educated guess: The target will be a little longer than the source.
+    string target("\0", strlen(source) + 50); // Educated guess: The target will be a little longer than the source.
 
     int result = target.size();
     va_list ap;
@@ -24,7 +26,7 @@ std::string format(const char* source, ...)
     } while (static_cast<size_t>(result) >= target.size());
 
     va_end(ap);
-    return std::string(target.c_str()); // Cut off anything after the terminal NUL of `target'
+    return string(target.c_str()); // Cut off anything after the terminal NUL of `target'
 }
 
 /**
