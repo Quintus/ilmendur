@@ -1,5 +1,7 @@
 #include "signpost.hpp"
 #include "../event.hpp"
+#include "../ilmendur.hpp"
+#include "../texture_pool.hpp"
 #include "../gui.hpp"
 #include "player.hpp"
 
@@ -22,9 +24,30 @@ void Signpost::update()
     // The signpost does nothing on update.
 }
 
-void Signpost::draw(SDL_Renderer*, const SDL_Rect*)
+/**
+ * Draw the sign onto the stage. This does not use Actor's normal
+ * draw() implementation, because it renders a part of the
+ * “signposts” tileset rather than a separate character graphic.
+ */
+void Signpost::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 {
-    // Signposts are CURRENTLY DEBUG not drawn, they are invisible.
+    TextureInfo* p_tileset = Ilmendur::instance().texturePool()["tilesets/signposts.png"];
+    static const SDL_Rect srcrect { 32, 0, 32, 32 };
+    SDL_Rect destrect;
+    destrect.x = m_pos.x;
+    destrect.y = m_pos.y;
+    destrect.w = 32;
+    destrect.h = 32;
+
+    if (!SDL_HasIntersection(&destrect, p_camview)) {
+        return;
+    }
+
+    // TODO: Honor p_camview width and height for scaling purposes.
+    destrect.x -= p_camview->x;
+    destrect.y -= p_camview->y;
+
+    SDL_RenderCopy(p_stage, p_tileset->p_texture, &srcrect, &destrect);
 }
 
 SDL_Rect Signpost::collisionBox() const
