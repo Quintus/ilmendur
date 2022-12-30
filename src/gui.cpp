@@ -320,3 +320,13 @@ void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::str
                               new MessageDialog(playerno, vel, charname, texts));
     s_active_elements[0]->setCallback(callback);
 }
+
+/**
+ * A utility method for easily displaying a text string for debugging
+ * purposes in a message box.
+ */
+void GUISystem::systemMessage(std::string str)
+{
+    s_active_elements.emplace(s_active_elements.begin(),
+                              new MessageDialog(1, text_velocity::instant, "", {str}));
+}
