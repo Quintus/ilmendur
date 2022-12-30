@@ -3,6 +3,10 @@
 #include <cstring>
 #include <cassert>
 
+/**
+ * This is a C++ version of sprintf() which will not overflow.
+ * The actual formatting is deferred to vsnprintf(3).
+ */
 std::string format(const char* source, ...)
 {
     std::string target("\0", strlen(source) + 50); // Educated guess: The target will be a little longer than the source.
@@ -29,4 +33,22 @@ std::string format(const char* source, ...)
 bool hasOverlap(float a1, float a2, float b1, float b2)
 {
     return (a1 >= b1 && a1 < b2) || (a2 >= b1 && a2 < b2);
+}
+
+/**
+ * Cuts `str` at each occurence of `sep` and returns the list
+ * of all cut elements as a vector. `sep` is excluded from
+ * the return value.
+ */
+vector<string> splitString(string str, const string& sep)
+{
+    vector<string> result;
+    size_t pos = 0;
+
+    while ((pos = str.find(sep)) != string::npos) {
+        result.push_back(str.substr(0, pos));
+        str.erase(0, pos + sep.size());
+    }
+    result.push_back(str);
+    return result;
 }

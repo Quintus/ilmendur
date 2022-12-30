@@ -3,6 +3,8 @@
 #include <SDL2/SDL.h>
 #include <cmath>
 #include <stdexcept>
+#include <vector>
+#include <string>
 
 /// Reads the entire file `file' (an std::ifstream) and returns it as a string.
 #define READ_FILE(file) std::istreambuf_iterator<char>(file.rdbuf()), std::istreambuf_iterator<char>()
@@ -163,12 +165,8 @@ inline bool isPointInRect(const Vector2f& point, const SDL_Rect& rect)
         point.y < rect.y + rect.h;
 }
 
-/**
- * This is a C++ version of sprintf() which will not overflow.
- * The actual formatting is deferred to vsnprintf(3).
- */
 std::string format(const char* source, ...);
-
 bool hasOverlap(float a1, float a2, float b1, float b2);
+std::vector<std::string> splitString(std::string str, const std::string& sep);
 
 #endif /* ILMENDUR_UTIL_HPP */
