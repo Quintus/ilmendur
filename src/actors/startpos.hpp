@@ -5,7 +5,7 @@
 class StartPosition: public Actor
 {
 public:
-    StartPosition(int id, Vector2f position, int hero_no);
+    StartPosition(int id, ObjectLayer* p_layer, Vector2f position, int hero_no);
     virtual ~StartPosition();
 
     Vector2f startpos;

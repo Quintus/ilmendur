@@ -6,8 +6,9 @@
 
 using namespace std;
 
-Player::Player()
-    : Actor(PLAYER_ID, "chars/spaceship.png")
+Player::Player(ObjectLayer* p_layer, int playerno)
+    : Actor(PLAYER_ID, p_layer, "chars/spaceship.png"),
+      m_playerno(playerno)
 {
 }
 

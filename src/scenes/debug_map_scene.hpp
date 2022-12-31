@@ -19,7 +19,6 @@ public:
     virtual void handleKeyDown(const SDL_Event& event);
     virtual void handleKeyUp(const SDL_Event& event);
 
-    inline void setPlayer(Player* p_player) { mp_player = p_player; }
     inline Map& map() { return *mp_map; }
 private:
     Camera* mp_cam1;

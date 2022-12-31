@@ -11,7 +11,7 @@ public:
     static const pass_direction down  = 1 << 2;
     static const pass_direction left  = 1 << 3;
 
-    Passage(int id, SDL_Rect area, pass_direction dir, const std::string& targetlayer);
+    Passage(int id, ObjectLayer* p_layer, SDL_Rect area, pass_direction dir, const std::string& targetlayer);
     virtual ~Passage();
 
     virtual void handleEvent(const Event& event);

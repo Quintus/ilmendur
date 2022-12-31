@@ -1,212 +1,139 @@
 #include "map.hpp"
 #include "os.hpp"
-#include "actors/actor.hpp"
-#include "actors/collbox.hpp"
-#include "actors/passage.hpp"
-#include "actors/startpos.hpp"
-#include "actors/player.hpp"
-#include "actors/signpost.hpp"
 #include "event.hpp"
 #include "ilmendur.hpp"
 #include "texture_pool.hpp"
+#include "tmx.hpp"
+#include "actors/actor.hpp"
+#include "actors/startpos.hpp"
+#include "actors/player.hpp"
 #include <fstream>
 #include <algorithm>
 #include <cstdlib>
 #include <cassert>
 #include <pugixml.hpp>
 
-#include <iostream>
-
 #define TILEWIDTH 32
 
 using namespace std;
 namespace fs = std::filesystem;
 
-static TmxProperties readProperties(const pugi::xml_node& node)
+MapLayer::MapLayer(Map& map, std::string name, Properties props)
+    : mr_map(map),
+      m_name(name),
+      m_props(props)
 {
-    TmxProperties props;
-    const pugi::xml_node& properties_node = node.child("properties");
+}
 
-    if (properties_node) {
-        for (const pugi::xml_node& prop_node: properties_node.children("property")) {
-            string prop_name = prop_node.attribute("name").value();
-            string prop_val  = prop_node.attribute("value").value();
-            string prop_type = prop_node.attribute("type").value();
-            if (prop_type == "int") {
-                props.int_props[prop_name] = atoi(prop_val.c_str());
-            } else if (prop_type == "float") {
-                props.float_props[prop_name] = atof(prop_val.c_str());
-            } else if (prop_type == "bool") {
-                props.int_props[prop_name] = prop_val == "true";
-            } else { // Treat all the rest as strings, these types are not used
-                props.string_props[prop_name] = prop_val;
+MapLayer::~MapLayer()
+{
+}
+
+ObjectLayer::ObjectLayer(Map& map, std::string name, Properties props)
+    : MapLayer(map, name, props)
+{
+}
+
+ObjectLayer::~ObjectLayer()
+{
+    for(Actor* p_actor: m_actors) {
+        delete p_actor;
+    }
+
+    m_actors.clear();
+}
+
+void ObjectLayer::update()
+{
+    for(Actor* p_actor: m_actors) {
+        p_actor->update();
+    }
+
+    // After everyone has moved, check collisions and reset positions
+    // appropriately.
+    checkCollisions();
+}
+
+void ObjectLayer::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
+{
+    for(Actor* p_actor: m_actors) {
+        p_actor->draw(p_stage, p_camview);
+    }
+}
+
+TileLayer::TileLayer(Map& map, std::string name, Properties props, int width, int height, vector<int> gids)
+    : MapLayer(map, name, props),
+      m_width(width),
+      m_height(height),
+      m_gids(gids)
+{
+    string facedir = m_props.get("facedir");
+    if (facedir == string("down")) {
+        m_dir = TileLayer::layer_direction::down;
+    } else if (facedir == string("both")) {
+        m_dir = TileLayer::layer_direction::both;
+    } else {
+        m_dir = TileLayer::layer_direction::up;
+    }
+}
+
+void TileLayer::update()
+{
+    // Nothing
+}
+
+void TileLayer::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
+{
+    SDL_Rect srcrect;
+    SDL_Rect destrect;
+    SDL_Texture* p_tilesettexture = nullptr;
+
+    // TODO: Honor p_camview width and height for scaling purposes.
+    destrect.w = TILEWIDTH;
+    destrect.h = TILEWIDTH;
+
+    if (m_dir == TileLayer::layer_direction::up) {
+        for(size_t i=0; i < m_gids.size(); i++) {
+            int gid = m_gids[i];
+            if (readTile(p_tilesettexture, srcrect, gid)) {
+                destrect.x = (i % m_width * TILEWIDTH) - p_camview->x;
+                destrect.y = (i / m_width * TILEWIDTH) - p_camview->y;
+                SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
             }
         }
     }
+    // TODO: Handle "down" and "both" direction depending on the player view direction.
 
-    return props;
 }
 
-static vector<int> parseGidCsv(const std::string& csv)
+static MapLayer* readLayer(const pugi::xml_node& node, Map& map)
 {
-    vector<int> result;
-    size_t pos = 0;
-    size_t ppos = 0;
-    while ((pos = csv.find(",", pos)) != string::npos) {
-        int gid = atoi(csv.substr(ppos+1, pos-ppos).c_str());
-        result.push_back(gid);
-        // TODO: Detect rotations
-        ppos = pos;
-        pos++;
-    }
-
-    int gid = atoi(csv.substr(ppos+1, pos-ppos).c_str());
-    result.push_back(gid);
-
-    return result;
-}
-
-static vector<Actor*> readTmxObjects(const pugi::xml_node& node)
-{
-    vector<Actor*> result;
-
-    for(const pugi::xml_node& obj_node: node.children("object")) {
-        int id              = obj_node.attribute("id").as_int();
-        float x             = obj_node.attribute("x").as_float();
-        float y             = obj_node.attribute("y").as_float();
-        float w             = obj_node.attribute("width").as_float(); // zero if unset
-        float h             = obj_node.attribute("height").as_float(); // zero if unset
-        TmxProperties props = readProperties(obj_node);
-
-        assert(id > 0);
-
-        string type = props.get("type");
-        if (type == string("static")) {
-            const string& graphic = props.get("graphic");
-            const string& ani     = props.get("animation_mode");
-            assert(!graphic.empty());
-
-            // Note: Actors should always be placed with Point objects in
-            // Tiled, which do not have width/height values in the TMX file.
-            Actor* p_actor = new Actor(id, graphic);
-            p_actor->warp(Vector2f(x, y));
-
-            if (!ani.empty()) {
-                if (ani == string("never")) {
-                    p_actor->setAnimationMode(Actor::animation_mode::never);
-                } else if (ani == string("on_move")) {
-                    p_actor->setAnimationMode(Actor::animation_mode::on_move);
-                } else if (ani == string("always")) {
-                    p_actor->setAnimationMode(Actor::animation_mode::always);
-                } else {
-                    throw(runtime_error("Invalid animation mode `" + ani + "' for object with ID " + to_string(id) + "!"));
-                }
-            }
-
-            result.push_back(p_actor);
-        } else if (type == "startpos") {
-            result.push_back(new StartPosition(id, Vector2f(x, y), atoi(props.get("startpos").c_str())));
-        } else if (type == string("npc")) {
-            cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
-        } else if (type == "signpost") {
-            SDL_Rect rect;
-            rect.x = x;
-            rect.y = y;
-            rect.w = w;
-            rect.h = h;
-
-            vector<string> texts = splitString(props.get("text"), "<NM>");
-            result.push_back(new Signpost(id, rect, texts));
-        } else if (type == string("collbox")) {
-            SDL_Rect rect;
-            rect.x = x;
-            rect.y = y;
-            rect.w = w;
-            rect.h = h;
-            result.push_back(new CollisionBox(id, rect));
-        } else if (type == string("passage")) {
-            SDL_Rect rect;
-            rect.x = x;
-            rect.y = y;
-            rect.w = w;
-            rect.h = h;
-
-            const string& direction = props.get("direction");
-            Passage::pass_direction dir = 0;
-            if (direction.find("all") != string::npos) {
-                dir = Passage::up | Passage::right | Passage::down | Passage::left;
-            } else {
-                if (direction.find("up") != string::npos) {
-                    dir |= Passage::up;
-                }
-                if (direction.find("right") != string::npos) {
-                    dir |= Passage::right;
-                }
-                if (direction.find("down") != string::npos) {
-                    dir |= Passage::down;
-                }
-                if (direction.find("left") != string::npos) {
-                    dir |= Passage::left;
-                }
-            }
-
-            const string& target = props.get("target");
-            assert(!target.empty());
-            result.push_back(new Passage(id, rect, dir, target));
-        } else {
-            // Valid TMX, but an error by the map editor: unknown object type requested.
-            throw(runtime_error(string("Unknown object type `") + type + "' found in TMX file!"));
-        }
-
-    }
-
-    sort(result.begin(),
-         result.end(),
-         [](Actor*& a, Actor*& b) { return a->id() < b->id(); });
-
-    return result;
-}
-
-static Map::Layer readLayer(const pugi::xml_node& node, const std::string& mapname)
-{
-    Map::Layer layer;
     if (node.name() == string("layer")) {
-        layer.type = Map::LayerType::Tile;
-        layer.data.p_tile_layer = new TmxTileLayer();
-        layer.data.p_tile_layer->name   = node.attribute("name").value();
-        layer.data.p_tile_layer->width  = node.attribute("width").as_int();
-        layer.data.p_tile_layer->height = node.attribute("height").as_int();
-        layer.data.p_tile_layer->props  = readProperties(node);
-
-        string facedir = layer.data.p_tile_layer->props.get("facedir");
-        if (facedir == string("down")) {
-            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::down;
-        } else if (facedir == string("both")) {
-            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::both;
-        } else {
-            layer.data.p_tile_layer->dir = TmxTileLayer::layer_direction::up;
-        }
-
-        layer.data.p_tile_layer->gids = parseGidCsv(node.child("data").text().get());
+        TileLayer* p_layer = new TileLayer(map,
+                                           node.attribute("name").value(),
+                                           TMX::readProperties(node),
+                                           node.attribute("width").as_int(),
+                                           node.attribute("height").as_int(),
+                                           TMX::parseGidCsv(node.child("data").text().get()));
+        return p_layer;
     } else if (node.name() == string("objectgroup")) {
-        layer.type = Map::LayerType::Object;
-        layer.data.p_obj_layer         = new TmxObjLayer();
-        layer.data.p_obj_layer->name   = node.attribute("name").value();
-        layer.data.p_obj_layer->props  = readProperties(node);
-        layer.data.p_obj_layer->actors = readTmxObjects(node);
-
+        ObjectLayer* p_layer = new ObjectLayer(map,
+                                               node.attribute("name").value(),
+                                               TMX::readProperties(node));
+        TMX::readTmxObjects(node, p_layer); // Modifies `p_layer`!
+        return p_layer;
     // TODO: Remaining TMX layer types
     } else {
-        throw(runtime_error(string("Unsupported <map> child type `") + node.name() + "' in map `" + mapname + "'!"));
+        throw(runtime_error(string("Unsupported <map> child type `") + node.name() + "' in map `" + map.name() + "'!"));
     }
-
-    return layer;
 }
 
 Map::Map(const std::string& name)
     : m_name(name),
       m_width(0),
-      m_height(0)
+      m_height(0),
+      mp_freya(nullptr),
+      mp_benjamin(nullptr)
 {
     // DEBUG: Try user-provided map of the name first, and only if it
     // does not exist try shipped map. This is only for debugging!
@@ -244,7 +171,7 @@ Map::Map(const std::string& name)
 
     for (const pugi::xml_node& node: doc.child("map").children()) {
         if (node.name() == string("properties")) {
-            TmxProperties props = readProperties(doc.child("map"));
+            Properties props = TMX::readProperties(doc.child("map"));
             m_bg_music = props.get("background_music");
         } else if (node.name() == string("tileset")) {
             int firstgid    = node.attribute("firstgid").as_int();
@@ -253,78 +180,29 @@ Map::Map(const std::string& name)
 
             m_tilesets[firstgid] = new Tileset(source);
         } else {
-            m_layers.push_back(readLayer(node, m_name));
-
-            Layer& layer = m_layers[m_layers.size() - 1];
-            if (layer.type == LayerType::Object) {
-                for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                    p_actor->mp_map = this;
-                }
-            }
+            m_layers.push_back(readLayer(node, *this));
         }
     }
 }
 
 Map::~Map()
 {
-    for(Layer& layer: m_layers) {
-        switch (layer.type) {
-        case LayerType::Tile:
-            delete layer.data.p_tile_layer;
-            break;
-        case LayerType::Object:
-            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                delete p_actor;
-            }
-            delete layer.data.p_obj_layer;
-            break;
-        case LayerType::Image: // Ignore
-        case LayerType::Group: // Ignore
-        default: // Ignore
-            break;
-        }
+    for (MapLayer* p_layer: m_layers) {
+        delete p_layer;
     }
+    m_layers.clear();
 
     for(auto iter = m_tilesets.begin(); iter != m_tilesets.end(); iter++) {
         delete iter->second;
     }
+
+    m_tilesets.clear();
 }
 
 void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 {
-    SDL_Rect srcrect;
-    SDL_Rect destrect;
-    SDL_Texture* p_tilesettexture = nullptr;
-
-    // TODO: Honor p_camview width and height for scaling purposes.
-    destrect.w = TILEWIDTH;
-    destrect.h = TILEWIDTH;
-
-    for(size_t li=0; li < m_layers.size(); li++) {
-        const Layer& layer = m_layers[li];
-        switch (layer.type) {
-        case LayerType::Tile:
-            if (layer.data.p_tile_layer->dir == TmxTileLayer::layer_direction::up) {
-                for(size_t i=0; i < layer.data.p_tile_layer->gids.size(); i++) {
-                    int gid = layer.data.p_tile_layer->gids[i];
-                    if (readTile(p_tilesettexture, srcrect, gid)) {
-                        destrect.x = (i % m_width * TILEWIDTH) - p_camview->x;
-                        destrect.y = (i / m_width * TILEWIDTH) - p_camview->y;
-                        SDL_RenderCopy(p_stage, p_tilesettexture, &srcrect, &destrect);
-                    }
-                }
-            }
-            // TODO: Handle "down" and "both" direction depending on the player view direction.
-            break;
-        case LayerType::Object:
-            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                p_actor->draw(p_stage, p_camview);
-            }
-            break;
-        default:
-            // Ignore
-            break;
-        }
+    for (MapLayer* p_layer: m_layers) {
+        p_layer->draw(p_stage, p_camview);
     }
 }
 
@@ -337,17 +215,17 @@ SDL_Rect Map::drawRect() const
     return SDL_Rect{0, 0, m_width * TILEWIDTH, m_height * TILEWIDTH};
 }
 
-bool Map::readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid)
+bool TileLayer::readTile(SDL_Texture*& p_texid, SDL_Rect& rect, int gid)
 {
-    static map<int,Tileset*>::iterator iter;
+    static std::map<int,Tileset*>::iterator iter;
     if (gid == 0) {
         return false;
     }
 
-    for(iter=m_tilesets.begin(); iter != m_tilesets.end(); iter++) {
+    for(iter=mr_map.tilesets().begin(); iter != mr_map.tilesets().end(); iter++) {
         if (gid >= iter->first) {
             ++iter;
-            if (iter == m_tilesets.end() || gid < iter->first) {
+            if (iter == mr_map.tilesets().end() || gid < iter->first) {
                 --iter;
                 p_texid = iter->second->sdlTexture();
                 iter->second->readTile(rect, gid - iter->first);
@@ -368,17 +246,9 @@ void Map::update()
      * actors within the camera range. That would cause rather unnatural
      * behaviour. Always update all actors on the stage, and optimise by
      * not drawing them all in draw(). */
-    for(Layer& layer: m_layers) {
-        if (layer.type == LayerType::Object) {
-            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                p_actor->update();
-            }
-        }
+    for(MapLayer* p_layer: m_layers) {
+        p_layer->update();
     }
-
-    // After everyone has moved, check collisions and reset positions
-    // appropriately.
-    checkCollisions();
 }
 
 /**
@@ -386,24 +256,20 @@ void Map::update()
  * Note that apart from collision with the map boundary, collisions
  * can only occur between actors on the same layer.
  */
-void Map::checkCollisions()
+void ObjectLayer::checkCollisions()
 {
-    for(Layer& layer: m_layers) {
-        if (layer.type == LayerType::Object) {
-            for(Actor* p_actor: layer.data.p_obj_layer->actors) {
-                checkCollideMapBoundary(p_actor);
-                checkCollideActors(p_actor, *layer.data.p_obj_layer);
-            }
-        }
+    for(Actor* p_actor: m_actors) {
+        checkCollideMapBoundary(p_actor);
+        checkCollideActors(p_actor);
     }
 }
 
-void Map::checkCollideMapBoundary(Actor* p_actor)
+void ObjectLayer::checkCollideMapBoundary(Actor* p_actor)
 {
     /* Do not walk off the map. It is allowed to have the drawing rectangle
      * hang into the void, but not the collision box, i.e., the map's edge
      * counts as a wall. */
-    SDL_Rect maprect = drawRect();
+    SDL_Rect maprect = mr_map.drawRect();
     if (p_actor->isInvisible()) {
         if (p_actor->m_pos.x < 0.0f) {
             p_actor->m_pos.x = 0.0f;
@@ -442,9 +308,10 @@ void Map::checkCollideMapBoundary(Actor* p_actor)
 
 /**
  * Checks collisions with other actors. Only actors on the same
- * layer can collide.
+ * layer can collide, hence it is possible to have this as a
+ * member function of ObjectLayer rather than Map.
  */
-void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
+void ObjectLayer::checkCollideActors(Actor* p_actor)
 {
     using Collision = pair<Actor*,Actor*>;
 
@@ -452,7 +319,7 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
     vector<Collision> collisions;
     SDL_Rect collrect = p_actor->collisionBox();
     SDL_Rect other_collbox;
-    for(Actor* p_other: layer.actors) {
+    for(Actor* p_other: m_actors) {
         // Collision of an actor with itself is not possible.
         if (p_actor->m_id == p_other->m_id) {
             continue;
@@ -510,16 +377,66 @@ void Map::checkCollideActors(Actor* p_actor, TmxObjLayer& layer)
     }
 }
 
+/**
+ * Release ownership of `p_actor` from this layer, leaving the Actor
+ * instance dangling. This function is only intended to be used
+ * in Map::changeActorLayer() and nowhere else! It is an implementation
+ * detail! `p_actor` is in an inconsistent state after this method
+ * returns!
+ *
+ * \internal
+ */
+void ObjectLayer::releaseActor(Actor* p_actor)
+{
+    for(auto iter=m_actors.begin(); iter != m_actors.end(); iter++) {
+        if ((*iter)->m_id == p_actor->m_id) {
+            m_actors.erase(iter);
+            return;
+        }
+    }
+
+    /* If this assert triggers, then the actor requested to be released
+     * was not on the layer. This indicates that p_actor's mr_layer
+     * got out of sync with it's layer's member information -- which
+     * in turn is most likely the result of not using Map::changeActorLayer()
+     * for changing an actor's layer. ONLY EVER USE changeActorLayer() to
+     * change an actor's layer! */
+    assert(false);
+}
+
+/**
+ * Adds `p_actor` to the actors owned by this layer. This is
+ * an internal API only meant to be used during actor construction.
+ * It leaves `p_actor` itself untouched!
+ *
+ * \internal
+ */
+void ObjectLayer::addActor(Actor* p_actor)
+{
+    assert(p_actor->mapLayer() == this);
+
+    // Insert the actor at the position corresponding to its ID.
+    for(auto iter=m_actors.begin(); iter != m_actors.end(); iter++) {
+        if ((*iter)->id() > p_actor->id()) {
+            m_actors.insert(iter, p_actor);
+            return;
+        }
+    }
+
+    // If this is reached, the actor has a higher ID than all existing actors.
+    m_actors.push_back(p_actor);
+}
+
 vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
 {
     vector<Actor*> results;
-    TmxObjLayer* p_layer = p_actor->mapLayer();
+    ObjectLayer* p_layer = p_actor->mapLayer(); // Only actors on the same layer are considered
     SDL_Rect collbox1 = p_actor->collisionBox();
     SDL_Rect collbox2;
     SDL_Rect intersect;
-    for (Actor* p_other: p_layer->actors) {
+    for (Actor* p_other: p_layer->actors()) {
         // p_actor may not collide with itself
-        if (p_other->m_id == p_actor->m_id) {
+        if (p_other->id() == p_actor->id()) {
             continue;
         }
 
@@ -561,83 +478,98 @@ vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
     return results;
 }
 
-void Map::addHero(Player* p_player, int herono)
+/**
+ * Retrieves the hero pointers, if there are any. Otherwise, this
+ * method crashes.
+ */
+void Map::heroes(Player** p_freya, Player** p_benjamin)
 {
-    for(Layer& layer: m_layers) {
-        if (layer.type == LayerType::Object) {
-            for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
-                StartPosition* p_startpos = dynamic_cast<StartPosition*>(*iter);
-                if (p_startpos && p_startpos->herono == herono) {
-                    p_player->warp(p_startpos->startpos);
-                    p_player->turn(direction::up);
+    assert(mp_freya && mp_benjamin);
+    *p_freya = mp_freya;
+    *p_benjamin = mp_benjamin;
+}
 
-                    // Insert the player at the position corresponding to its ID.
-                    for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
-                        if ((*iter)->id() > p_player->id()) {
-                            layer.data.p_obj_layer->actors.insert(iter, p_player);
-                            p_player->mp_map = this;
-                            return;
-                        }
+/**
+ * Locates the actors of type `startpos` and creates player actors
+ * centred on them. If there are no `startpos` type actors, places the
+ * heroes at (100|100) and (200|200) at the bottom-most object layer.
+ * If there are no object layers, this method crashes.
+ */
+void Map::makeHeroes()
+{
+    for(MapLayer* p_layer: m_layers) {
+        ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(p_layer);
+        if (p_obj_layer) {
+            for(Actor* p_actor: p_obj_layer->actors()) {
+                StartPosition* p_startpos = dynamic_cast<StartPosition*>(p_actor);
+                if (p_startpos) {
+                    if (p_startpos->herono == 1) {
+                        mp_freya = new Player(p_obj_layer, 1);
+                        mp_freya->warp(p_startpos->startpos);
+                        mp_freya->turn(direction::up);
+                        p_obj_layer->addActor(mp_freya);
+                    } else if (p_startpos->herono == 2) {
+                        mp_benjamin = new Player(p_obj_layer, 2);
+                        mp_benjamin->warp(p_startpos->startpos);
+                        mp_benjamin->turn(direction::up);
+                        p_obj_layer->addActor(mp_benjamin);
+                    } else {
+                        // This is a two-player game.
+                        assert(false);
                     }
-                    // If this is reached, the player has a higher ID than all existing actors.
-                    layer.data.p_obj_layer->actors.push_back(p_player);
-                    p_player->mp_map = this;
-                    return;
                 }
             }
         }
     }
 
-    // No player start position found, spawn at "chars" layer at (100|100)
-    p_player->warp(Vector2f(100.0f, 100.0f));
-    p_player->turn(direction::up);
-    addActor(p_player, "chars");
-}
+    // If at least one hero was placed, it is ok.
+    if (mp_freya || mp_benjamin) {
+        return;
+    }
 
-/**
- * Add an actor to the map, to the layer named by `layername'. The map
- * takes ownership of `p_actor', do not delete it anymore.
- */
-void Map::addActor(Actor* p_actor, const string& layername)
-{
-    for(Layer& layer: m_layers) {
-        if (layer.type == LayerType::Object && layer.data.p_obj_layer->name == layername) {
-            // Insert the actor at the position corresponding to its ID.
-            for (auto iter = layer.data.p_obj_layer->actors.begin(); iter != layer.data.p_obj_layer->actors.end(); iter++) {
-                if ((*iter)->id() > p_actor->id()) {
-                    layer.data.p_obj_layer->actors.insert(iter, p_actor);
-                    p_actor->mp_map = this;
-                    return;
-                }
-            }
-            // If this is reached, the actor has a higher ID than all existing actors.
-            layer.data.p_obj_layer->actors.push_back(p_actor);
-            p_actor->mp_map = this;
+    // No start positions found, use defaults
+    for(MapLayer* p_layer: m_layers) {
+        ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(p_layer);
+        if (p_obj_layer) {
+            mp_freya = new Player(p_obj_layer, 1);
+            mp_freya->warp(Vector2f(100.0f, 100.0f));
+            mp_freya->turn(direction::up);
+            p_obj_layer->addActor(mp_freya);
+
+            mp_benjamin = new Player(p_obj_layer, 2);
+            mp_benjamin->warp(Vector2f(200.0f, 200.0f));
+            mp_benjamin->turn(direction::up);
+            p_obj_layer->addActor(mp_benjamin);
             return;
         }
     }
 
-    // If this triggers, a non-existant layer was requested. Note that
-    // actors can only be added to object layers.
+    // No object layers. Error.
     assert(false);
 }
 
-bool Map::findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer)
+/**
+ * Search through all object layers of this map for the actor
+ * that has the given ID. This is an expensive operation;
+ * use sparingly.
+ *
+ * Returns false if there is no actor with the requested ID, otherwise
+ * returns true. In the letter case, `*pp_actor` is set to a pointer
+ * to the Actor instance. In the former `*pp_actor` is left untouched.
+ */
+bool Map::findActor(int id, Actor** pp_actor)
 {
     assert(id > 0);
+    assert(pp_actor);
 
-    for (Layer& layer: m_layers) {
-        if (layer.type == LayerType::Object) {
-            for (auto iter=layer.data.p_obj_layer->actors.begin();
-                 iter != layer.data.p_obj_layer->actors.end();
+    for (MapLayer* p_layer: m_layers) {
+        ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(p_layer);
+        if (p_obj_layer) {
+            for (auto iter=p_obj_layer->actors().begin();
+                 iter != p_obj_layer->actors().end();
                  iter++) {
-                if (id == (*iter)->m_id) {
-                    if (pp_actor) {
-                        *pp_actor = *iter;
-                    }
-                    if (pp_layer) {
-                        *pp_layer = layer.data.p_obj_layer;
-                    }
+                if (id == (*iter)->id()) {
+                    *pp_actor = *iter;
                     return true;
                 }
             }
@@ -654,25 +586,18 @@ bool Map::findActor(int id, Actor** pp_actor, TmxObjLayer** pp_layer)
  */
 void Map::changeActorLayer(Actor* p_actor, const string& target_layer_name)
 {
-    assert(p_actor->map() == this);
+    assert(&p_actor->mapLayer()->map() == this);
 
     // Find the layer the actor is on, remove it from there,
     // and move it to the target layer.
-    TmxObjLayer* p_layer = p_actor->mapLayer();
-    for(auto iter=p_layer->actors.begin(); iter != p_layer->actors.end(); iter++) {
-        if ((*iter)->m_id == p_actor->m_id) {
-            p_layer->actors.erase(iter);
-            break;
-        }
-    }
+    ObjectLayer* p_layer = p_actor->mapLayer();
+    p_layer->releaseActor(p_actor); // p_actor's mp_layer is now out of sync!!
 
     for(auto iter=m_layers.begin(); iter != m_layers.end(); iter++) {
-        if (iter->type == LayerType::Object && iter->data.p_obj_layer->name == target_layer_name) {
-            iter->data.p_obj_layer->actors.push_back(p_actor);
-
-            sort(iter->data.p_obj_layer->actors.begin(),
-                 iter->data.p_obj_layer->actors.end(),
-                 [](Actor* p_a, Actor* p_b){return p_a->m_id < p_b->m_id;});
+        ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(*iter);
+        if (p_obj_layer && p_obj_layer->name() == target_layer_name) {
+            p_actor->resetLayer(p_obj_layer); // Now p_obj_layer's actor list is broken
+            p_obj_layer->addActor(p_actor);   // Fix it
             return;
         }
     }

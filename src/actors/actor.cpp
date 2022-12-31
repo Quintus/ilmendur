@@ -11,21 +11,22 @@
 using namespace std;
 
 /**
- * Constructs a new actor without an associated scene. To associate it
- * with a map, call Map::addActor().
+ * Constructs a new actor. New actors cannot be constructed outside
+ * of a map layer: pass the target layer as `p_layer`. You can always
+ * change the layer an actor is on later.
  *
  * The actor is constructed with the requested graphic, or, if no
  * graphic is requested, it will be invisible. The parameter
  * `graphic` takes the same values as TexturePool's [] operator.
  */
-Actor::Actor(int id, const string& graphic)
+Actor::Actor(int id, ObjectLayer* p_layer, const string& graphic)
     : mp_texinfo(nullptr),
       m_current_frame(0),
       m_ani_mode(animation_mode::on_move),
       m_lookdir(direction::none),
       m_ani_ticks(0),
       m_id(id),
-      mp_map(nullptr),
+      mp_layer(p_layer),
       m_move_start(0),
       m_passed_distance(0.0f),
       m_total_distance(0.0f)
@@ -310,14 +311,6 @@ void Actor::move()
     // Note: Collision checks happen in Map::update().
 }
 
-TmxObjLayer* Actor::mapLayer()
-{
-    assert(mp_map); // Cannot query the layer if the actor is not on a map.
-    TmxObjLayer* p_result = nullptr;
-    assert(mp_map->findActor(m_id, nullptr, &p_result)); // If this assert triggers, map and actor have gone out of sync.
-    return p_result;
-}
-
 /**
  * Handle an event. The default implementation does nothing; override
  * in subclasses. When handling collision events, be sure to check
@@ -403,4 +396,18 @@ void Actor::antiCollide(Actor* p_actor, const Actor* p_other, const SDL_Rect& in
         //cout << "This gives an angle of " << (180.0f*angle)/M_PI << "° with the Y axis" << endl;
         //cout << "ID " << p_actor->m_id << " is now at (" << p_actor->m_pos.x << "|" << p_actor->m_pos.y << ")" << endl;        }
     }
+}
+
+/**
+ * Forcibly reset this actor's layer to another one. This
+ * function is an implementation detail and only to be used
+ * within Map::changeActorLayer(). Do not use it anywhere else.
+ * Doing so will make the Actor's information go out of sync
+ * with the MapLayer's information and this will yield chaos.
+ *
+ * \internal
+ */
+void Actor::resetLayer(ObjectLayer* p_layer)
+{
+    mp_layer = p_layer;
 }

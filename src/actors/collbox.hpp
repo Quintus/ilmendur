@@ -5,7 +5,7 @@
 class CollisionBox: public Actor
 {
 public:
-    CollisionBox(int id, SDL_Rect box);
+    CollisionBox(int id, ObjectLayer* p_layer, SDL_Rect box);
     virtual ~CollisionBox();
 
     virtual void update();

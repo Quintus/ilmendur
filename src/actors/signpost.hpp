@@ -7,7 +7,7 @@
 class Signpost: public Actor
 {
 public:
-    Signpost(int id, SDL_Rect collbox, std::vector<std::string> texts);
+    Signpost(int id, ObjectLayer* p_layer, SDL_Rect collbox, std::vector<std::string> texts);
     virtual ~Signpost();
 
     virtual void update();

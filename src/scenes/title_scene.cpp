@@ -81,9 +81,6 @@ void TitleScene::draw(SDL_Renderer*)
 void TitleScene::startGame(const std::string& mapname)
 {
     DebugMapScene* p_testscene = new DebugMapScene(mapname);
-    Player* p = new Player();
-    p_testscene->map().addHero(p, 1);
-    p_testscene->setPlayer(p);
 
     // No popping, so that terminating the main game scene returns to the title scene.
     Ilmendur::instance().pushScene(p_testscene);

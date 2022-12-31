@@ -5,8 +5,8 @@
 
 using namespace std;
 
-Passage::Passage(int id, SDL_Rect area, pass_direction dir, const string& targetlayer)
-    : Actor(id),
+Passage::Passage(int id, ObjectLayer* p_layer, SDL_Rect area, pass_direction dir, const string& targetlayer)
+    : Actor(id, p_layer),
       m_size(area.w, area.h),
       m_passdir(dir),
       m_targetlayer(targetlayer)
@@ -51,6 +51,6 @@ void Passage::handleEvent(const Event& event)
         (movedir.y > 0.0f && m_passdir & Passage::down) ||
         (movedir.x < 0.0f && m_passdir & Passage::left) ||
         (movedir.x > 0.0f && m_passdir & Passage::up)) {
-        mp_map->changeActorLayer(event.data.coll.p_other, m_targetlayer);
+        mp_layer->map().changeActorLayer(event.data.coll.p_other, m_targetlayer);
     }
 }

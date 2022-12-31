@@ -4,8 +4,8 @@
 
 using namespace std;
 
-CollisionBox::CollisionBox(int id, SDL_Rect box)
-    : Actor(id)
+CollisionBox::CollisionBox(int id, ObjectLayer* p_layer, SDL_Rect box)
+    : Actor(id, p_layer)
 {
     warp(Vector2f(box.x, box.y));
     m_collbox = box;

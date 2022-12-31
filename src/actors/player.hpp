@@ -5,11 +5,13 @@
 class Player: public Actor
 {
 public:
-    Player();
+    Player(ObjectLayer* p_layer, int playerno);
     ~Player();
 
     virtual void update();
     void checkInput();
+private:
+    int m_playerno;
 };
 
 #endif /* ILMENDUR_PLAYER_HPP */

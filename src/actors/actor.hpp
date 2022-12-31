@@ -9,8 +9,7 @@
 
 struct TextureInfo;
 class Scene;
-class Map;
-struct TmxObjLayer;
+class ObjectLayer;
 struct Event;
 
 class Actor
@@ -18,7 +17,7 @@ class Actor
 public:
     enum class animation_mode { never, on_move, always };
 
-    Actor(int id, const std::string& graphic = "");
+    Actor(int id, ObjectLayer* p_layer, const std::string& graphic = "");
     virtual ~Actor();
 
     virtual void update();
@@ -26,11 +25,11 @@ public:
     virtual void handleEvent(const Event& event);
     virtual void interact(Actor* p_other);
 
+    ObjectLayer* mapLayer() { return mp_layer; }
+    void resetLayer(ObjectLayer* p_layer);
+
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
-
-    Map* map() { return mp_map; } ///< Map the player is associated with. May be nullptr.
-    TmxObjLayer* mapLayer();      ///< Layer on the map().
 
     bool isMoving();
     void moveTo(const Vector2f& targetpos, float velocity);
@@ -60,7 +59,7 @@ private:
 
 protected:
     int m_id; ///< Map-wide unique ID of this actor.
-    Map* mp_map; ///< Map the actor is on. May be nullptr.
+    ObjectLayer* mp_layer; // Map layer the actor is on (this has an association to the map)
     Vector2f m_pos;
     Vector2f m_targetpos;
     Vector2f m_movedir;
@@ -71,8 +70,8 @@ protected:
 
     static void antiCollide(Actor* p_actor, const Actor* p_other, const SDL_Rect& intersect);
 
-    // For collision checks and mp_map assocation Map needs access
-    friend class Map;
+    // For collision checks and mp_map assocation ObjectLayer needs access
+    friend class ObjectLayer;
 };
 
 #endif /* ILMENDUR_ACTOR_HPP */

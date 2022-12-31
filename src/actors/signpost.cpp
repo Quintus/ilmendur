@@ -7,8 +7,8 @@
 
 using namespace std;
 
-Signpost::Signpost(int id, SDL_Rect collbox, vector<string> texts)
-    : Actor(id),
+Signpost::Signpost(int id, ObjectLayer* p_layer, SDL_Rect collbox, vector<string> texts)
+    : Actor(id, p_layer),
       m_texts(texts)
 {
     warp(Vector2f(collbox.x, collbox.y));
