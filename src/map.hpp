@@ -8,6 +8,11 @@
 class Actor;
 class Player;
 class Map;
+class ObjectLayer;
+
+namespace TMX {
+    void tmxAddActor(ObjectLayer* p_target_layer, Actor* p_actor);
+}
 
 class MapLayer
 {
@@ -53,14 +58,20 @@ public:
     virtual void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
     inline const std::vector<Actor*>& actors() { return m_actors; }
 
+private:
     void addActor(Actor* p_actor);
     void releaseActor(Actor* p_actor);
-private:
     void checkCollisions();
     void checkCollideMapBoundary(Actor* p_actor);
     void checkCollideActors(Actor* p_actor);
 
     std::vector<Actor*> m_actors;
+
+    // Allow Map::changeActorLayer() and Map::makeHeroes() to call
+    // the addActor() and releaseActor() internal functions.
+    friend class Map;
+    // Allow the Actor TMX deserialiser to access addActor().
+    friend void TMX::tmxAddActor(ObjectLayer* p_target_layer, Actor* p_actor);
 };
 
 class Map

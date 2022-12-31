@@ -596,8 +596,8 @@ void Map::changeActorLayer(Actor* p_actor, const string& target_layer_name)
     for(auto iter=m_layers.begin(); iter != m_layers.end(); iter++) {
         ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(*iter);
         if (p_obj_layer && p_obj_layer->name() == target_layer_name) {
-            p_actor->resetLayer(p_obj_layer); // Now p_obj_layer's actor list is broken
-            p_obj_layer->addActor(p_actor);   // Fix it
+            p_actor->mp_layer = p_obj_layer; // Now p_obj_layer's actor list is broken
+            p_obj_layer->addActor(p_actor);  // Fix it
             return;
         }
     }

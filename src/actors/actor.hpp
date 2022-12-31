@@ -26,7 +26,6 @@ public:
     virtual void interact(Actor* p_other);
 
     ObjectLayer* mapLayer() { return mp_layer; }
-    void resetLayer(ObjectLayer* p_layer);
 
     void setGraphic(const std::string& graphic);
     void setAnimationMode(animation_mode mode);
@@ -72,6 +71,7 @@ protected:
 
     // For collision checks and mp_map assocation ObjectLayer needs access
     friend class ObjectLayer;
+    friend class Map;
 };
 
 #endif /* ILMENDUR_ACTOR_HPP */

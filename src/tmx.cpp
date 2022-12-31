@@ -166,6 +166,17 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
     // Important final step: Make the counter-link from the layer to
     // to the actors so that the layer owns the actors.
     for(Actor* p_actor: result) {
-        p_target_layer->addActor(p_actor);
+        tmxAddActor(p_target_layer, p_actor);
     }
+}
+
+/**
+ * Internal function used by TMX::readTmxObjects() that is `friend`
+ * with ObjectLayer.
+ *
+ * \internal
+ */
+void TMX::tmxAddActor(ObjectLayer* p_target_layer, Actor* p_actor)
+{
+    p_target_layer->addActor(p_actor);
 }

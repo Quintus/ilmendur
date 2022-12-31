@@ -397,17 +397,3 @@ void Actor::antiCollide(Actor* p_actor, const Actor* p_other, const SDL_Rect& in
         //cout << "ID " << p_actor->m_id << " is now at (" << p_actor->m_pos.x << "|" << p_actor->m_pos.y << ")" << endl;        }
     }
 }
-
-/**
- * Forcibly reset this actor's layer to another one. This
- * function is an implementation detail and only to be used
- * within Map::changeActorLayer(). Do not use it anywhere else.
- * Doing so will make the Actor's information go out of sync
- * with the MapLayer's information and this will yield chaos.
- *
- * \internal
- */
-void Actor::resetLayer(ObjectLayer* p_layer)
-{
-    mp_layer = p_layer;
-}
