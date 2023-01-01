@@ -1,3 +1,4 @@
+# coding: utf-8
 require "rake/clean"
 
 CLEAN.include("*-prefix", "build", "build-dir", "repo")
@@ -26,6 +27,35 @@ desc "Build ilmendur.flatpak Flatpak bundle"
 file "ilmendur.flatpak" => FileList["src/**/*.cpp", "src/**/*.hpp", "eu.guelker.ilmendur.yml"] + deps.keys do |t|
   run "flatpak-builder --repo=repo --gpg-sign=E22572789229F6266BBF327C58932C3C6385CD3B --force-clean build-dir eu.guelker.ilmendur.yml"
   run "flatpak build-bundle repo '#{t.name}' eu.guelker.ilmendur"
+end
+
+namespace "i18n" do
+
+  desc "Update data/translations/Ilmendur.pot from the C++ source files."
+  task :potfile do
+    sources = FileList["src/**/*.cpp"]
+    run "xgettext -o data/translations/Ilmendur.pot \
+--add-comments='TRANS:' \
+--language=C++ \
+--escape \
+--from-code=UTF-8 \
+--keyword=_ \
+--keyword=PL_:1,2 \
+--keyword=C_:1c,2 \
+--copyright-holder='Marvin Gülker and the Ilmendur team' \
+--package-name='Ilmendur' \
+#{sources.join(' ')}"
+  end
+
+  rule ".po" => "data/translations/Ilmendur.pot" do |t|
+    target = "data/translations/#{t.name.split(":")[1]}"
+    if File.file?("data/translations/#{t.source}")
+      run "msgmerge -U #{t.prereqs.first} #{target}"
+    else
+      cp t.prereqs.first, target
+    end
+  end
+
 end
 
 task :default do

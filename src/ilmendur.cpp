@@ -10,6 +10,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
+#include "i18n.hpp"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -48,6 +49,8 @@ Ilmendur::Ilmendur()
         throw(runtime_error("Ilmendur is a singleton!"));
     }
     sp_ilmendur = this;
+
+    I18n::setup();
 
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         throw(runtime_error(string("SDL_Init() failed: ") + SDL_GetError()));

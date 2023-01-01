@@ -4,6 +4,7 @@
 #include "../actors/player.hpp"
 #include "../map.hpp"
 #include "../os.hpp"
+#include "../i18n.hpp"
 #include "../imgui/imgui.h"
 #include <filesystem>
 #include <algorithm>
@@ -31,7 +32,7 @@ void TitleScene::update()
     ImGui::Begin("Title Menu", nullptr, ImGuiWindowFlags_NoDecoration);
 
     if (mapmode) {
-        if (ImGui::Button("Back")) {
+        if (ImGui::Button(_("Back"))) {
             mapmode = false;
         } else {
             static string msg;
@@ -61,13 +62,13 @@ void TitleScene::update()
             }
         }
     } else {
-        if (ImGui::Button("START", ImVec2(1000.0f, 100.0f))) {
+        if (ImGui::Button(_("START"), ImVec2(1000.0f, 100.0f))) {
             startGame("Oak Fortress");
         }
-        if (ImGui::Button("Quit", ImVec2(1000.0f, 100.0f))) {
+        if (ImGui::Button(_("Quit"), ImVec2(1000.0f, 100.0f))) {
             quitGame();
         }
-        if (ImGui::Button("Load map from disk", ImVec2(1000.0f, 100.0f))) {
+        if (ImGui::Button(_("Load map from disk"), ImVec2(1000.0f, 100.0f))) {
             mapmode = true;
         }
     }

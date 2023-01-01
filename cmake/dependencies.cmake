@@ -234,3 +234,11 @@ target_link_libraries(ilmendur
 
 # inith (source files in tree)
 add_compile_options(-DINI_ALLOW_MULTILINE=0 -DINI_HANDLER_LINENO=1)
+
+# GNU Gettext. The actual C library, libintl, is part of glibc
+# and does not require explicit linking. The Gettext cmake module
+# only looks for the Gettext commandline tooling. On Windows,
+# it will be necessary to use FindIntl and actually link libintl.
+if (ENABLE_NLS)
+  find_package(Gettext)
+endif()

@@ -35,7 +35,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 ########################################
 # Flags and options
 
-# option(ENABLE_NLS "Enable native language support (most notably translations)" ON)
+option(ENABLE_NLS "Enable native language support (most notably translations)" ON)
 
 ########################################
 # Configuring the compiler
@@ -81,6 +81,35 @@ include_directories(${ILMENDUR_DEPS_INSTALL_DIR}/include)
 include(cmake/dependencies.cmake)
 
 ########################################
+# Internationalization
+
+set(ILMENDUR_GETTEXT_DOMAIN "Ilmendur")
+if (ENABLE_NLS)
+  file(GLOB po_files "data/translations/*.po")
+  set(mofiles "")
+  
+  foreach(pofile ${po_files})
+    cmake_path(GET pofile STEM polocale)
+    cmake_path(SET mofile "${CMAKE_BINARY_DIR}")
+    cmake_path(APPEND mofile "translations")
+    cmake_path(APPEND mofile "${polocale}")
+    cmake_path(APPEND mofile "LC_MESSAGES")
+    cmake_path(SET catdir "${mofile}")
+    cmake_path(APPEND mofile "${ILMENDUR_GETTEXT_DOMAIN}.mo")
+    message(STATUS "pofile: ${pofile}")
+    message(STATUS "mofile: ${mofile}")
+    message(STATUS "catdir: ${catdir}")
+    add_custom_command(OUTPUT "${mofile}"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${catdir}"
+      COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} -o "${mofile}" "${pofile}")
+    list(APPEND mofiles "${mofile}")
+  endforeach()
+  message(STATUS "mofiles: ${mofiles}")
+  add_custom_target(translations SOURCES "${mofiles}")
+  add_dependencies(ilmendur translations)
+endif()
+
+########################################
 # Installation configuration
 
 include(GNUInstallDirs)
@@ -90,6 +119,8 @@ install(TARGETS ilmendur DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Game data.
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur)
+
+# TODO: Install translations into the /usr/share/locale resp. the CMAKE variable for this
 
 ########################################
 # Build configuration header
