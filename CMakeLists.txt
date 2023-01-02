@@ -119,8 +119,7 @@ install(TARGETS ilmendur DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Game data.
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/" DESTINATION ${CMAKE_INSTALL_DATADIR}/ilmendur)
-
-# TODO: Install translations into the /usr/share/locale resp. the CMAKE variable for this
+install(DIRECTORY "${CMAKE_BINARY_DIR}/translations/" DESTINATION ${CMAKE_INSTALL_LOCALEDIR})
 
 ########################################
 # Build configuration header
