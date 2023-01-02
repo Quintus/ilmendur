@@ -69,8 +69,8 @@ void I18n::setup()
 
 #ifdef ILMENDUR_DEBUG_BUILD
     cout << "I18n information:" << endl
-         << "  Locale:    " << userlocale << endl
-         << "  Domain:    " << ILMENDUR_GETTEXT_DOMAIN << endl
-         << "  Directory: " << transdir.string() << endl;
+         << "    Locale:    " << userlocale << endl
+         << "    Domain:    " << ILMENDUR_GETTEXT_DOMAIN << endl
+         << "    Directory: " << transdir.string() << endl;
 #endif
 }
