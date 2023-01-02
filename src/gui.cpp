@@ -30,6 +30,10 @@ static void parseMarkup(std::string& str, ImTextCustomization& tc)
 {
     static const ImColor emcolor(0, 172, 255, 255);
 
+    // Note: Do not include i18n translation logic here; this should
+    // be done in the TMX loader in order to allow showing
+    // non-localisable messages.
+
     regex re("<em>(.*?)</em>");
     smatch mresult;
     vector<pair<size_t, size_t>> ranges; // each pair holds start and length of match

@@ -87,7 +87,7 @@ set(ILMENDUR_GETTEXT_DOMAIN "Ilmendur")
 if (ENABLE_NLS)
   file(GLOB po_files "data/translations/*.po")
   set(mofiles "")
-  
+
   foreach(pofile ${po_files})
     cmake_path(GET pofile STEM polocale)
     cmake_path(SET mofile "${CMAKE_BINARY_DIR}")
@@ -96,15 +96,12 @@ if (ENABLE_NLS)
     cmake_path(APPEND mofile "LC_MESSAGES")
     cmake_path(SET catdir "${mofile}")
     cmake_path(APPEND mofile "${ILMENDUR_GETTEXT_DOMAIN}.mo")
-    message(STATUS "pofile: ${pofile}")
-    message(STATUS "mofile: ${mofile}")
-    message(STATUS "catdir: ${catdir}")
     add_custom_command(OUTPUT "${mofile}"
       COMMAND ${CMAKE_COMMAND} -E make_directory "${catdir}"
-      COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} -o "${mofile}" "${pofile}")
+      COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} -o "${mofile}" "${pofile}"
+      DEPENDS "${pofile}")
     list(APPEND mofiles "${mofile}")
   endforeach()
-  message(STATUS "mofiles: ${mofiles}")
   add_custom_target(translations SOURCES "${mofiles}")
   add_dependencies(ilmendur translations)
 endif()

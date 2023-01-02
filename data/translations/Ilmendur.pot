@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Ilmendur\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-01 14:03+0100\n"
+"POT-Creation-Date: 2023-01-02 14:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/external_strings.cpp:6
+msgid "This is a signpost!<NM>It took about a week to code it!"
+msgstr ""
 
 #: src/scenes/title_scene.cpp:35
 msgid "Back"

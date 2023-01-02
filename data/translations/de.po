@@ -1,5 +1,5 @@
 # German translation for Ilmendur
-# Copyright (C) YEAR Marvin Gülker and the Ilmendur team
+# Copyright (C) 2023 Marvin Gülker and the Ilmendur team
 # This file is distributed under the same license as the Ilmendur package.
 # Marvin Gülker <kontakt@guelker.eu>, 2023.
 #
@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Ilmendur\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-01 14:03+0100\n"
-"PO-Revision-Date: 2023-01-01 21:23+0100\n"
+"POT-Creation-Date: 2023-01-02 14:03+0100\n"
+"PO-Revision-Date: 2023-01-02 14:25+0100\n"
 "Last-Translator: Marvin Gülker <kontakt@guelker.eu>\n"
 "Language-Team: No teams yet\n"
 "Language: de\n"
@@ -16,6 +16,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: src/external_strings.cpp:6
+msgid "This is a signpost!<NM>It took about a week to code it!"
+msgstr "Dies ist ein Schild!<NM>Es brauchte ungefähr eine Woche, bis es fertig programmiert war!"
 
 #: src/scenes/title_scene.cpp:35
 msgid "Back"

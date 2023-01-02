@@ -6,6 +6,7 @@
 #include "actors/player.hpp"
 #include "actors/signpost.hpp"
 #include "map.hpp"
+#include "i18n.hpp"
 #include <cassert>
 #include <algorithm>
 #include <pugixml.hpp>
@@ -113,7 +114,8 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
             rect.w = w;
             rect.h = h;
 
-            vector<string> texts = splitString(props.get("text"), "<NM>");
+            string translated_text = gettext(props.get("text").c_str());
+            vector<string> texts = splitString(translated_text, "<NM>");
             result.push_back(new Signpost(id, p_target_layer, rect, texts));
         } else if (type == string("collbox")) {
             SDL_Rect rect;
