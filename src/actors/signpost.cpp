@@ -5,14 +5,14 @@
 #include "../gui.hpp"
 #include "player.hpp"
 
+#define TILEWIDTH 32
+
 using namespace std;
 
-Signpost::Signpost(int id, ObjectLayer* p_layer, SDL_Rect collbox, vector<string> texts)
+Signpost::Signpost(int id, ObjectLayer* p_layer, vector<string> texts)
     : Actor(id, p_layer),
       m_texts(texts)
 {
-    warp(Vector2f(collbox.x, collbox.y));
-    m_collbox = collbox;
 }
 
 Signpost::~Signpost()
@@ -34,8 +34,8 @@ void Signpost::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
     TextureInfo* p_tileset = Ilmendur::instance().texturePool()["tilesets/signposts.png"];
     static const SDL_Rect srcrect { 32, 0, 32, 32 };
     SDL_Rect destrect;
-    destrect.x = m_pos.x;
-    destrect.y = m_pos.y;
+    destrect.x = m_pos.x - 0.5 * TILEWIDTH;
+    destrect.y = m_pos.y - 0.5 * TILEWIDTH;
     destrect.w = 32;
     destrect.h = 32;
 
@@ -52,7 +52,12 @@ void Signpost::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
 
 SDL_Rect Signpost::collisionBox() const
 {
-    return m_collbox;
+    SDL_Rect rect;
+    rect.x = m_pos.x - 0.5 * TILEWIDTH;
+    rect.y = m_pos.y - 0.5 * TILEWIDTH;
+    rect.w = TILEWIDTH;
+    rect.h = TILEWIDTH;
+    return rect;
 }
 
 void Signpost::handleEvent(const Event& event)

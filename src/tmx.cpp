@@ -147,15 +147,12 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
 
             result.push_back(p_npc);
         } else if (type == "signpost") {
-            SDL_Rect rect;
-            rect.x = x;
-            rect.y = y;
-            rect.w = w;
-            rect.h = h;
-
             string translated_text = gettext(props.get("text").c_str());
             vector<string> texts = splitString(translated_text, "<NM>");
-            result.push_back(new Signpost(id, p_target_layer, rect, texts));
+
+            Signpost* p_sign = new Signpost(id, p_target_layer, texts);
+            p_sign->warp(Vector2f(x, y));
+            result.push_back(p_sign);
         } else if (type == string("collbox")) {
             SDL_Rect rect;
             rect.x = x;

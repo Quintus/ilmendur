@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="40">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="42">
  <properties>
   <property name="background_music" value="Slow Ballad.ogg"/>
  </properties>
@@ -323,17 +323,18 @@
    </properties>
    <point/>
   </object>
-  <object id="36" x="1600" y="2144" width="32" height="32">
-   <properties>
-    <property name="text" value="This is a signpost!&lt;NM&gt;It took about a week to code it!"/>
-    <property name="type" value="signpost"/>
-   </properties>
-  </object>
   <object id="39" x="2240" y="2272">
    <properties>
     <property name="direction" value="left"/>
     <property name="graphic" value="chars/spaceship.png"/>
     <property name="type" value="npc"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="40" x="1728" y="2368">
+   <properties>
+    <property name="text" value="This is a signpost!&lt;NM&gt;It took about a week to code it!"/>
+    <property name="type" value="signpost"/>
    </properties>
    <point/>
   </object>
