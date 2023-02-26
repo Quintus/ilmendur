@@ -14,6 +14,7 @@ public:
     DebugMapScene(const std::string& map);
     virtual ~DebugMapScene();
 
+    virtual void setup();
     virtual void update();
     virtual void draw(SDL_Renderer* p_renderer);
     virtual void handleKeyDown(const SDL_Event& event);

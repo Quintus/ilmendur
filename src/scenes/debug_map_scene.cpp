@@ -27,9 +27,6 @@ DebugMapScene::DebugMapScene(const std::string& map)
         //Ilmendur::instance().audioSystem().playBackgroundMusic(mp_map->backgroundMusic());
     }
 
-    mp_map->makeHeroes();
-    Player* p_ignore = nullptr;
-    mp_map->heroes(&mp_player, &p_ignore);
 }
 
 DebugMapScene::~DebugMapScene()
@@ -43,6 +40,16 @@ DebugMapScene::~DebugMapScene()
     if (mp_cam2) {
         delete mp_cam2;
     }
+}
+
+void DebugMapScene::setup()
+{
+    Scene::setup();
+
+    mp_map->setup();
+    mp_map->makeHeroes();
+    Player* p_ignore = nullptr;
+    mp_map->heroes(&mp_player, &p_ignore);
 }
 
 void DebugMapScene::update()

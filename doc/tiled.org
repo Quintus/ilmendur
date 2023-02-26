@@ -61,6 +61,18 @@ Collision boxes prevent most actors from passing over them, most notably the her
 
 Ilmendur does not support any properties for actors of type =collbox=.
 
+**** =npc=
+
+This is the general-purpose type for making any kind of more-than-trivial non-playable character (NPC). For instance, if you want an NPC that behaves differently depending on the game progress, this is what you want.
+
+Each NPC has an associated /activation function/ that is run when the NPC is interacted with with one of the heroes. The activation function receives two arguments: the instance of =NPC= it is run on, and the instance of the =Hero= which is interacting with the NPC. Activation functions are attached to the =NPC= instances in the C++ code by special objects of type =MapController= in their =setup()= method, and the target =NPC= instance is identified by its TMX ID, which you can see in Tiled in the property window when editing an NPC object. So, to make an NPC that does what you want, you need to:
+
+1. Create an object of type =npc= in Tiled and write down its TMX ID property value.
+2. Create a =MapController= subclass for the map the NPC is on in the C++ code (in the =map_controllers/= directory).
+3. Write your activation function, preferably as a static member of the =MapController= subclass you created in step 2.
+4. Write the =setup()= function for your =MapController= subclass and inside it, attach the activation function you write in step 3 to the NPC with the TMX ID you noted in step 1.
+5. Add your =MapController= subclass to the list of recognised map controllers in =MapController::createAllMapControllers()=.
+
 **** =passage=
 
 The =passage= type defines objects which allow the player and NPCs to switch the layer they are currently moving on. This is required to use in-map stairs, bridges over passable ways below, and similar constructions. They have a direction in which they need to be passed in order to activate the layer switch and a target layer.
@@ -96,7 +108,9 @@ Ilmendur reads the following properties for actors of type =startpos=:
 
 A sign standing around. Signs cannot be passed, but they can be read.
 
-The =text= property gives the text that is displayed to the user. Note that Ilmendur currently only displays six lines of text in a message dialog box; any exceeding text will be clipped off. In order to show multiple message dialogue boxes in sequence, use the special character sequence =<NM>= to divice your long text accordingly.
+The =text= property gives the text that is displayed to the user. Note that Ilmendur currently only displays six lines of text in a message dialog box; any exceeding text will be clipped off. In order to show multiple message dialogue boxes in sequence, use the special character sequence =<NM>= to divide your long text accordingly.
+
+Do not care about translations when editing the text in Tiled. The game developers have a means to extract the texts from the TMX files and add them into the translation system.
 
 | *Property* | *Type* | *Possible Values* | *Default value* | *Meaning*                                |
 |            |        | <20>              | <10>            | <20>                                     |

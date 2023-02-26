@@ -7,6 +7,7 @@
 #include "actors/actor.hpp"
 #include "actors/startpos.hpp"
 #include "actors/player.hpp"
+#include "map_controllers/map_controller.hpp"
 #include <fstream>
 #include <algorithm>
 #include <cstdlib>
@@ -133,7 +134,8 @@ Map::Map(const std::string& name)
       m_width(0),
       m_height(0),
       mp_freya(nullptr),
-      mp_benjamin(nullptr)
+      mp_benjamin(nullptr),
+      mp_controller(nullptr)
 {
     // DEBUG: Try user-provided map of the name first, and only if it
     // does not exist try shipped map. This is only for debugging!
@@ -149,18 +151,14 @@ Map::Map(const std::string& name)
         throw(std::runtime_error(string("Failed to load map '") + m_name + "'"));
     }
 
-    if (doc.child("map").attribute("version").value() != string("1.5")) {
-        throw(std::runtime_error(string("Expected TMX map format version 1.5, got '") + doc.child("map").attribute("version").value() + "'."));
-    }
+    // if (doc.child("map").attribute("version").value() != string("1.5")) {
+    //     throw(std::runtime_error(string("Expected TMX map format version 1.5, got '") + doc.child("map").attribute("version").value() + "'."));
+    // }
     if (doc.child("map").attribute("tilewidth").as_int() != TILEWIDTH) {
         throw(std::runtime_error(string("Map '" + m_name + "' does not have " + to_string(TILEWIDTH) + "px tile width")));
     }
     if (doc.child("map").attribute("tileheight").as_int() != TILEWIDTH) {
         throw(std::runtime_error(string("Map '" + m_name + "' does not have " + to_string(TILEWIDTH) + "px tile height")));
-    }
-
-    if (doc.child("map").attribute("version").value() != string("1.5")) {
-        throw(std::runtime_error(string("Expected TMX map format version 1.5, got '") + doc.child("map").attribute("version").value() + "'."));
     }
 
     // TODO: More assertions on <MAP> attributes
@@ -183,10 +181,17 @@ Map::Map(const std::string& name)
             m_layers.push_back(readLayer(node, *this));
         }
     }
+
+    MapControllers::MapController* p_ctrl = nullptr;
+    if (MapControllers::MapController::findMapController(m_name, &p_ctrl)) {
+        mp_controller = p_ctrl;
+    }
 }
 
 Map::~Map()
 {
+    mp_controller = nullptr; // Now owned by Map
+
     for (MapLayer* p_layer: m_layers) {
         delete p_layer;
     }
@@ -197,6 +202,18 @@ Map::~Map()
     }
 
     m_tilesets.clear();
+}
+
+/**
+ * Late map initialisation code that requires the map's
+ * scene to be available as the top of the stack. Run in
+ * your scene's setup() function.
+ */
+void Map::setup()
+{
+    if (mp_controller) {
+        mp_controller->setup();
+    }
 }
 
 void Map::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)

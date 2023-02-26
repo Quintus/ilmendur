@@ -11,6 +11,7 @@
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
 #include "i18n.hpp"
+#include "map_controllers/map_controller.hpp"
 #include <chrono>
 #include <thread>
 #include <stdexcept>
@@ -165,9 +166,11 @@ int Ilmendur::run()
     mp_texture_pool = new TexturePool();
     mp_audio_system = new AudioSystem();
 
-    m_scene_stack.push(new TitleScene());
-
     GUISystem::loadFonts();
+    MapControllers::MapController::createAllMapControllers();
+
+    m_scene_stack.push(new TitleScene());
+    m_scene_stack.top()->setup();
 
     ImGuiIO& io = ImGui::GetIO();
     high_resolution_clock::time_point start_time;
@@ -234,6 +237,10 @@ int Ilmendur::run()
         if (mp_next_scene) {
             m_scene_stack.push(mp_next_scene);
             mp_next_scene = nullptr;
+
+            if (!m_scene_stack.top()->isSetUp()) {
+                m_scene_stack.top()->setup();
+            }
         }
 
         // Throttle framerate to a fixed one (fixed frame rate)
@@ -247,6 +254,8 @@ int Ilmendur::run()
         }
 #endif
     }
+
+    MapControllers::MapController::freeAllMapControllers();
 
     return 0;
 }

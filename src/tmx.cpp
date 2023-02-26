@@ -5,6 +5,7 @@
 #include "actors/startpos.hpp"
 #include "actors/player.hpp"
 #include "actors/signpost.hpp"
+#include "actors/npc.hpp"
 #include "map.hpp"
 #include "i18n.hpp"
 #include <cassert>
@@ -106,7 +107,30 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
         } else if (type == "startpos") {
             result.push_back(new StartPosition(id, p_target_layer, Vector2f(x, y), atoi(props.get("startpos").c_str())));
         } else if (type == string("npc")) {
-            cout << "DEBUG WARNING: Ignoring npc actor for now" << endl;
+            const string& graphic = props.get("graphic");
+            const string& ani     = props.get("animation_mode");
+            assert(!graphic.empty());
+            SDL_Rect rect;
+            rect.x = x;
+            rect.y = y;
+            rect.w = w;
+            rect.h = h;
+
+            NonPlayableCharacter* p_npc = new NonPlayableCharacter(id, p_target_layer, rect, graphic);
+
+            if (!ani.empty()) {
+                if (ani == string("never")) {
+                    p_npc->setAnimationMode(Actor::animation_mode::never);
+                } else if (ani == string("on_move")) {
+                    p_npc->setAnimationMode(Actor::animation_mode::on_move);
+                } else if (ani == string("always")) {
+                    p_npc->setAnimationMode(Actor::animation_mode::always);
+                } else {
+                    throw(runtime_error("Invalid animation mode `" + ani + "' for object with ID " + to_string(id) + "!"));
+                }
+            }
+
+            result.push_back(p_npc);
         } else if (type == "signpost") {
             SDL_Rect rect;
             rect.x = x;

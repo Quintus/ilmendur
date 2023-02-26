@@ -10,6 +10,10 @@ class Player;
 class Map;
 class ObjectLayer;
 
+namespace MapControllers {
+    class MapController;
+}
+
 namespace TMX {
     void tmxAddActor(ObjectLayer* p_target_layer, Actor* p_actor);
 }
@@ -81,6 +85,7 @@ public:
     ~Map();
 
     void draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview);
+    void setup();
     void update();
     SDL_Rect drawRect() const;
 
@@ -116,6 +121,7 @@ private:
     std::string m_bg_music;
     Player* mp_freya;
     Player* mp_benjamin;
+    MapControllers::MapController *mp_controller;
 };
 
 #endif /* ILMENDUR_MAP_HPP */
