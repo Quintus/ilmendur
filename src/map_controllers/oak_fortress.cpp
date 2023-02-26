@@ -3,7 +3,7 @@
 #include "../actors/npc.hpp"
 #include <cassert>
 
-#define SOME_ACTOR_ID 38
+#define SOME_ACTOR_ID 39
 
 MapControllers::OakFortress::OakFortress()
     : MapControllers::MapController("Oak Fortress")

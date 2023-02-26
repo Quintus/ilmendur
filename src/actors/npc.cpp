@@ -2,11 +2,9 @@
 #include "../event.hpp"
 #include "player.hpp"
 
-NonPlayableCharacter::NonPlayableCharacter(int id, ObjectLayer* p_layer, SDL_Rect collbox, std::string graphic)
+NonPlayableCharacter::NonPlayableCharacter(int id, ObjectLayer* p_layer, std::string graphic)
     : Actor(id, p_layer, graphic)
 {
-    warp(Vector2f(collbox.x, collbox.y));
-    m_collbox = collbox;
 }
 
 NonPlayableCharacter::~NonPlayableCharacter()
@@ -27,12 +25,6 @@ void NonPlayableCharacter::handleEvent(const Event& event)
 
     // TODO: And they should not walk through anything, nor off the map...
 }
-
-SDL_Rect NonPlayableCharacter::collisionBox() const
-{
-    return m_collbox;
-}
-
 
 void NonPlayableCharacter::interact(Actor* p_other)
 {

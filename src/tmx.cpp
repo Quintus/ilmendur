@@ -86,7 +86,7 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
             const string& ani     = props.get("animation_mode");
             assert(!graphic.empty());
 
-            // Note: Actors should always be placed with Point objects in
+            // Note: Static actors should always be placed with Point objects in
             // Tiled, which do not have width/height values in the TMX file.
             Actor* p_actor = new Actor(id, p_target_layer, graphic);
             p_actor->warp(Vector2f(x, y));
@@ -110,13 +110,11 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
             const string& graphic = props.get("graphic");
             const string& ani     = props.get("animation_mode");
             assert(!graphic.empty());
-            SDL_Rect rect;
-            rect.x = x;
-            rect.y = y;
-            rect.w = w;
-            rect.h = h;
 
-            NonPlayableCharacter* p_npc = new NonPlayableCharacter(id, p_target_layer, rect, graphic);
+            // Note: NPCs should always be placed with Point objects in
+            // Tiled, which do not have width/height values in the TMX file.
+            NonPlayableCharacter* p_npc = new NonPlayableCharacter(id, p_target_layer, graphic);
+            p_npc->warp(Vector2f(x, y));
 
             if (!ani.empty()) {
                 if (ani == string("never")) {

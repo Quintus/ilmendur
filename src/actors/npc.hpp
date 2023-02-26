@@ -7,13 +7,12 @@ class Player;
 class NonPlayableCharacter: public Actor
 {
 public:
-    NonPlayableCharacter(int id, ObjectLayer* p_layer, SDL_Rect collbox, std::string graphic);
+    NonPlayableCharacter(int id, ObjectLayer* p_layer, std::string graphic);
     virtual ~NonPlayableCharacter();
 
     virtual void update();
     virtual void handleEvent(const Event&);
     virtual void interact(Actor* p_other);
-    virtual SDL_Rect collisionBox() const;
 
     void attachActivationFunction(std::function<void(NonPlayableCharacter*,Player*)> af);
 private:
