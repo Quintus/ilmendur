@@ -67,6 +67,37 @@ bool Actor::isMoving()
 }
 
 /**
+ * Move this actor into the given direction by the given amount of
+ * fields. A "field" is a unit of 32x32 pixels; this method will not
+ * align the actor with such a grid. The actor will be turned to look
+ * into the specified direction. If you need more control, use
+ * moveTo().
+ */
+void Actor::moveRelative(direction dir, int fields)
+{
+    Vector2f target = m_pos;
+    switch (dir) {
+    case direction::up:
+        target.y -= TILEWIDTH * fields;
+        break;
+    case direction::right:
+        target.x += TILEWIDTH * fields;
+        break;
+    case direction::down:
+        target.y += TILEWIDTH * fields;
+        break;
+    case direction::left:
+        target.x -= TILEWIDTH * fields;
+        break;
+    case direction::none:
+        assert(false);
+    } // No default so the compiler can warn about missing values
+
+    turn(dir);
+    moveTo(target, TILEWIDTH);
+}
+
+/**
  * Request this actor to move to the position `targetpos`. `velocity` gives
  * the moving speed in pixels per second. For reference, a value of 32.0f
  * will make the actor cross one field in one second.
