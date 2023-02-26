@@ -93,8 +93,53 @@ void Actor::moveRelative(direction dir, int fields)
         assert(false);
     } // No default so the compiler can warn about missing values
 
-    turn(dir);
     moveTo(target, TILEWIDTH);
+}
+
+/**
+ * Move the actor into the direction it is looking into by the
+ * specified number of fields, where one "field" means 32 pixels. Use
+ * moveTo() if you need more control.
+ */
+void Actor::moveForward(int fields)
+{
+    moveRelative(m_lookdir, fields);
+}
+
+/**
+ * Move the actor backward by the specified number of fields, where
+ * one "field" means 32 pixels. The actor is not turned, i.e. it will
+ * continue look into the same direction while moving. Use moveTo() if
+ * you need more control.
+ */
+void Actor::moveBackward(int fields)
+{
+    Vector2f target = m_pos;
+    switch (m_lookdir) {
+    case direction::up:
+        target.y += TILEWIDTH * fields;
+        break;
+    case direction::right:
+        target.x -= TILEWIDTH * fields;
+        break;
+    case direction::down:
+        target.y -= TILEWIDTH * fields;
+        break;
+    case direction::left:
+        target.x += TILEWIDTH * fields;
+        break;
+    case direction::none:
+        assert(false);
+    } // No default so the compiler can warn about missing values
+
+    /* It is a little hacky as it depends on the internals
+     * of moveTo(), but moveTo() won't tamper with the looking
+     * direction if it is set to direction::none. So temporaryly
+     * do exactly that - the update function does not change it anymore. */
+    direction ldir = m_lookdir;
+    m_lookdir = direction::none;
+    moveTo(target, TILEWIDTH);
+    m_lookdir = ldir;
 }
 
 /**

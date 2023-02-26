@@ -109,12 +109,29 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
         } else if (type == string("npc")) {
             const string& graphic = props.get("graphic");
             const string& ani     = props.get("animation_mode");
+            const string& dirstr  = props.get("direction");
             assert(!graphic.empty());
+
+            direction dir = direction::down;
+            if (!dirstr.empty()) {
+                if (dirstr == "up") {
+                    dir = direction::up;
+                } else if (dirstr == "right") {
+                    dir = direction::right;
+                } else if (dirstr == "down") {
+                    dir = direction::down;
+                } else if (dirstr == "left") {
+                    dir = direction::left;
+                } else {
+                    assert(false);
+                }
+            }
 
             // Note: NPCs should always be placed with Point objects in
             // Tiled, which do not have width/height values in the TMX file.
             NonPlayableCharacter* p_npc = new NonPlayableCharacter(id, p_target_layer, graphic);
             p_npc->warp(Vector2f(x, y));
+            p_npc->turn(dir);
 
             if (!ani.empty()) {
                 if (ani == string("never")) {

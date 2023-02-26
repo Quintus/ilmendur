@@ -28,7 +28,7 @@ void MapControllers::OakFortress::clownGuy(NonPlayableCharacter* p_npc, Player* 
 
     GUISystem::messageDialog(1, GUISystem::text_velocity::normal, "Test NPC",
                              {"I am a test NPC, and I am now going to make a step to the right."},
-                             [p_npc] {p_npc->moveRelative(direction::right);});
+                             [p_npc] {p_npc->moveBackward();});
 
     // Some pseudo code for what the NPC could possibly do:
     // if (Ilmendur::instance().saveState.globals.archievments.bossAbcBeaten) {

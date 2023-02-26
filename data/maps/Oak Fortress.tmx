@@ -331,6 +331,7 @@
   </object>
   <object id="39" x="2240" y="2272">
    <properties>
+    <property name="direction" value="left"/>
     <property name="graphic" value="chars/spaceship.png"/>
     <property name="type" value="npc"/>
    </properties>
