@@ -2,7 +2,7 @@
 #define ILMENDUR_NPC_HPP
 #include "actor.hpp"
 
-class Player;
+class Hero;
 
 class NonPlayableCharacter: public Actor
 {
@@ -14,9 +14,9 @@ public:
     virtual void handleEvent(const Event&);
     virtual void interact(Actor* p_other);
 
-    void attachActivationFunction(std::function<void(NonPlayableCharacter*,Player*)> af);
+    void attachActivationFunction(std::function<void(NonPlayableCharacter*,Hero*)> af);
 private:
-    std::function<void(NonPlayableCharacter*,Player*)> m_activation_function;
+    std::function<void(NonPlayableCharacter*,Hero*)> m_activation_function;
     SDL_Rect m_collbox;
 };
 

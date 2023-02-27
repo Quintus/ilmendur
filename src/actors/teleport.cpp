@@ -3,7 +3,7 @@
 #include "../scenes/debug_map_scene.hpp"
 #include "../ilmendur.hpp"
 #include "../map.hpp"
-#include "../actors/player.hpp"
+#include "../actors/hero.hpp"
 #include <cassert>
 
 using namespace std;

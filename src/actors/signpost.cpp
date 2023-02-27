@@ -3,7 +3,7 @@
 #include "../ilmendur.hpp"
 #include "../texture_pool.hpp"
 #include "../gui.hpp"
-#include "player.hpp"
+#include "hero.hpp"
 
 #define TILEWIDTH 32
 
@@ -70,11 +70,11 @@ void Signpost::handleEvent(const Event& event)
 
 void Signpost::interact(Actor* p_other)
 {
-    Player* p_player = dynamic_cast<Player*>(p_other);
-    if (!p_player) {
+    Hero* p_hero = dynamic_cast<Hero*>(p_other);
+    if (!p_hero) {
         return;
     }
 
-    // TODO: Check which one of the heroes it is. For now assume player 1
+    // TODO: Check which one of the heroes it is. For now assume hero 1
     GUISystem::messageDialog(1, GUISystem::text_velocity::instant, "Signpost", m_texts);
 }

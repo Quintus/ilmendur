@@ -1,7 +1,7 @@
 #include "title_scene.hpp"
 #include "debug_map_scene.hpp"
 #include "../ilmendur.hpp"
-#include "../actors/player.hpp"
+#include "../actors/hero.hpp"
 #include "../map.hpp"
 #include "../os.hpp"
 #include "../i18n.hpp"

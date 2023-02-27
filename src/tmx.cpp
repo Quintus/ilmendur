@@ -3,7 +3,7 @@
 #include "actors/collbox.hpp"
 #include "actors/passage.hpp"
 #include "actors/startpos.hpp"
-#include "actors/player.hpp"
+#include "actors/hero.hpp"
 #include "actors/signpost.hpp"
 #include "actors/npc.hpp"
 #include "actors/teleport.hpp"

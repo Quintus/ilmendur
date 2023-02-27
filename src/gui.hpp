@@ -29,8 +29,8 @@ namespace GUISystem {
         normal,      //< Normal speech delay
         fast         //< Minimal delay, as if speaking quickly
     };
-    void messageDialog(unsigned int playerno, text_velocity vel, std::string charname, std::vector<std::string> texts, std::function<void()> callback);
-    void messageDialog(unsigned int playerno, text_velocity vel, std::string charname, std::vector<std::string> texts);
+    void messageDialog(unsigned int herono, text_velocity vel, std::string charname, std::vector<std::string> texts, std::function<void()> callback);
+    void messageDialog(unsigned int herono, text_velocity vel, std::string charname, std::vector<std::string> texts);
     void systemMessage(std::string str);
 }
 

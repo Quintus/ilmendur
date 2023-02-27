@@ -4,7 +4,7 @@
 #include <map>
 
 class NonPlayableCharacter;
-class Player;
+class Hero;
 
 namespace MapControllers {
 

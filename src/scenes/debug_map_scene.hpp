@@ -3,7 +3,7 @@
 #include "scene.hpp"
 #include <string>
 
-class Player;
+class Hero;
 class Actor;
 class Camera;
 class Map;
@@ -27,9 +27,9 @@ private:
     Camera* mp_cam1;
     Camera* mp_cam2;
     Map* mp_map;
-public: // DEBUG: TODO: Proper notion of player object required
-    Player* mp_freya;
-    Player* mp_benjamin;
+public: // DEBUG: TODO: Proper notion of hero object required
+    Hero* mp_freya;
+    Hero* mp_benjamin;
 private:
     int m_teleport_entry;
 };

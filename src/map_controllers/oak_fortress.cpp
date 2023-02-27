@@ -22,7 +22,7 @@ void MapControllers::OakFortress::setup()
     // activateFunction runs when the NPC is "spoken to" (user presses RETURN).
 }
 
-void MapControllers::OakFortress::clownGuy(NonPlayableCharacter* p_npc, Player* p_hero)
+void MapControllers::OakFortress::clownGuy(NonPlayableCharacter* p_npc, Hero* p_hero)
 {
     assert(p_npc->id() == SOME_ACTOR_ID);
 

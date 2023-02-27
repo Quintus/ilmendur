@@ -6,7 +6,7 @@
 #include <map>
 
 class Actor;
-class Player;
+class Hero;
 class Map;
 class ObjectLayer;
 
@@ -91,7 +91,7 @@ public:
 
     void makeHeroes();
     void makeHeroesTeleport(int entry_id);
-    void heroes(Player** p_freya, Player** p_benjamin);
+    void heroes(Hero** p_freya, Hero** p_benjamin);
 
     bool findActor(int id, Actor** pp_actor);
     void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
@@ -120,8 +120,8 @@ private:
     int m_width;
     int m_height;
     std::string m_bg_music;
-    Player* mp_freya;
-    Player* mp_benjamin;
+    Hero* mp_freya;
+    Hero* mp_benjamin;
     MapControllers::MapController *mp_controller;
 };
 

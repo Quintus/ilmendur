@@ -2,7 +2,7 @@
 #include "buildconfig.hpp"
 #include "texture_pool.hpp"
 #include "map.hpp"
-#include "actors/player.hpp"
+#include "actors/hero.hpp"
 #include "scenes/scene.hpp"
 #include "scenes/title_scene.hpp"
 #include "audio.hpp"

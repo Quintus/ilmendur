@@ -3,7 +3,7 @@
 #include "../actors/actor.hpp"
 #include "../map.hpp"
 #include "../audio.hpp"
-#include "../actors/player.hpp"
+#include "../actors/hero.hpp"
 #include "../ilmendur.hpp"
 #include "../gui.hpp"
 #include <cassert>
@@ -64,7 +64,7 @@ void DebugMapScene::update()
     // Update all actors
     mp_map->update();
 
-    // Centre camera on the player
+    // Centre camera on the hero
     if (mp_freya) {
         mp_cam1->setPosition(mp_freya->position());
     }

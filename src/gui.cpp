@@ -55,8 +55,8 @@ namespace {
     class MessageDialog
     {
     public:
-        MessageDialog(unsigned int playerno, GUISystem::text_velocity vel, std::string charname, std::vector<std::string> texts)
-            : m_playerno(playerno),
+        MessageDialog(unsigned int herono, GUISystem::text_velocity vel, std::string charname, std::vector<std::string> texts)
+            : m_herono(herono),
               m_textvel(0),
               m_texts(texts),
               m_current_text(0),
@@ -114,9 +114,9 @@ namespace {
             }
 
             SDL_Rect boxarea;
-            if (m_playerno == 1) {
+            if (m_herono == 1) {
                 boxarea = Ilmendur::instance().viewportPlayer1();
-            } else if (m_playerno == 2) {
+            } else if (m_herono == 2) {
                 boxarea = Ilmendur::instance().viewportPlayer2();
             } else { // Full-screen dialog
                 boxarea = Ilmendur::instance().renderArea();
@@ -156,7 +156,7 @@ namespace {
                 string terminator;
                 if (m_current_text == m_texts.size() - 1) {
                     if (!m_endmark_sound_played) {
-                        Ilmendur::instance().audioSystem().playSound(m_playerno == 2 ? "ui/talkfin2.ogg" : "ui/talkfin1.ogg", AudioSystem::channel::ui);
+                        Ilmendur::instance().audioSystem().playSound(m_herono == 2 ? "ui/talkfin2.ogg" : "ui/talkfin1.ogg", AudioSystem::channel::ui);
                         m_endmark_sound_played = true;
                     }
 
@@ -189,17 +189,17 @@ namespace {
                     m_cb();
                 }
 
-                if (m_playerno == 2) {
-                    // TODO: Create a higher-pitch version of talkendmark1 for player 2 and play that one based on `m_playerno'.
+                if (m_herono == 2) {
+                    // TODO: Create a higher-pitch version of talkendmark1 for hero 2 and play that one based on `m_herono'.
                     Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
-                } else { // Player 1 or full-screen dialogue
+                } else { // Hero 1 or full-screen dialogue
                     Ilmendur::instance().audioSystem().playSound("ui/talkendmark1.ogg", AudioSystem::channel::ui);
                 }
                 return false;
             } else { // Another text to display
-                if (m_playerno == 2) {
+                if (m_herono == 2) {
                     Ilmendur::instance().audioSystem().playSound("ui/continue2.ogg", AudioSystem::channel::ui);
-                } else { // Player 1 or full-screen dialogue
+                } else { // Hero 1 or full-screen dialogue
                     Ilmendur::instance().audioSystem().playSound("ui/continue1.ogg", AudioSystem::channel::ui);
                 }
             }
@@ -218,7 +218,7 @@ namespace {
         }
 
     private:
-        unsigned int m_playerno;
+        unsigned int m_herono;
         float m_textvel;
         std::vector<std::string> m_texts;
         std::vector<ImTextCustomization> m_customs;
@@ -302,8 +302,8 @@ void GUISystem::loadFonts()
 /**
  * Display a message dialog to the user.
  *
- * \param[playerno]
- * Which player's viewport to use. 1 = player 1, 2 = player 2, any other value = fullscreen message box.
+ * \param[herono]
+ * Which hero's viewport to use. 1 = hero 1, 2 = hero 2, any other value = fullscreen message box.
  *
  * \param[vel]
  * Text display velocity. See text_velocity for the possible values.
@@ -318,20 +318,20 @@ void GUISystem::loadFonts()
  * \param[callback]
  * This callback is executed when all message boxes have been confirmed by the player.
  */
-void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, vector<string> texts, std::function<void()> callback)
+void GUISystem::messageDialog(unsigned int herono, text_velocity vel, std::string charname, vector<string> texts, std::function<void()> callback)
 {
     s_active_elements.emplace(s_active_elements.begin(),
-                              new MessageDialog(playerno, vel, charname, texts));
+                              new MessageDialog(herono, vel, charname, texts));
     s_active_elements[0]->setCallback(callback);
 }
 
 /**
  * Like the base function, but without a callback to be executed.
  */
-void GUISystem::messageDialog(unsigned int playerno, text_velocity vel, std::string charname, vector<string> texts)
+void GUISystem::messageDialog(unsigned int herono, text_velocity vel, std::string charname, vector<string> texts)
 {
     s_active_elements.emplace(s_active_elements.begin(),
-                              new MessageDialog(playerno, vel, charname, texts));
+                              new MessageDialog(herono, vel, charname, texts));
 }
 
 /**

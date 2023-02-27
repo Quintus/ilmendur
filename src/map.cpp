@@ -6,7 +6,7 @@
 #include "tmx.hpp"
 #include "actors/actor.hpp"
 #include "actors/startpos.hpp"
-#include "actors/player.hpp"
+#include "actors/hero.hpp"
 #include "actors/teleport.hpp"
 #include "map_controllers/map_controller.hpp"
 #include <fstream>
@@ -104,7 +104,7 @@ void TileLayer::draw(SDL_Renderer* p_stage, const SDL_Rect* p_camview)
             }
         }
     }
-    // TODO: Handle "down" and "both" direction depending on the player view direction.
+    // TODO: Handle "down" and "both" direction depending on the hero view direction.
 
 }
 
@@ -500,7 +500,7 @@ vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
  * Retrieves the hero pointers, if there are any. Otherwise, this
  * method crashes.
  */
-void Map::heroes(Player** p_freya, Player** p_benjamin)
+void Map::heroes(Hero** p_freya, Hero** p_benjamin)
 {
     assert(mp_freya && mp_benjamin);
     *p_freya = mp_freya;
@@ -508,7 +508,7 @@ void Map::heroes(Player** p_freya, Player** p_benjamin)
 }
 
 /**
- * Locates the actors of type `startpos` and creates player actors
+ * Locates the actors of type `startpos` and creates hero actors
  * centred on them. If there are no `startpos` type actors, places the
  * heroes at (100|100) and (200|200) at the bottom-most object layer.
  * If there are no object layers, this method crashes.
@@ -522,12 +522,12 @@ void Map::makeHeroes()
                 StartPosition* p_startpos = dynamic_cast<StartPosition*>(p_actor);
                 if (p_startpos) {
                     if (p_startpos->herono == 1) {
-                        mp_freya = new Player(p_obj_layer, 1);
+                        mp_freya = new Hero(p_obj_layer, 1);
                         mp_freya->warp(p_startpos->startpos);
                         mp_freya->turn(direction::up);
                         p_obj_layer->addActor(mp_freya);
                     } else if (p_startpos->herono == 2) {
-                        mp_benjamin = new Player(p_obj_layer, 2);
+                        mp_benjamin = new Hero(p_obj_layer, 2);
                         mp_benjamin->warp(p_startpos->startpos);
                         mp_benjamin->turn(direction::up);
                         p_obj_layer->addActor(mp_benjamin);
@@ -549,12 +549,12 @@ void Map::makeHeroes()
     for(MapLayer* p_layer: m_layers) {
         ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(p_layer);
         if (p_obj_layer) {
-            mp_freya = new Player(p_obj_layer, 1);
+            mp_freya = new Hero(p_obj_layer, 1);
             mp_freya->warp(Vector2f(100.0f, 100.0f));
             mp_freya->turn(direction::up);
             p_obj_layer->addActor(mp_freya);
 
-            mp_benjamin = new Player(p_obj_layer, 2);
+            mp_benjamin = new Hero(p_obj_layer, 2);
             mp_benjamin->warp(Vector2f(200.0f, 200.0f));
             mp_benjamin->turn(direction::up);
             p_obj_layer->addActor(mp_benjamin);
@@ -579,8 +579,8 @@ void Map::makeHeroesTeleport(int entry_id)
     assert(p_entry);
 
     ObjectLayer* p_obj_layer = p_entry->mp_layer;
-    mp_freya    = new Player(p_obj_layer, 1);
-    mp_benjamin = new Player(p_obj_layer, 2);
+    mp_freya    = new Hero(p_obj_layer, 1);
+    mp_benjamin = new Hero(p_obj_layer, 2);
 
     mp_freya->warp(p_entry->position());
     mp_freya->turn(p_entry->enterDirection());

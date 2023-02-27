@@ -13,7 +13,7 @@ namespace MapControllers
 
     private:
         // -- NPC Activation functions follow --
-        static void clownGuy(NonPlayableCharacter* p_npc, Player* p_hero);
+        static void clownGuy(NonPlayableCharacter* p_npc, Hero* p_hero);
     };
 }
 

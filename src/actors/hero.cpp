@@ -1,31 +1,31 @@
-#include "player.hpp"
+#include "hero.hpp"
 #include "../scenes/scene.hpp"
 
-#define PLAYER_ID 999999
-#define PLAYER_VELOCITY 80
+#define HERO_ID 999999
+#define HERO_VELOCITY 80
 
 using namespace std;
 
-Player::Player(ObjectLayer* p_layer, int playerno)
-    : Actor(PLAYER_ID, p_layer, "chars/spaceship.png"),
-      m_playerno(playerno)
+Hero::Hero(ObjectLayer* p_layer, int herono)
+    : Actor(HERO_ID, p_layer, "chars/spaceship.png"),
+      m_herono(herono)
 {
 }
 
-Player::~Player()
+Hero::~Hero()
 {
 }
 
-void Player::update()
+void Hero::update()
 {
     Actor::update();
 }
 
 /**
- * Check the keyboard state for player movement input.
+ * Check the keyboard state for hero movement input.
  * Call this from the event loop.
  */
-void Player::checkInput()
+void Hero::checkInput()
 {
     Vector2f vec;
     const uint8_t* keys = SDL_GetKeyboardState(nullptr);
@@ -74,6 +74,6 @@ void Player::checkInput()
         } else {
             vec.y /= 0.0f;
         }
-        moveTo(vec, PLAYER_VELOCITY);
+        moveTo(vec, HERO_VELOCITY);
     }
 }
