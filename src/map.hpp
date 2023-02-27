@@ -90,6 +90,7 @@ public:
     SDL_Rect drawRect() const;
 
     void makeHeroes();
+    void makeHeroesTeleport(int entry_id);
     void heroes(Player** p_freya, Player** p_benjamin);
 
     bool findActor(int id, Actor** pp_actor);

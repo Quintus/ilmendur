@@ -6,6 +6,7 @@
 #include "actors/player.hpp"
 #include "actors/signpost.hpp"
 #include "actors/npc.hpp"
+#include "actors/teleport.hpp"
 #include "map.hpp"
 #include "i18n.hpp"
 #include <cassert>
@@ -160,6 +161,36 @@ void TMX::readTmxObjects(const pugi::xml_node& node, ObjectLayer* p_target_layer
             rect.w = w;
             rect.h = h;
             result.push_back(new CollisionBox(id, p_target_layer, rect));
+        } else if (type == string("teleport")) {
+            int target_entry_id = props.getInt("entry");
+            string target_map_name = props.get("map");
+            SDL_Rect rect;
+            rect.x = x;
+            rect.y = y;
+            rect.w = w;
+            rect.h = h;
+
+            assert(target_entry_id > 0);
+
+            result.push_back(new Teleport(id, p_target_layer, rect, target_entry_id, target_map_name));
+        } else if (type == string("entry")) {
+            string dirstr = props.get("enter_dir");
+            direction dir = direction::down;
+            if (dirstr == string("up")) {
+                dir = direction::up;
+            } else if (dirstr == string("right")) {
+                dir = direction::right;
+            } else if (dirstr == string("down")) {
+                dir = direction::down;
+            } else if (dirstr == string("left")) {
+                dir = direction::left;
+            } else {
+                throw(string("Invalid value for `enter_dir': `") + dirstr + "' (TMX object ID: " + to_string(id) + ")!");
+            }
+
+            Entry* p_entry = new Entry(id, p_target_layer, dir);
+            p_entry->warp(Vector2f(x, y));
+            result.push_back(p_entry);
         } else if (type == string("passage")) {
             SDL_Rect rect;
             rect.x = x;

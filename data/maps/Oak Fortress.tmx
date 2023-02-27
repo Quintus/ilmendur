@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="42">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="43">
  <properties>
   <property name="background_music" value="Slow Ballad.ogg"/>
  </properties>
@@ -337,6 +337,14 @@
     <property name="type" value="signpost"/>
    </properties>
    <point/>
+  </object>
+  <object id="42" x="1504" y="1792" width="224" height="32">
+   <properties>
+    <property name="animation" value="up"/>
+    <property name="entry" type="int" value="9"/>
+    <property name="map" value="Test Map 2"/>
+    <property name="type" value="teleport"/>
+   </properties>
   </object>
  </objectgroup>
  <layer id="4" name="Kachelebene 3" width="100" height="100">

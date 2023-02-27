@@ -6,6 +6,7 @@
 #include "../actors/player.hpp"
 #include "../ilmendur.hpp"
 #include "../gui.hpp"
+#include <cassert>
 
 using namespace std;
 
@@ -13,7 +14,9 @@ DebugMapScene::DebugMapScene(const std::string& map)
     : Scene(),
       mp_cam1(new Camera(*this, Ilmendur::instance().viewportPlayer1())),
       mp_cam2(new Camera(*this, Ilmendur::instance().viewportPlayer2())),
-      mp_player(nullptr)
+      mp_freya(nullptr),
+      mp_benjamin(nullptr),
+      m_teleport_entry(-1)
 {
     mp_map = new Map(map);
     mp_cam1->setBounds(mp_map->drawRect());
@@ -45,11 +48,15 @@ DebugMapScene::~DebugMapScene()
 void DebugMapScene::setup()
 {
     Scene::setup();
-
     mp_map->setup();
-    mp_map->makeHeroes();
-    Player* p_ignore = nullptr;
-    mp_map->heroes(&mp_player, &p_ignore);
+
+    if (m_teleport_entry > 0) {
+        mp_map->makeHeroesTeleport(m_teleport_entry);
+    } else {
+        mp_map->makeHeroes();
+    }
+
+    mp_map->heroes(&mp_freya, &mp_benjamin);
 }
 
 void DebugMapScene::update()
@@ -58,8 +65,8 @@ void DebugMapScene::update()
     mp_map->update();
 
     // Centre camera on the player
-    if (mp_player) {
-        mp_cam1->setPosition(mp_player->position());
+    if (mp_freya) {
+        mp_cam1->setPosition(mp_freya->position());
     }
     mp_cam2->setPosition(Vector2f(1600, 2600));
 }
@@ -86,8 +93,8 @@ void DebugMapScene::handleKeyDown(const SDL_Event& event)
     case SDLK_RIGHT: // fall-through
     case SDLK_DOWN:  // fall-through
     case SDLK_LEFT:  // fall-through
-        if (mp_player) {
-            mp_player->checkInput();
+        if (mp_freya) {
+            mp_freya->checkInput();
         }
         break;
     default:
@@ -106,8 +113,8 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
     case SDLK_RIGHT: // fall-through
     case SDLK_DOWN:  // fall-through
     case SDLK_LEFT:  // fall-through
-        if (mp_player) {
-            mp_player->checkInput();
+        if (mp_freya) {
+            mp_freya->checkInput();
         }
         break;
     case SDLK_ESCAPE:
@@ -125,7 +132,7 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         }
         break;
     case SDLK_j: {
-        vector<Actor*> adj = mp_map->findAdjascentActors(mp_player, mp_player->lookDirection());
+        vector<Actor*> adj = mp_map->findAdjascentActors(mp_freya, mp_freya->lookDirection());
         string result = "Found ";
         result += to_string(adj.size());
         result += " actors\n";
@@ -137,13 +144,19 @@ void DebugMapScene::handleKeyUp(const SDL_Event& event)
         GUISystem::systemMessage(result);
     } break;
     case SDLK_RETURN: {
-        vector<Actor*> adj = mp_map->findAdjascentActors(mp_player, mp_player->lookDirection());
+        vector<Actor*> adj = mp_map->findAdjascentActors(mp_freya, mp_freya->lookDirection());
         if (adj.size() > 0) {
-            adj[0]->interact(mp_player);
+            adj[0]->interact(mp_freya);
         }
     } break;
     default:
         // Ignore
         break;
     }
+}
+
+void DebugMapScene::useEntry(int entry_id)
+{
+    assert(entry_id > 0);
+    m_teleport_entry = entry_id;
 }

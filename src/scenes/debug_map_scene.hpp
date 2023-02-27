@@ -20,12 +20,18 @@ public:
     virtual void handleKeyDown(const SDL_Event& event);
     virtual void handleKeyUp(const SDL_Event& event);
 
+    void useEntry(int id);
+
     inline Map& map() { return *mp_map; }
 private:
     Camera* mp_cam1;
     Camera* mp_cam2;
     Map* mp_map;
-    Player* mp_player;
+public: // DEBUG: TODO: Proper notion of player object required
+    Player* mp_freya;
+    Player* mp_benjamin;
+private:
+    int m_teleport_entry;
 };
 
 #endif /* ILMENDUR_DEBUG_MAP_SCENE_HPP */

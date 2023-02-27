@@ -7,6 +7,7 @@
 #include "actors/actor.hpp"
 #include "actors/startpos.hpp"
 #include "actors/player.hpp"
+#include "actors/teleport.hpp"
 #include "map_controllers/map_controller.hpp"
 #include <fstream>
 #include <algorithm>
@@ -563,6 +564,30 @@ void Map::makeHeroes()
 
     // No object layers. Error.
     assert(false);
+}
+
+/**
+ * Creates the heroes like makeHeroes(), but places them
+ * on the type =entry= actor with the given TMX ID.
+ */
+void Map::makeHeroesTeleport(int entry_id)
+{
+    Actor* p_entry_actor = nullptr;
+    assert(findActor(entry_id, &p_entry_actor));
+
+    Entry* p_entry = dynamic_cast<Entry*>(p_entry_actor);
+    assert(p_entry);
+
+    ObjectLayer* p_obj_layer = p_entry->mp_layer;
+    mp_freya    = new Player(p_obj_layer, 1);
+    mp_benjamin = new Player(p_obj_layer, 2);
+
+    mp_freya->warp(p_entry->position());
+    mp_freya->turn(p_entry->enterDirection());
+    mp_benjamin->warp(p_entry->position());
+    mp_benjamin->turn(p_entry->enterDirection());
+    p_obj_layer->addActor(mp_freya);
+    p_obj_layer->addActor(mp_benjamin);
 }
 
 /**
