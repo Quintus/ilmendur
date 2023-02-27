@@ -497,6 +497,40 @@ vector<Actor*> Map::findAdjascentActors(Actor* p_actor, direction dir)
 }
 
 /**
+ * Return a list of all actors in the requested area on the requested
+ * layer. If `p_layer` is nullptr, check all layers.
+ *
+ * It is sufficient if an actor's collision box overlaps with the
+ * requested area to be accepted and returned by this function.
+ */
+vector<Actor*> Map::findActorsInArea(const SDL_Rect& area, ObjectLayer* p_layer)
+{
+    if (p_layer) {
+        vector<Actor*> results;
+        for (Actor* p_actor: p_layer->m_actors) {
+            SDL_Rect collrect = p_actor->collisionBox();
+            if (SDL_HasIntersection(&area, &collrect)) {
+                results.push_back(p_actor);
+            }
+        }
+
+        return results;
+    } else {
+        vector<Actor*> results;
+        for(MapLayer* p_layer: m_layers) {
+            ObjectLayer* p_obj_layer = dynamic_cast<ObjectLayer*>(p_layer);
+            if (p_obj_layer) {
+                for (Actor* p_actor: findActorsInArea(area, p_obj_layer)) {
+                    results.push_back(p_actor);
+                }
+            }
+        }
+
+        return results;
+    }
+}
+
+/**
  * Retrieves the hero pointers, if there are any. Otherwise, this
  * method crashes.
  */

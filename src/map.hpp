@@ -96,6 +96,7 @@ public:
     bool findActor(int id, Actor** pp_actor);
     void changeActorLayer(Actor* p_actor, const std::string& target_layer_name);
     std::vector<Actor*> findAdjascentActors(Actor* p_actor, direction dir);
+    std::vector<Actor*> findActorsInArea(const SDL_Rect& area, ObjectLayer* p_layer);
 
     inline const std::string& backgroundMusic() const { return m_bg_music; }
 
