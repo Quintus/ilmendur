@@ -53,30 +53,42 @@ SDL_Rect Teleport::collisionBox() const
 void Teleport::handleEvent(const Event& event)
 {
     if (event.type == Event::Type::collision) {
-        // TODO: Check if the other hero is also within the collision rectangle
-
         // Only activate if it's actually a hero stepping into the teleporter
-        Hero* p_other = dynamic_cast<Hero*>(event.data.coll.p_other);
-        if (p_other) {
-            if (m_target_map_name.empty()) { // Teleport within the same map
-                Scene& scene = Ilmendur::instance().currentScene();
-                DebugMapScene* p_scene = dynamic_cast<DebugMapScene*>(&scene);
-                assert(p_scene); // Can only call this from a map scene
+        Hero* p_hero1 = dynamic_cast<Hero*>(event.data.coll.p_other);
+        if (p_hero1) {
+            Scene& scene = Ilmendur::instance().currentScene();
+            DebugMapScene* p_scene = dynamic_cast<DebugMapScene*>(&scene);
+            assert(p_scene); // Can only call this from a map scene
 
-                Actor* p_entry_actor = nullptr;
-                assert(p_scene->map().findActor(m_target_entry_id, &p_entry_actor));
-                Entry* p_entry = dynamic_cast<Entry*>(p_entry_actor);
-                assert(p_entry);
+            bool both_heroes_in = false;
+            vector<Actor*> teleportees = p_scene->map().findActorsInArea(m_collbox, mp_layer);
+            for (Actor* p_actor: teleportees) {
+                Hero* p_hero2 = dynamic_cast<Hero*>(p_actor);
+                if (p_hero2 && p_hero2->id() != p_hero1->id()) {
+                    both_heroes_in = true;
+                }
+            }
 
-                p_scene->freya()->warp(p_entry->position());
-                p_scene->freya()->turn(p_entry->enterDirection());
-                p_scene->benjamin()->warp(p_entry->position());
-                p_scene->benjamin()->turn(p_entry->enterDirection());
-            } else { // Teleport to another map
-                DebugMapScene* p_newscene = new DebugMapScene(m_target_map_name);
-                p_newscene->useEntry(m_target_entry_id);
-                Ilmendur::instance().popScene();
-                Ilmendur::instance().pushScene(p_newscene);
+            // DEBUG: Until two-player handling is done, accept one hero
+            both_heroes_in = true;
+
+            if (both_heroes_in) {
+                if (m_target_map_name.empty()) { // Teleport within the same map
+                    Actor* p_entry_actor = nullptr;
+                    assert(p_scene->map().findActor(m_target_entry_id, &p_entry_actor));
+                    Entry* p_entry = dynamic_cast<Entry*>(p_entry_actor);
+                    assert(p_entry);
+
+                    p_scene->freya()->warp(p_entry->position());
+                    p_scene->freya()->turn(p_entry->enterDirection());
+                    p_scene->benjamin()->warp(p_entry->position());
+                    p_scene->benjamin()->turn(p_entry->enterDirection());
+                } else { // Teleport to another map
+                    DebugMapScene* p_newscene = new DebugMapScene(m_target_map_name);
+                    p_newscene->useEntry(m_target_entry_id);
+                    Ilmendur::instance().popScene();
+                    Ilmendur::instance().pushScene(p_newscene);
+                }
             }
         }
     }
