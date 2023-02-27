@@ -20,6 +20,9 @@ public:
     virtual void handleKeyDown(const SDL_Event& event);
     virtual void handleKeyUp(const SDL_Event& event);
 
+    Hero* freya() { return mp_freya; }
+    Hero* benjamin() { return mp_benjamin; }
+
     void useEntry(int id);
 
     inline Map& map() { return *mp_map; }
@@ -27,7 +30,7 @@ private:
     Camera* mp_cam1;
     Camera* mp_cam2;
     Map* mp_map;
-public: // DEBUG: TODO: Proper notion of hero object required
+
     Hero* mp_freya;
     Hero* mp_benjamin;
 private:

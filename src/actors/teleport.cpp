@@ -55,25 +55,29 @@ void Teleport::handleEvent(const Event& event)
     if (event.type == Event::Type::collision) {
         // TODO: Check if the other hero is also within the collision rectangle
 
-        if (m_target_map_name.empty()) { // Teleport within the same map
-            Scene& scene = Ilmendur::instance().currentScene();
-            DebugMapScene* p_scene = dynamic_cast<DebugMapScene*>(&scene);
-            assert(p_scene); // Can only call this from a map scene
+        // Only activate if it's actually a hero stepping into the teleporter
+        Hero* p_other = dynamic_cast<Hero*>(event.data.coll.p_other);
+        if (p_other) {
+            if (m_target_map_name.empty()) { // Teleport within the same map
+                Scene& scene = Ilmendur::instance().currentScene();
+                DebugMapScene* p_scene = dynamic_cast<DebugMapScene*>(&scene);
+                assert(p_scene); // Can only call this from a map scene
 
-            Actor* p_entry_actor = nullptr;
-            assert(p_scene->map().findActor(m_target_entry_id, &p_entry_actor));
-            Entry* p_entry = dynamic_cast<Entry*>(p_entry_actor);
-            assert(p_entry);
+                Actor* p_entry_actor = nullptr;
+                assert(p_scene->map().findActor(m_target_entry_id, &p_entry_actor));
+                Entry* p_entry = dynamic_cast<Entry*>(p_entry_actor);
+                assert(p_entry);
 
-            p_scene->mp_freya->warp(p_entry->position());
-            p_scene->mp_freya->turn(p_entry->enterDirection());
-            p_scene->mp_benjamin->warp(p_entry->position());
-            p_scene->mp_benjamin->turn(p_entry->enterDirection());
-        } else { // Teleport to another map
-            DebugMapScene* p_newscene = new DebugMapScene(m_target_map_name);
-            p_newscene->useEntry(m_target_entry_id);
-            Ilmendur::instance().popScene();
-            Ilmendur::instance().pushScene(p_newscene);
+                p_scene->freya()->warp(p_entry->position());
+                p_scene->freya()->turn(p_entry->enterDirection());
+                p_scene->benjamin()->warp(p_entry->position());
+                p_scene->benjamin()->turn(p_entry->enterDirection());
+            } else { // Teleport to another map
+                DebugMapScene* p_newscene = new DebugMapScene(m_target_map_name);
+                p_newscene->useEntry(m_target_entry_id);
+                Ilmendur::instance().popScene();
+                Ilmendur::instance().pushScene(p_newscene);
+            }
         }
     }
 }
